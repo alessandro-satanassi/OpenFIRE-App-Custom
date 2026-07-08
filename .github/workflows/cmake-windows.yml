@@ -29,7 +29,7 @@ jobs:
             build_type: Debug
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: 'true'
 
@@ -41,7 +41,7 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.11.1'
+        version: '6.8.3'
         arch: '${{ matrix.win_arch }}'
         modules: 'qtserialport'
         tools: '${{ matrix.qt_tools }}'
@@ -68,7 +68,7 @@ jobs:
         mv "${{ github.workspace }}/build/out/bin" "${{ github.workspace }}/build/out/OpenFIRE App"
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         # Artifact name
         name: OpenFIREapp-${{ matrix.pretty }}-Qt6-${{ matrix.build_type }} # optional, default is artifact
@@ -76,4 +76,4 @@ jobs:
         path: build/out
 
     - name: Download a Build Artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
