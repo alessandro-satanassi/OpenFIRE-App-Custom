@@ -1,0 +1,2671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>guiWindow</class>
+ <widget class="QMainWindow" name="guiWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>980</width>
+    <height>832</height>
+   </rect>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../img/vectors.qrc">
+    <normaloff>:/icon/icon.png</normaloff>:/icon/icon.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QHBoxLayout" name="comPortLayout" stretch="1,0,0">
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="comPortLabel">
+        <property name="text">
+         <string>COM Port:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comPortSelector">
+        <property name="sizeAdjustPolicy">
+         <enum>QComboBox::AdjustToContents</enum>
+        </property>
+        <property name="placeholderText">
+         <string>[No devices currently available]</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="boardLabel">
+      <property name="font">
+       <font>
+        <pointsize>16</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string notr="true"/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="versionLabel">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+        <italic>false</italic>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string notr="true"/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="tabPosition">
+       <enum>QTabWidget::South</enum>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>24</width>
+        <height>24</height>
+       </size>
+      </property>
+      <widget class="QWidget" name="pinsTab">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <attribute name="icon">
+        <iconset theme="document-properties"/>
+       </attribute>
+       <attribute name="title">
+        <string>Board Layout</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="pinsScrollArea">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+          <widget class="QWidget" name="pinsScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>958</width>
+             <height>582</height>
+            </rect>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="PinsTopHalf" stretch="0,1,0">
+              <item>
+               <layout class="QGridLayout" name="PinsLeft"/>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="PinsCenter" stretch="0">
+                <item>
+                 <layout class="QGridLayout" name="PinsCenterSub"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QGridLayout" name="PinsRight"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="PinsBottomHalf">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
+          <item alignment="Qt::AlignBottom">
+           <widget class="QCheckBox" name="customPinsEnabled">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="baseSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string>Enable to use custom pins mapping, or disable to use the default mappings for the current board.</string>
+            </property>
+            <property name="text">
+             <string>Use Custom Pins</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_14">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QToolButton" name="customLayoutToolBtn">
+            <property name="text">
+             <string>User Layouts</string>
+            </property>
+            <property name="icon">
+             <iconset theme="edit-copy"/>
+            </property>
+            <property name="popupMode">
+             <enum>QToolButton::InstantPopup</enum>
+            </property>
+            <property name="toolButtonStyle">
+             <enum>Qt::ToolButtonTextBesideIcon</enum>
+            </property>
+           </widget>
+          </item>
+          <item alignment="Qt::AlignRight|Qt::AlignBottom">
+           <widget class="QComboBox" name="presetsBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="placeholderText">
+             <string>Select Layout Preset</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="buttonFuncTab">
+       <attribute name="icon">
+        <iconset theme="input-keyboard"/>
+       </attribute>
+       <attribute name="title">
+        <string>Button Mapping</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_18" stretch="8,3">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="buttonFuncScroller">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignHCenter|Qt::AlignTop</set>
+          </property>
+          <widget class="QWidget" name="buttonFuncScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>958</width>
+             <height>445</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_19" stretch="0,1,0">
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="buttonFuncBox">
+              <property name="title">
+               <string>Digital Inputs</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_20">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,3,3,3">
+                 <item>
+                  <spacer name="horizontalSpacer_7">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_17">
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>On-Screen Function</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_19">
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Off-Screen Function</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_18">
+                   <property name="font">
+                    <font>
+                     <pointsize>11</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Gamepad Mode</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="btnFuncLayout">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="aStickFuncBox">
+              <property name="title">
+               <string>Analog Stick</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <spacer name="horizontalSpacer_6">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>Send Analog Stick As:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="aStickModeBox">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If an analog stick is enabled in the current &lt;span style=&quot; font-style:italic;&quot;&gt;Board Layout,&lt;/span&gt; this determines which type of Button Output it uses.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Gamepad Analog Stick&lt;/span&gt; will use either the Left or Right analog stick of the Gamepad device, depending on the circumstances and/or whether &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad Output Mode&lt;/span&gt; is set via Serial. The other two settings will translate the stick's analog movements into either digital &lt;span style=&quot; font-weight:700;&quot;&gt;Gamepad D-Pad&lt;/span&gt; or &lt;span style=&quot; font-weight:700;&quot;&gt;Keyboard Arrow Key&lt;/span&gt; presses.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Gamepad Analog Stick&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Analog Stick Output Mode</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>3</number>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>Gamepad Analog Stick (Left/Right)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Gamepad D-Pad</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Keyboard Arrows</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="btnFuncDescBox">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QGroupBox::title { color: yellow }</string>
+          </property>
+          <property name="title">
+           <string/>
+          </property>
+          <layout class="QVBoxLayout" name="btnDescLayout">
+           <item>
+            <widget class="QLabel" name="btnFuncDescText">
+             <property name="font">
+              <font>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tab shows the currently loaded Button Mapping settings.&lt;/p&gt;&lt;p&gt;Any enabled button input in the current &lt;span style=&quot; font-style:italic;&quot;&gt;Board Layout&lt;/span&gt; can be assigned to output any button from any of the three Input Devices that OpenFIRE presents to any connected device (a Mouse, Keyboard, and Xbox-like Gamepad), depending on the condition that the input is pressed.&lt;/p&gt;&lt;p&gt;Hover over an option to view detailed info about it here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: lightgray</string>
+             </property>
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tab shows the currently loaded Button Mapping settings.&lt;/p&gt;&lt;p&gt;Any enabled button input in the current &lt;span style=&quot; font-style:italic;&quot;&gt;Board Layout&lt;/span&gt; can be assigned to output any button from any of the three Input Devices that OpenFIRE presents to any connected device (a Mouse, Keyboard, and Xbox-like Gamepad), depending on the condition that the input is pressed.&lt;/p&gt;&lt;p&gt;Hover over an option to view detailed info about it here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="openExternalLinks">
+              <bool>true</bool>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="settingsTab">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <attribute name="icon">
+        <iconset theme="drive-harddisk"/>
+       </attribute>
+       <attribute name="title">
+        <string>Gun Settings</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_7" stretch="8,3">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="settingsScrollArea">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignHCenter|Qt::AlignTop</set>
+          </property>
+          <widget class="QWidget" name="settingsScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>944</width>
+             <height>1200</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0,0,1,0">
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="forceFeedbackBox">
+              <property name="title">
+               <string>Force Feedback</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_3">
+               <item row="4" column="0">
+                <widget class="QGroupBox" name="rumbleFFBox">
+                 <property name="title">
+                  <string>Rumble</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_5">
+                  <item row="1" column="0">
+                   <widget class="QGroupBox" name="rumbleSettingsBox">
+                    <property name="title">
+                     <string/>
+                    </property>
+                    <property name="flat">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_10">
+                     <item row="2" column="0">
+                      <widget class="QLabel" name="label_3">
+                       <property name="text">
+                        <string>Rumble Intensity:</string>
+                       </property>
+                       <property name="textFormat">
+                        <enum>Qt::PlainText</enum>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QSpinBox" name="rumbleIntensityBox">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="whatsThis">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the intensity of rumble force feedback events. Scales from 0 (disabled) to 255 (maximum).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 255 (100%)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Rumble Intensity Amount</string>
+                       </property>
+                       <property name="frame">
+                        <bool>true</bool>
+                       </property>
+                       <property name="buttonSymbols">
+                        <enum>QAbstractSpinBox::PlusMinus</enum>
+                       </property>
+                       <property name="correctionMode">
+                        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                       </property>
+                       <property name="suffix">
+                        <string> / 255</string>
+                       </property>
+                       <property name="maximum">
+                        <number>255</number>
+                       </property>
+                       <property name="trackable" stdset="0">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QLabel" name="label_4">
+                       <property name="text">
+                        <string>Rumble Length:</string>
+                       </property>
+                       <property name="textFormat">
+                        <enum>Qt::PlainText</enum>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="3">
+                      <widget class="QSpinBox" name="rumbleLengthBox">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="whatsThis">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When Rumble is enabled, this setting determines the length of how long the rumble motor is activated when pulling the trigger offscreen, in milliseconds.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 150 (ms)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Length of Rumble Events</string>
+                       </property>
+                       <property name="buttonSymbols">
+                        <enum>QAbstractSpinBox::PlusMinus</enum>
+                       </property>
+                       <property name="correctionMode">
+                        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                       </property>
+                       <property name="suffix">
+                        <string> ms</string>
+                       </property>
+                       <property name="maximum">
+                        <number>9999</number>
+                       </property>
+                       <property name="trackable" stdset="0">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0" colspan="4" alignment="Qt::AlignHCenter">
+                      <widget class="QCheckBox" name="rumbleFFToggle">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="whatsThis">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines if the rumble motor will be used for onscreen trigger feedback; taking the place of the solenoid feedback, rather than using the default off-screen motor feedback. Naturally, this requires &lt;span style=&quot; font-style:italic;&quot;&gt;Rumble&lt;/span&gt; to be enabled.&lt;/p&gt;&lt;p&gt;Note that &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid&lt;/span&gt; takes priority over this setting, and will be disabled if this is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Rumble-based Force Feedback Toggle</string>
+                       </property>
+                       <property name="text">
+                        <string>Use Rumble as primary Force Feedback</string>
+                       </property>
+                       <property name="trackable" stdset="0">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" alignment="Qt::AlignHCenter">
+                   <widget class="QCheckBox" name="rumbleToggle">
+                    <property name="toolTip">
+                     <string/>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set if the rumble motor is enabled.&lt;/p&gt;&lt;p&gt;Under normal conditions, the rumble motor will actuate when shooting offscreen &lt;span style=&quot; font-style:italic;&quot;&gt;(i.e. when the cursor is at the edge of the display)&lt;/span&gt;, and can also provide feedback in various sections of the Pause Menu interface.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>Rumble Toggle</string>
+                    </property>
+                    <property name="text">
+                     <string>Rumble Enabled</string>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <number>1</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="0" column="0" alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="autofireToggle">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable for rapid solenoid feedback while the trigger is pressed.&lt;/p&gt;&lt;p&gt;When enabled, the solenoid will always fire off automatically, as if the trigger has been held when using normal solenoid force feedback.&lt;/p&gt;&lt;p&gt;Note: if &lt;span style=&quot; font-style:italic;&quot;&gt;Rumble FF&lt;/span&gt; is enabled, this option will provide continuous rumble motor feedback instead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Autofire Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>Autofire Enabled</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <string>1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QGroupBox" name="solenoidFFBox">
+                 <property name="title">
+                  <string>Solenoid</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout">
+                  <item row="0" column="0" alignment="Qt::AlignHCenter">
+                   <widget class="QCheckBox" name="solenoidToggle">
+                    <property name="toolTip">
+                     <string/>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Set if the solenoid is enabled.&lt;/p&gt;&lt;p&gt;Under normal circumstances, the solenoid actuates when shooting at the display; the &amp;quot;engaged&amp;quot; duration is set in &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid Interval&lt;/span&gt;. When depressed for the length of &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid Hold Length&lt;/span&gt;, the solenoid will fire rapidly for as long as the trigger is held, with &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid Fast Interval&lt;/span&gt; determining state of the &amp;quot;engaged&amp;quot; duration and pause between engagements calculated by &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid Fast Interval * Autofire Wait Factor.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Note that the &lt;span style=&quot; font-style:italic;&quot;&gt;Rumble FF&lt;/span&gt; setting conflicts with solenoid functionality, and will be disabled if this is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>Solenoid Toggle</string>
+                    </property>
+                    <property name="text">
+                     <string>Solenoid Enabled</string>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <number>1</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QGroupBox" name="solenoidSettingsBox">
+                    <property name="title">
+                     <string/>
+                    </property>
+                    <property name="flat">
+                     <bool>true</bool>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_8">
+                     <item row="2" column="0" colspan="4">
+                      <widget class="QGroupBox" name="solenoidTempBox">
+                       <property name="title">
+                        <string/>
+                       </property>
+                       <property name="flat">
+                        <bool>true</bool>
+                       </property>
+                       <layout class="QGridLayout" name="gridLayout_12">
+                        <property name="leftMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="rightMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item row="0" column="0">
+                         <widget class="QLabel" name="label_14">
+                          <property name="text">
+                           <string>Temperature Warning Threshold:</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="2">
+                         <widget class="QLabel" name="label_16">
+                          <property name="text">
+                           <string>Temperature Shutoff Threshold:</string>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="1">
+                         <widget class="QSpinBox" name="tempWarningBox">
+                          <property name="whatsThis">
+                           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines the point at which solenoid activations will force longer OFF periods between sustained fire/autofire shots, in &lt;span style=&quot; font-style:italic;&quot;&gt;degrees Celsius.&lt;/span&gt; Generally speaking, the higher this is set, the longer the solenoid will maintain full sustained fire speeds.&lt;/p&gt;&lt;p&gt;Once this point is hit, the solenoid firing rate is reduced until the temperature monitor reads at least five (5)°C &lt;span style=&quot; font-weight:700;&quot;&gt;below&lt;/span&gt; this threshold. The &amp;quot;reduced&amp;quot; firing rate is automatically calculated as &lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Solenoid ON Fast Length * 4&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Warning: Setting this value too high may reduce the lifespan of the connected solenoid!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                          </property>
+                          <property name="accessibleName">
+                           <string>Temperature Warning Threshold</string>
+                          </property>
+                          <property name="suffix">
+                           <string>°C</string>
+                          </property>
+                          <property name="minimum">
+                           <number>20</number>
+                          </property>
+                          <property name="trackable" stdset="0">
+                           <number>1</number>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="3">
+                         <widget class="QSpinBox" name="tempShutoffBox">
+                          <property name="whatsThis">
+                           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the point at which the solenoid will stop activating, in &lt;span style=&quot; font-style:italic;&quot;&gt;degrees Celsius.&lt;/span&gt; Generally speaking, the higher the temperature threshold, the longer the solenoid will activate at reduced sustained fire speeds.&lt;/p&gt;&lt;p&gt;Once this point is triggered, solenoid activations will not be allowed for either single or sustained shots until the temperature monitor reads at least five (5)°C &lt;span style=&quot; font-weight:700;&quot;&gt;below&lt;/span&gt; this threshold.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Warning: Setting this value too high WILL reduce the lifespan of the connected solenoid!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                          </property>
+                          <property name="accessibleName">
+                           <string>Temperature Shutoff Threshold</string>
+                          </property>
+                          <property name="suffix">
+                           <string>°C</string>
+                          </property>
+                          <property name="minimum">
+                           <number>25</number>
+                          </property>
+                          <property name="maximum">
+                           <number>60</number>
+                          </property>
+                          <property name="trackable" stdset="0">
+                           <number>1</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_7">
+                       <property name="text">
+                        <string>Solenoid ON Length:</string>
+                       </property>
+                       <property name="textFormat">
+                        <enum>Qt::PlainText</enum>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QSpinBox" name="solenoidOnLengthBox">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="whatsThis">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid&lt;/span&gt; is enabled, this setting determines the amount of time the solenoid is engaged when the trigger is held, in milliseconds.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 45 (ms)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Solenoid Engagement Length</string>
+                       </property>
+                       <property name="buttonSymbols">
+                        <enum>QAbstractSpinBox::PlusMinus</enum>
+                       </property>
+                       <property name="correctionMode">
+                        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                       </property>
+                       <property name="suffix">
+                        <string> ms</string>
+                       </property>
+                       <property name="trackable" stdset="0">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="3">
+                      <widget class="QSpinBox" name="solenoidOffLengthBox">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="whatsThis">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid&lt;/span&gt; is enabled, this setting determines the amount of time between solenoid activations when the trigger is held in &lt;span style=&quot; font-style:italic;&quot;&gt;Autofire&lt;/span&gt; mode (or after holding the trigger for &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid Hold Length),&lt;/span&gt; in milliseconds.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 80 (ms)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Solenoid Autofire Wait Length</string>
+                       </property>
+                       <property name="buttonSymbols">
+                        <enum>QAbstractSpinBox::PlusMinus</enum>
+                       </property>
+                       <property name="correctionMode">
+                        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                       </property>
+                       <property name="suffix">
+                        <string> ms</string>
+                       </property>
+                       <property name="trackable" stdset="0">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QLabel" name="label_8">
+                       <property name="text">
+                        <string>Solenoid Autofire Wait Time:</string>
+                       </property>
+                       <property name="textFormat">
+                        <enum>Qt::PlainText</enum>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="wordWrap">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QLabel" name="label_9">
+                       <property name="text">
+                        <string>Solenoid Hold-to-Autofire Length:</string>
+                       </property>
+                       <property name="textFormat">
+                        <enum>Qt::PlainText</enum>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="wordWrap">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QSpinBox" name="solenoidHoldLengthBox">
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="whatsThis">
+                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When &lt;span style=&quot; font-style:italic;&quot;&gt;Solenoid&lt;/span&gt; is enabled and &lt;span style=&quot; font-style:italic;&quot;&gt;Autofire&lt;/span&gt; is disabled, this setting determines the time it takes to hold the trigger after a &lt;span style=&quot; font-style:italic;&quot;&gt;single shot&lt;/span&gt; solenoid activation before transitioning to a sustained fire feedback, in milliseconds.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 500 (ms)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       </property>
+                       <property name="accessibleName">
+                        <string>Solenoid Trigger Hold to Autofire Length</string>
+                       </property>
+                       <property name="buttonSymbols">
+                        <enum>QAbstractSpinBox::PlusMinus</enum>
+                       </property>
+                       <property name="correctionMode">
+                        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                       </property>
+                       <property name="suffix">
+                        <string> ms</string>
+                       </property>
+                       <property name="maximum">
+                        <number>9999</number>
+                       </property>
+                       <property name="trackable" stdset="0">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="lightingBox">
+              <property name="title">
+               <string>Lighting</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_4">
+               <item row="0" column="0" alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="commonAnodeToggle">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines if the 4-pin RGB LED module uses a &lt;span style=&quot; font-style:italic;&quot;&gt;Common Anode&lt;/span&gt; or &lt;span style=&quot; font-style:italic;&quot;&gt;Common Cathode.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Enable&lt;/span&gt; if your 4-pin LED is a Common Anode type (with common connected to 5V).&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Disable&lt;/span&gt; if your 4-pin LED is a Common Cathode (with common connected to GND).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>4-Pin RGB LED Common Anode Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>4-Pin RGB Common Anode</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QGroupBox" name="neopixelGroupBox">
+                 <property name="title">
+                  <string>NeoPixels</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_9">
+                  <item row="0" column="1" colspan="2">
+                   <widget class="QLabel" name="label">
+                    <property name="text">
+                     <string>NeoPixel Strand Length: </string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="3">
+                   <layout class="QHBoxLayout" name="horizontalLayout_2">
+                    <item>
+                     <widget class="QPushButton" name="customLEDstaticBtn1">
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                        <bold>true</bold>
+                        <underline>false</underline>
+                        <kerning>false</kerning>
+                       </font>
+                      </property>
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to set the color for this Pixel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>First NeoPixel Static Color</string>
+                      </property>
+                      <property name="text">
+                       <string>Static Color 1</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="customLEDstaticBtn2">
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to set the color for this Pixel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Second NeoPixel Static Color</string>
+                      </property>
+                      <property name="text">
+                       <string>Static Color 2</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="customLEDstaticBtn3">
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to set the color for this Pixel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Third NeoPixel Static Color</string>
+                      </property>
+                      <property name="text">
+                       <string>Static Color 3</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item row="0" column="3">
+                   <widget class="QSpinBox" name="neopixelStrandLengthBox">
+                    <property name="toolTip">
+                     <string/>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines how many LEDs are in the NeoPixel chain. More than one NeoPixel can be daisychained together, starting from the Pixel that's directly connected to &lt;span style=&quot; font-style:italic;&quot;&gt;NeoPixel Pin.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>NeoPixel Strand Length</string>
+                    </property>
+                    <property name="buttonSymbols">
+                     <enum>QAbstractSpinBox::PlusMinus</enum>
+                    </property>
+                    <property name="correctionMode">
+                     <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                    </property>
+                    <property name="suffix">
+                     <string> Pixel(s)</string>
+                    </property>
+                    <property name="prefix">
+                     <string/>
+                    </property>
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>100</number>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <number>1</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QSpinBox" name="customLEDstaticSpinbox">
+                    <property name="toolTip">
+                     <string/>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines how many LEDs in the NeoPixel chain are statically colored. &lt;/p&gt;&lt;p&gt;These first (x) Pixels &lt;span style=&quot; font-weight:700;&quot;&gt;won't be affected&lt;/span&gt; by menu elements or Serial LED events. Which colors for which Pixels can be set using the &lt;span style=&quot; font-style:italic;&quot;&gt;Static Color&lt;/span&gt; boxes.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 0&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>Amount of NeoPixels using Static Colors</string>
+                    </property>
+                    <property name="suffix">
+                     <string> Pixel(s)</string>
+                    </property>
+                    <property name="prefix">
+                     <string>First </string>
+                    </property>
+                    <property name="maximum">
+                     <number>3</number>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <number>1</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0" colspan="6">
+                   <widget class="QLabel" name="pixelChangeNotice">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Changes to NeoPixel settings may require a power cycle to update properly!</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" rowspan="2">
+                   <spacer name="horizontalSpacer_3">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="label_2">
+                    <property name="text">
+                     <string>Static NeoPixels: </string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="5" rowspan="2">
+                   <spacer name="horizontalSpacer_4">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="1" column="4">
+                   <widget class="QCheckBox" name="invertStaticPixelsBox">
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enabling this setting will have statically illuminated pixels set to the &lt;span style=&quot; font-style:italic;&quot;&gt;last&lt;/span&gt; X Pixel(s), rather than the default &lt;span style=&quot; font-style:italic;&quot;&gt;first&lt;/span&gt; X Pixel(s).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>Set Static Pixels to First/Last Pixels Toggle</string>
+                    </property>
+                    <property name="text">
+                     <string>Invert Static Colors</string>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <number>1</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="inputBox">
+              <property name="title">
+               <string>Input</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_7">
+               <item row="0" column="0" alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="lowButtonsToggle">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines how &lt;span style=&quot; font-style:italic;&quot;&gt;Button A&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Button B&lt;/span&gt; behaves during normal use.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;When Enabled, &lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Button A&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Button B&lt;/span&gt; will perform different functions when aiming off-screen, instead actuating the functions of &lt;span style=&quot; font-style:italic;&quot;&gt;Start&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Select&lt;/span&gt; respectively.&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;When Disabled,&lt;/span&gt; all buttons will perform the same functions, regardless of aiming off-screen or not.&lt;/p&gt;&lt;p&gt;Enabled is recommended for lightguns &lt;span style=&quot; font-weight:700;&quot;&gt;with two or less sub buttons.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Low Buttons Mode Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>Low Buttons Mode</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="uiuxBox">
+              <property name="title">
+               <string>UI and UX</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_6">
+               <item row="1" column="3">
+                <widget class="QSpinBox" name="holdToPauseLengthBox">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When &lt;span style=&quot; font-style:italic;&quot;&gt;Hold To Pause&lt;/span&gt; mode is enabled, this setting determines how long (in milliseconds) should the buttons be held before Pause Mode activates.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 2500 (ms)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Length to activate Hold-to-Pause Menu</string>
+                 </property>
+                 <property name="buttonSymbols">
+                  <enum>QAbstractSpinBox::PlusMinus</enum>
+                 </property>
+                 <property name="correctionMode">
+                  <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+                 </property>
+                 <property name="suffix">
+                  <string> ms</string>
+                 </property>
+                 <property name="maximum">
+                  <number>9999</number>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="4">
+                <spacer name="horizontalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="1" column="2">
+                <widget class="QLabel" name="label_5">
+                 <property name="text">
+                  <string>Hold-to-Pause Length:</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::PlainText</enum>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="holdToPauseToggle">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines how to trigger Pause Mode.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;When Enabled,&lt;/span&gt; Pause Mode can be activated by holding &lt;span style=&quot; font-style:italic;&quot;&gt;Trigger&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;Button A &lt;/span&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;while no IR points are visible.&lt;/span&gt;&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;When Disabled,&lt;/span&gt; Pause Mode can be activated by pressing the Pause Mode hotkey (Button C + Select).&lt;/p&gt;&lt;p&gt;Enabled is recommended for guns &lt;span style=&quot; font-weight:700;&quot;&gt;with less than two sub buttons.&lt;/span&gt; Note that regardless of setting, Pause Mode can always be accessed by pressing the Home Button (if set).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Pause Mode Hold-to-Activate Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>Hold to Pause Enabled</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <spacer name="horizontalSpacer_5">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="0" column="1" colspan="3" alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="simplePauseToggle">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines how Pause Mode functions.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;When Enabled,&lt;/span&gt; Pause Mode will use a scrolling menu layout - navigate by using &lt;span style=&quot; font-style:italic;&quot;&gt;Button A/B&lt;/span&gt; to select, and press Trigger to activate.&lt;br/&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;When Disabled,&lt;/span&gt; Pause Menu options are activated with hotkeys.&lt;/p&gt;&lt;p&gt;Enabled is recommended for guns &lt;span style=&quot; font-weight:700;&quot;&gt;with less than two sub buttons,&lt;/span&gt; but &lt;span style=&quot; font-weight:700;&quot;&gt;requires an LED or OLED Display for visual feedback!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Simple Pause Menu Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>Simple Pause Menu</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="i2cGroup">
+              <property name="title">
+               <string>I2C Peripherals</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_17">
+               <item alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="i2cOLEDtoggle">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If &lt;span style=&quot; font-style:italic;&quot;&gt;Peripheral I2C (SDA)&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;Peripheral I2C (SCL)&lt;/span&gt; pins are set, enable use of an SSD1306 OLED display.&lt;/p&gt;&lt;p&gt;The OLED display can be used to navigate on-gun settings, visualize special modes, and display Ammo &amp;amp; Life counts in compatible software.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;NOTE:&lt;/span&gt; Because this device does not communicate back to the board, the firmware has no way of knowing whether the device successfully initialized or not. If the display is connected properly, but does &lt;span style=&quot; font-weight:700;&quot;&gt;not&lt;/span&gt; seem to power on on startup/after syncing settings, then try the &lt;span style=&quot; font-style:italic;&quot;&gt;Use Alternative Device Address&lt;/span&gt; setting before attempting to rewire the device.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>I2C OLED Display Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>Enable OLED Display (SSD1306 128x64)</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <UInt>1</UInt>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="oledGroup">
+                 <property name="title">
+                  <string>SSD1306 OLED Display</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_11">
+                  <item row="0" column="0" alignment="Qt::AlignHCenter">
+                   <widget class="QCheckBox" name="oledAltAddrsToggle">
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the display doesn't seem to power on when &lt;span style=&quot; font-style:italic;&quot;&gt;Enable OLED Display&lt;/span&gt; is set on startup/after syncing settings to the device (and you have confirmed that it is wired correctly), enabling this will try a different start address.&lt;/p&gt;&lt;p&gt;The firmware's display component normally defaults to I2C address &lt;span style=&quot; font-weight:700;&quot;&gt;0x3C&lt;/span&gt;, but some 128x64 screens may have device address &lt;span style=&quot; font-weight:700;&quot;&gt;0x3D&lt;/span&gt; instead, which this setting will inform the firmware to try instead.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>I2C OLED Device Alternate Address Toggle</string>
+                    </property>
+                    <property name="text">
+                     <string>Use Alternative Device Address</string>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <UInt>1</UInt>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="tinyUSBGroupbox">
+              <property name="title">
+               <string>TinyUSB Identifier</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_12">
+               <item>
+                <widget class="QLabel" name="label_6">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <italic>true</italic>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>For Multiplayer, make sure each gun has its own unique identifier!</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="tUSBLayoutAdvanced">
+                 <property name="font">
+                  <font>
+                   <kerning>false</kerning>
+                  </font>
+                 </property>
+                 <property name="title">
+                  <string/>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_14">
+                  <item>
+                   <widget class="QLabel" name="label_15">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start/Select key mappings will default to &lt;span style=&quot; font-style:italic;&quot;&gt;P1&lt;/span&gt; binds (&lt;span style=&quot; font-weight:700;&quot;&gt;Key_1&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-weight:700;&quot;&gt;Key_5&lt;/span&gt;) for custom identifiers set here:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QGridLayout" name="gridLayout_2" columnstretch="1,0,0,1">
+                    <item row="0" column="1">
+                     <widget class="QLabel" name="label_11">
+                      <property name="text">
+                       <string>Product ID:</string>
+                      </property>
+                      <property name="textFormat">
+                       <enum>Qt::PlainText</enum>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="0">
+                     <spacer name="horizontalSpacer_9">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item row="0" column="2">
+                     <widget class="QSpinBox" name="productIdInput">
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines the custom Product ID that the microcontroller reports when connected to any given device, in base 16 hexadecimal (0-F)&lt;/p&gt;&lt;p&gt;Custom Product IDs &lt;span style=&quot; font-weight:700;&quot;&gt;are required&lt;/span&gt; to distinguish different lightguns in applications that can individually address multiple mouse devices.&lt;/p&gt;&lt;p&gt;Note: The USB Vendor ID is hard-coded into the firmware, &lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;0xF143.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Custom USB Product ID</string>
+                      </property>
+                      <property name="buttonSymbols">
+                       <enum>QAbstractSpinBox::NoButtons</enum>
+                      </property>
+                      <property name="prefix">
+                       <string>0x</string>
+                      </property>
+                      <property name="maximum">
+                       <number>65535</number>
+                      </property>
+                      <property name="displayIntegerBase">
+                       <number>16</number>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QLabel" name="label_12">
+                      <property name="text">
+                       <string>Product Name:</string>
+                      </property>
+                      <property name="textFormat">
+                       <enum>Qt::PlainText</enum>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="3">
+                     <spacer name="horizontalSpacer_8">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item row="1" column="2">
+                     <widget class="QLineEdit" name="productNameInput">
+                      <property name="toolTip">
+                       <string/>
+                      </property>
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This dictates the custom Product Name that the microcontroller reports when connected to any given device.&lt;/p&gt;&lt;p&gt;Custom Product Names are helpful (and in some cases, &lt;span style=&quot; font-weight:700;&quot;&gt;required&lt;/span&gt;) to distinguish different lightguns in applications that can individually address multiple mouse devices.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Custom USB Product Name</string>
+                      </property>
+                      <property name="inputMask">
+                       <string notr="true"/>
+                      </property>
+                      <property name="text">
+                       <string notr="true"/>
+                      </property>
+                      <property name="maxLength">
+                       <number>15</number>
+                      </property>
+                      <property name="placeholderText">
+                       <string>(15 Characters)</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="tUSBLayoutSimple">
+                 <property name="font">
+                  <font>
+                   <kerning>false</kerning>
+                  </font>
+                 </property>
+                 <property name="title">
+                  <string/>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="flat">
+                  <bool>true</bool>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_13">
+                  <item>
+                   <widget class="QLabel" name="label_13">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="text">
+                     <string>Start/Select key mappings will change according to the player identifier set here:</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_8">
+                    <item alignment="Qt::AlignHCenter">
+                     <widget class="QRadioButton" name="tUSB_p1">
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines the Product ID and Name that the microcontroller reports when connected to any given device, in decimal (with its hexadecimal equivalent).&lt;/p&gt;&lt;p&gt;Different Identifiers &lt;span style=&quot; font-weight:700;&quot;&gt;are required&lt;/span&gt; to distinguish different lightguns in applications that can individually address multiple mouse devices.&lt;/p&gt;&lt;p&gt;When using any &lt;span style=&quot; font-style:italic;&quot;&gt;Simple USB ID Preset,&lt;/span&gt; the &lt;span style=&quot; font-style:italic;&quot;&gt;Start&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Select&lt;/span&gt; keyboard mappings (used by default) will be changed to reflect the player slot preset used (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;P1&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;1 &amp;amp; 5,&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;P2&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;2 &amp;amp; 6,&lt;/span&gt; etc.).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Simple USB Identifier Presets</string>
+                      </property>
+                      <property name="text">
+                       <string>P1</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item alignment="Qt::AlignHCenter">
+                     <widget class="QRadioButton" name="tUSB_p2">
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines the Product ID and Name that the microcontroller reports when connected to any given device, in decimal (with its hexadecimal equivalent).&lt;/p&gt;&lt;p&gt;Different Identifiers &lt;span style=&quot; font-weight:700;&quot;&gt;are required&lt;/span&gt; to distinguish different lightguns in applications that can individually address multiple mouse devices.&lt;/p&gt;&lt;p&gt;When using any &lt;span style=&quot; font-style:italic;&quot;&gt;Simple USB ID Preset,&lt;/span&gt; the &lt;span style=&quot; font-style:italic;&quot;&gt;Start&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Select&lt;/span&gt; keyboard mappings (used by default) will be changed to reflect the player slot preset used (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;P1&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;1 &amp;amp; 5,&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;P2&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;2 &amp;amp; 6,&lt;/span&gt; etc.).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Simple USB Identifier Presets</string>
+                      </property>
+                      <property name="text">
+                       <string>P2</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item alignment="Qt::AlignHCenter">
+                     <widget class="QRadioButton" name="tUSB_p3">
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines the Product ID and Name that the microcontroller reports when connected to any given device, in decimal (with its hexadecimal equivalent).&lt;/p&gt;&lt;p&gt;Different Identifiers &lt;span style=&quot; font-weight:700;&quot;&gt;are required&lt;/span&gt; to distinguish different lightguns in applications that can individually address multiple mouse devices.&lt;/p&gt;&lt;p&gt;When using any &lt;span style=&quot; font-style:italic;&quot;&gt;Simple USB ID Preset,&lt;/span&gt; the &lt;span style=&quot; font-style:italic;&quot;&gt;Start&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Select&lt;/span&gt; keyboard mappings (used by default) will be changed to reflect the player slot preset used (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;P1&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;1 &amp;amp; 5,&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;P2&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;2 &amp;amp; 6,&lt;/span&gt; etc.).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Simple USB Identifier Presets</string>
+                      </property>
+                      <property name="text">
+                       <string>P3</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item alignment="Qt::AlignHCenter">
+                     <widget class="QRadioButton" name="tUSB_p4">
+                      <property name="whatsThis">
+                       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines the Product ID and Name that the microcontroller reports when connected to any given device, in decimal (with its hexadecimal equivalent).&lt;/p&gt;&lt;p&gt;Different Identifiers &lt;span style=&quot; font-weight:700;&quot;&gt;are required&lt;/span&gt; to distinguish different lightguns in applications that can individually address multiple mouse devices.&lt;/p&gt;&lt;p&gt;When using any &lt;span style=&quot; font-style:italic;&quot;&gt;Simple USB ID Preset,&lt;/span&gt; the &lt;span style=&quot; font-style:italic;&quot;&gt;Start&lt;/span&gt; &amp;amp; &lt;span style=&quot; font-style:italic;&quot;&gt;Select&lt;/span&gt; keyboard mappings (used by default) will be changed to reflect the player slot preset used (e.g. &lt;span style=&quot; font-style:italic;&quot;&gt;P1&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;1 &amp;amp; 5,&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;P2&lt;/span&gt; will emit &lt;span style=&quot; font-style:italic;&quot;&gt;2 &amp;amp; 6,&lt;/span&gt; etc.).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                      <property name="accessibleName">
+                       <string>Simple USB Identifier Presets</string>
+                      </property>
+                      <property name="text">
+                       <string>P4</string>
+                      </property>
+                      <property name="trackable" stdset="0">
+                       <number>1</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item alignment="Qt::AlignRight">
+                <widget class="QCheckBox" name="tinyUSBLayoutToggle">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This determines whether to show/use &lt;span style=&quot; font-style:italic;&quot;&gt;Simple USB ID Presets&lt;/span&gt; or &lt;span style=&quot; font-style:italic;&quot;&gt;Custom USB ID Settings.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This can be useful for users with either more than four OpenFIRE lightguns, or simply want to personalize each lightgun, but the &lt;span style=&quot; font-style:italic;&quot;&gt;Simple Presets&lt;/span&gt; may be preferable to some.&lt;/p&gt;&lt;p&gt;All lightguns default to a &lt;span style=&quot; font-style:italic;&quot;&gt;P1 Simple USB ID Preset.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Toggle Advanced USB ID Settings</string>
+                 </property>
+                 <property name="text">
+                  <string>Advanced View</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="settingsDescBox">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QGroupBox::title { color: yellow }</string>
+          </property>
+          <property name="title">
+           <string/>
+          </property>
+          <layout class="QVBoxLayout" name="settingsDescLayout">
+           <item>
+            <widget class="QLabel" name="settingsDescText">
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tab has a variety of settings to tweak about the lightgun's force feedback, lighting effects, and how it presents itself to the device.&lt;/p&gt;&lt;p&gt;Hover over an option to view detailed info about it here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: lightgray</string>
+             </property>
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tab has a variety of settings to tweak about the lightgun's force feedback, lighting effects, and how it presents itself to the device.&lt;/p&gt;&lt;p&gt;Hover over an option to view detailed info about it here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="openExternalLinks">
+              <bool>true</bool>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="profilesTab">
+       <attribute name="icon">
+        <iconset theme="computer"/>
+       </attribute>
+       <attribute name="title">
+        <string>Calibration Profiles</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4" stretch="8,3">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="profilesScrollArea">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignHCenter|Qt::AlignTop</set>
+          </property>
+          <widget class="QWidget" name="profilesScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>958</width>
+             <height>445</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,1">
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="profilesBox">
+              <property name="title">
+               <string>Calibration Profiles</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <layout class="QGridLayout" name="profilesArea" columnstretch="0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
+                 <item row="0" column="5">
+                  <widget class="QLabel" name="bottomOffHeader">
+                   <property name="text">
+                    <string>Bottom</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="renamePadding">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="6">
+                  <widget class="Line" name="line_5">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="13">
+                  <widget class="QLabel" name="TRledHeader">
+                   <property name="text">
+                    <string>TRled</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="15">
+                  <widget class="QLabel" name="irSensHeader">
+                   <property name="text">
+                    <string>Sensitivity</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="11">
+                  <widget class="QLabel" name="TLledHeader">
+                   <property name="text">
+                    <string>TLled</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="17">
+                  <widget class="QLabel" name="runModeHeader">
+                   <property name="text">
+                    <string>Run Mode</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="19">
+                  <widget class="QLabel" name="layoutHeader">
+                   <property name="text">
+                    <string>Layout</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="22">
+                  <widget class="Line" name="line_12">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="16">
+                  <widget class="Line" name="line_8">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="7">
+                  <widget class="QLabel" name="leftOffHeader">
+                   <property name="text">
+                    <string>Left</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="12">
+                  <widget class="Line" name="line_10">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="14">
+                  <widget class="Line" name="line_11">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="9">
+                  <widget class="QLabel" name="rightOffHeader">
+                   <property name="text">
+                    <string>Right</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="20">
+                  <widget class="Line" name="line_9">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="23">
+                  <widget class="QLabel" name="colorHeader">
+                   <property name="text">
+                    <string>Color</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="4">
+                  <widget class="Line" name="line_4">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QLabel" name="headerPadding">
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="10">
+                  <widget class="Line" name="line_7">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <spacer name="horizontalSpacer_15">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QLabel" name="topOffHeader">
+                   <property name="frameShape">
+                    <enum>QFrame::NoFrame</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Plain</enum>
+                   </property>
+                   <property name="lineWidth">
+                    <number>1</number>
+                   </property>
+                   <property name="text">
+                    <string>Top</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="8">
+                  <widget class="Line" name="line_6">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="18">
+                  <widget class="Line" name="line_3">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="21">
+                  <widget class="QLabel" name="aspectRatioHeader">
+                   <property name="text">
+                    <string>Display Ratio</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QGridLayout" name="caliBtnsLayout"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="profilesDescBox">
+          <property name="font">
+           <font>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QGroupBox::title { color: yellow }</string>
+          </property>
+          <property name="title">
+           <string/>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_15">
+           <item>
+            <widget class="QLabel" name="profilesDescText">
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tab shows information and settings to tweak about your current calibration profiles.&lt;/p&gt;&lt;p&gt;The table above represents the amount of profiles the current board can store, including currently selected profile, names shown for each profile when using a compatible &lt;span style=&quot; font-style:italic;&quot;&gt;I2C Display,&lt;/span&gt; and colors used for lighting devices when switching to them from &lt;span style=&quot; font-style:italic;&quot;&gt;Pause Mode.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Hover over an option to view detailed info about it here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">color: lightgray</string>
+             </property>
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tab shows information and settings to tweak about your current calibration profiles.&lt;/p&gt;&lt;p&gt;The table above represents the amount of profiles the current board can store, including currently selected profile, names shown for each profile when using a compatible &lt;span style=&quot; font-style:italic;&quot;&gt;I2C Display,&lt;/span&gt; and colors used for lighting devices when switching to them from &lt;span style=&quot; font-style:italic;&quot;&gt;Pause Mode.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Hover over an option to view detailed info about it here.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="openExternalLinks">
+              <bool>true</bool>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="testsTab">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <attribute name="icon">
+        <iconset theme="input-tablet"/>
+       </attribute>
+       <attribute name="title">
+        <string>Gun Tests</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="testScrollArea">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignHCenter|Qt::AlignTop</set>
+          </property>
+          <widget class="QWidget" name="testScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>958</width>
+             <height>612</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_10" stretch="0,0,0,1,0,0">
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="buttonsTestArea">
+              <property name="title">
+               <string>Inputs Test</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <widget class="QGroupBox" name="btnsGroup">
+                 <property name="title">
+                  <string>Buttons</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_11" stretch="3,1">
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <layout class="QGridLayout" name="btnsLayout"/>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="tmp36Label">
+                    <property name="frameShape">
+                     <enum>QFrame::Box</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Raised</enum>
+                    </property>
+                    <property name="text">
+                     <string>Temperature Sensor (N/A)</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QGroupBox" name="analogGroup">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="title">
+                  <string>Analog Stick</string>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,1">
+                  <property name="spacing">
+                   <number>4</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="aPosLabel">
+                    <property name="font">
+                     <font>
+                      <italic>true</italic>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string/>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGraphicsView" name="analogGfxView">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>256</width>
+                      <height>256</height>
+                     </size>
+                    </property>
+                    <property name="verticalScrollBarPolicy">
+                     <enum>Qt::ScrollBarAlwaysOff</enum>
+                    </property>
+                    <property name="horizontalScrollBarPolicy">
+                     <enum>Qt::ScrollBarAlwaysOff</enum>
+                    </property>
+                    <property name="interactive">
+                     <bool>false</bool>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="feedbackTestsBox">
+              <property name="title">
+               <string>Feedback Tests</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout">
+                 <item>
+                  <widget class="QPushButton" name="rumbleTestBtn">
+                   <property name="text">
+                    <string>Test Rumble Motor</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="solenoidTestBtn">
+                   <property name="text">
+                    <string>Test Solenoid</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <item>
+                  <widget class="QPushButton" name="redLedTestBtn">
+                   <property name="text">
+                    <string>Test Red LED</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="greenLedTestBtn">
+                   <property name="text">
+                    <string>Test Green LED</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="blueLedTestBtn">
+                   <property name="text">
+                    <string>Test Blue LED</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="testBtn">
+              <property name="text">
+               <string>Open IR Camera Tester...</string>
+              </property>
+              <property name="icon">
+               <iconset theme="camera-web"/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="Line" name="line_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="dangerZoneBox">
+              <property name="title">
+               <string>Board Actions</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="1,0">
+               <item>
+                <widget class="QPushButton" name="baudResetBtn">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="text">
+                  <string>Reboot to Bootloader</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="system-reboot"/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="clearEepromBtn">
+                 <property name="styleSheet">
+                  <string notr="true">color: red;</string>
+                 </property>
+                 <property name="text">
+                  <string>Clear Save Memory [!]</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="edit-delete"/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="confirmButton">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="text">
+       <string>[Currently Not Connected]</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>980</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionAbout_UI"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionCompatible_Boards"/>
+    <addaction name="actionOpen_IR_Emitter_Alignment_Assistant"/>
+    <addaction name="separator"/>
+    <addaction name="actionOpenFIRE_on_the_Web"/>
+    <addaction name="actionOpenFIRE_Documentation"/>
+    <addaction name="actionOpenFIRE_Serial_Usage"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionShow_Unsafe_Settings"/>
+    <addaction name="actionDebug_Window"/>
+   </widget>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+   <addaction name="menuAbout"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="sizeGripEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <action name="actionAbout_UI">
+   <property name="text">
+    <string>&amp;About OpenFIRE...</string>
+   </property>
+  </action>
+  <action name="actionOpenFIRE_Documentation">
+   <property name="icon">
+    <iconset theme="applications-internet"/>
+   </property>
+   <property name="text">
+    <string>&amp;OpenFIRE Documentation on the Repo...</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+D</string>
+   </property>
+  </action>
+  <action name="actionOpenFIRE_Serial_Usage">
+   <property name="icon">
+    <iconset theme="applications-internet"/>
+   </property>
+   <property name="text">
+    <string>OpenFIRE &amp;Serial Usage Docs on the Wiki...</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+S</string>
+   </property>
+  </action>
+  <action name="actionOpen_IR_Emitter_Alignment_Assistant">
+   <property name="icon">
+    <iconset theme="view-fullscreen"/>
+   </property>
+   <property name="text">
+    <string>Open &amp;IR Emitter Alignment Assistant</string>
+   </property>
+  </action>
+  <action name="actionImport_Custom_Layout">
+   <property name="icon">
+    <iconset theme="document-open"/>
+   </property>
+   <property name="text">
+    <string>Import Custom Layout...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+  </action>
+  <action name="actionExport_Custom_Layout">
+   <property name="icon">
+    <iconset theme="document-save-as"/>
+   </property>
+   <property name="text">
+    <string>Export Custom Layout...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
+  </action>
+  <action name="actionDebug_Window">
+   <property name="icon">
+    <iconset theme="application-x-executable"/>
+   </property>
+   <property name="text">
+    <string>Debug Window</string>
+   </property>
+  </action>
+  <action name="actionOpenFIRE_on_the_Web">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>OpenFIRE on the Web</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionCompatible_Boards">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
+   <property name="text">
+    <string>View Compatible Boards</string>
+   </property>
+  </action>
+  <action name="actionShow_Unsafe_Settings">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Unsafe Settings</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../img/vectors.qrc"/>
+ </resources>
+ <connections/>
+</ui>

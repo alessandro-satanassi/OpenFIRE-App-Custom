@@ -1,0 +1,1 @@
+C:\Qt\6.9.0\mingw_64\bin\lupdate src\ -ts translation\AppTranslations_it_IT.ts

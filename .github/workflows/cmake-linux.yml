@@ -1,0 +1,112 @@
+name: CMake - Linux AppImages
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+        qt_version: [5.15.2, 6.7.3, 6.8.3]
+        build_type: [Debug, Release]
+        include:
+          - os: ubuntu-22.04
+            qt_host: linux
+            qt_arch: gcc_64
+            qt_version: 5.15.2
+            sys_arch: x86_64
+            pretty: "Linux x86 AppImage"
+          - os: ubuntu-22.04
+            qt_host: linux
+            qt_arch: linux_gcc_64
+            qt_version: 6.8.3
+            sys_arch: x86_64
+            pretty: "Linux x86 AppImage"
+          - os: ubuntu-22.04-arm
+            qt_host: linux_arm64
+            qt_arch: linux_gcc_arm64
+            qt_version: 6.7.3
+            sys_arch: aarch64
+            pretty: "Linux ARM AppImage"
+        exclude:
+          - os: ubuntu-22.04
+            qt_version: 6.7.3
+          - os: ubuntu-22.04-arm
+            qt_version: 5.15.2
+          - os: ubuntu-22.04-arm
+            qt_version: 6.8.3
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Get short SHA
+      id: get-short-sha
+      run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    # TODO: using install-qt-action fork until https://github.com/jurplel/install-qt-action/issues/248 is resolved & merged
+    - name: Install Qt(5)
+      if: ${{ matrix.qt_version == '5.15.2' }}
+      uses: jdpurcell/install-qt-action@v5
+      with:
+        version: '${{ matrix.qt_version }}'
+        archives: 'qtbase qtwayland qttranslations qttools qtsvg qtserialport icu'
+        cache: true
+    - name: Install Qt(6)
+      if: ${{ matrix.qt_version != '5.15.2' }}
+      uses: jdpurcell/install-qt-action@v5
+      with:
+        version: '${{ matrix.qt_version }}'
+        host: '${{ matrix.qt_host }}'
+        arch: '${{ matrix.qt_arch }}'
+        modules: 'qtserialport qtwaylandcompositor'
+        archives: 'qtbase qtwayland qttranslations qttools qtsvg icu'
+        cache: true
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: >
+        cmake -B "${{ github.workspace }}/build"
+        -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}"
+        -DOFAPP_GITHASH="${{steps.get-short-sha.outputs.id}}"
+        -DCMAKE_INSTALL_PREFIX=/usr
+        -S "${{ github.workspace }}"
+
+    - name: Build
+      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }} --parallel
+
+    - name: Install linuxdeploy
+      uses: pcolby/install-linuxdeploy@v1
+      with:
+        plugins: qt appimage
+
+    - name: Setup AppImage
+      env:
+        EXTRA_PLATFORM_PLUGINS: libqwayland-generic.so
+        EXTRA_QT_MODULES: waylandcompositor
+      run: |
+        make install DESTDIR=AppDir
+        install -Dm755 "${{ github.workspace }}/img/ico/openfire.svg" "AppDir/usr/share/icons/hicolor/scalable/apps/org.TeamOpenFIRE.OpenFIREapp.svg"
+        "${{ runner.temp }}/linuxdeploy/linuxdeploy-${{ matrix.sys_arch }}.AppImage" --plugin=qt --output appimage --appdir AppDir --desktop-file "${{ github.workspace }}/org.TeamOpenFIRE.OpenFIREapp.desktop"
+        mv "OpenFIRE_App-${{matrix.sys_arch}}.AppImage" "${{ github.workspace }}"
+      working-directory: ${{ github.workspace }}/build
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        # Artifact name
+        name: OpenFIREapp-${{ matrix.pretty }}-Qt${{ matrix.qt_version }}-${{ matrix.build_type }}
+        path: "OpenFIRE_App-${{matrix.sys_arch}}.AppImage"
+
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v4
