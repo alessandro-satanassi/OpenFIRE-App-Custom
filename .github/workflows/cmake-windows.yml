@@ -41,7 +41,7 @@ jobs:
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.8.3'
+        version: '6.11.1'
         arch: '${{ matrix.win_arch }}'
         modules: 'qtserialport'
         tools: '${{ matrix.qt_tools }}'
