@@ -14,18 +14,18 @@ jobs:
 
       matrix:
         build_type: [Debug, Release]
-        win_arch: [win64_msvc2022_64, win64_mingw]
+        win_arch: [win64_msvc2026_64, win64_mingw]
         include:
           - win_arch: win64_mingw
             qt_tools: tools_mingw1310
             cmake_gen: "MinGW Makefiles"
             pretty: "Windows Artifact (MinGW)"
-          - win_arch: win64_msvc2022_64
+          - win_arch: win64_msvc2026_64
             cmake_gen: "Visual Studio 18 2026"
             pretty: "Windows Artifact (MSVC)"
         # MSVC insists on being weird with its Debug path, and can't be assed to fix it
         exclude:
-          - win_arch: win64_msvc2022_64
+          - win_arch: win64_msvc2026_64
             build_type: Debug
 
     steps:
