@@ -46,7 +46,7 @@ jobs:
         modules: 'qtserialport'
         tools: '${{ matrix.qt_tools }}'
         archives: 'qtbase qttranslations qttools qtsvg icu'
-        cache: false
+        cache: true
         #setup-python: false
 
     - name: Configure CMake
