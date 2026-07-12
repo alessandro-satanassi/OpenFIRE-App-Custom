@@ -52,7 +52,6 @@ jobs:
       id: get-short-sha
       run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    # TODO: using install-qt-action fork until https://github.com/jurplel/install-qt-action/issues/248 is resolved & merged
     - name: Install Qt(5)
       if: ${{ matrix.qt_version == '5.15.2' }}
       uses: jurplel/install-qt-action@v4

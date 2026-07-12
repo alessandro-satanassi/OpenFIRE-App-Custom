@@ -37,7 +37,6 @@ jobs:
       id: get-short-sha
       run: echo "id=$(git rev-parse --short HEAD)" >> $env:GITHUB_OUTPUT
 
-    # TODO: using install-qt-action fork until https://github.com/jurplel/install-qt-action/issues/248 is resolved & merged
     - name: Install Qt6
       uses: jurplel/install-qt-action@v4
       with:
@@ -47,7 +46,6 @@ jobs:
         tools: '${{ matrix.qt_tools }}'
         archives: 'qtbase qttranslations qttools qtsvg icu'
         cache: true
-        #setup-python: false
 
     - name: Configure CMake
       run: >
