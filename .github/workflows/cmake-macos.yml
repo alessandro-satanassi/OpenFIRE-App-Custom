@@ -1,0 +1,76 @@
+name: CMake - macOS Packages
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [macos-latest, macos-13]
+        build_type: [Release]
+        include:
+          - os: macos-latest
+            sys_arch: arm64
+            pretty: "macOS Apple Silicon"
+          - os: macos-13
+            sys_arch: x86_64
+            pretty: "macOS Intel"
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: 'true'
+
+    - name: Get short SHA
+      id: get-short-sha
+      run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Install Qt6
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.8.3'
+        host: 'mac'
+        arch: 'clang_64'
+        modules: 'qtserialport'
+        archives: 'qtbase qttranslations qttools qtsvg'
+        cache: true
+
+    - name: Configure CMake
+      run: >
+        cmake -B "${{ github.workspace }}/build"
+        -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}"
+        -DOFAPP_GITHASH="${{ steps.get-short-sha.outputs.id }}"
+        -DCMAKE_OSX_ARCHITECTURES=${{ matrix.sys_arch }}
+        -S "${{ github.workspace }}"
+
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }} --parallel
+
+    - name: Deploy macOS App Bundle
+      run: |
+        cmake --install "${{ github.workspace }}/build" --prefix "${{ github.workspace }}/build/out"
+        APP_BUNDLE="${{ github.workspace }}/build/out/OpenFIREapp.app"
+        if [ ! -d "$APP_BUNDLE" ]; then
+          echo "App bundle not found, searching..."
+          find "${{ github.workspace }}/build" -name "OpenFIREapp.app" -type d
+          exit 1
+        fi
+        macdeployqt "$APP_BUNDLE"
+        # Package the .app into a zip for easier artifact handling
+        cd "${{ github.workspace }}/build/out"
+        zip -r "OpenFIREapp-${{ matrix.sys_arch }}.zip" "OpenFIREapp.app"
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: OpenFIREapp-${{ matrix.pretty }}-Qt6-${{ matrix.build_type }}
+        path: build/out/OpenFIREapp-${{ matrix.sys_arch }}.zip
+
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v8
