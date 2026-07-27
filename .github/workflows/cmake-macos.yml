@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -83,7 +83,7 @@ jobs:
           mv "$DMG" build/out/OpenFIREapp-macOS-Universal.dmg
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: OpenFIREapp-macOS-Universal
           path: build/out/OpenFIREapp-macOS-Universal.dmg
