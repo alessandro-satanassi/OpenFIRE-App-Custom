@@ -26,14 +26,18 @@ jobs:
         archives: 'qtbase qttranslations qttools qtsvg'
         cache: true
 
-    - name: Fix Apple AGL Deprecation (SDK Cleanup & Dummy Framework)
+    - name: Fix Apple AGL Deprecation inside Xcode SDK Sysroot
       run: |
-        # 1. Rimuove i riferimenti legacy ad AGL da tutti i file di configurazione Qt (.cmake, .prl, .pri)
-        find "$QT_ROOT_DIR" -type f \( -name "*.cmake" -o -name "*.prl" -o -name "*.pri" \) -exec sed -i '' 's/-framework AGL//g; s/AGL\.framework//g; s/ -lAGL//g' {} + || true
+        # 1. Trova il percorso esatto dell'SDK macOS isolato (Sysroot) utilizzato da Xcode
+        SDK_PATH=$(xcrun --show-sdk-path)
+        echo "Active Xcode SDK Path: $SDK_PATH"
         
-        # 2. Crea il symlink di fallback in /Library/Frameworks reindirizzando AGL a OpenGL
-        sudo mkdir -p /Library/Frameworks
-        sudo ln -sf /System/Library/Frameworks/OpenGL.framework /Library/Frameworks/AGL.framework
+        # 2. Crea il symlink di AGL verso OpenGL DIRETTAMENTE dentro l'SDK di Xcode
+        # Questo elude il sandboxing del linker Apple (ld) su Xcode 15/16
+        sudo ln -sf "$SDK_PATH/System/Library/Frameworks/OpenGL.framework" "$SDK_PATH/System/Library/Frameworks/AGL.framework"
+        
+        # 3. Pulizia di sicurezza sui moduli FindOpenGL di sistema di CMake
+        sudo find / -name "FindOpenGL.cmake" -exec sed -i '' 's/-framework AGL//g; s/AGL\.framework//g' {} + 2>/dev/null || true
 
     - name: Configure CMake (Universal Binary)
       run: >
@@ -41,8 +45,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         -DOFAPP_GITHASH="${{ steps.get-short-sha.outputs.id }}"
         -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-        -DCMAKE_EXE_LINKER_FLAGS="-F/Library/Frameworks"
-        -DCMAKE_SHARED_LINKER_FLAGS="-F/Library/Frameworks"
+        -DOPENGL_agl_LIBRARY="$(xcrun --show-sdk-path)/System/Library/Frameworks/OpenGL.framework"
         -S "${{ github.workspace }}"
 
     - name: Build
