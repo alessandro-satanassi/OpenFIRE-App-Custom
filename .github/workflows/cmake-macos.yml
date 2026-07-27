@@ -26,10 +26,12 @@ jobs:
         archives: 'qtbase qttranslations qttools qtsvg'
         cache: true
 
-    - name: Fix Apple AGL Deprecation (Dummy Framework Workaround)
-      # Crea un symlink di sistema da OpenGL ad AGL per ingannare il linker Apple su Xcode 15+
-      # Risolve definitivamente "ld: framework 'AGL' not found" senza toccare il progetto
+    - name: Fix Apple AGL Deprecation (SDK Cleanup & Dummy Framework)
       run: |
+        # 1. Rimuove i riferimenti legacy ad AGL da tutti i file di configurazione Qt (.cmake, .prl, .pri)
+        find "$QT_ROOT_DIR" -type f \( -name "*.cmake" -o -name "*.prl" -o -name "*.pri" \) -exec sed -i '' 's/-framework AGL//g; s/AGL\.framework//g; s/ -lAGL//g' {} + || true
+        
+        # 2. Crea il symlink di fallback in /Library/Frameworks reindirizzando AGL a OpenGL
         sudo mkdir -p /Library/Frameworks
         sudo ln -sf /System/Library/Frameworks/OpenGL.framework /Library/Frameworks/AGL.framework
 
@@ -39,6 +41,8 @@ jobs:
         -DCMAKE_BUILD_TYPE=Release
         -DOFAPP_GITHASH="${{ steps.get-short-sha.outputs.id }}"
         -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+        -DCMAKE_EXE_LINKER_FLAGS="-F/Library/Frameworks"
+        -DCMAKE_SHARED_LINKER_FLAGS="-F/Library/Frameworks"
         -S "${{ github.workspace }}"
 
     - name: Build
