@@ -28,14 +28,6 @@ jobs:
           archives: "qtbase qttools qttranslations qtsvg"
           cache: true
 
-      - name: Show Tool Versions
-        run: |
-          cmake --version
-          clang --version
-          xcodebuild -version
-          qmake -v
-          macdeployqt -h | head -n 2
-
       - name: Configure
         run: |
           cmake \
@@ -49,15 +41,6 @@ jobs:
         run: |
           cmake --build build --parallel
 
-      - name: Verify Universal Binary
-        run: |
-          echo "==== file ===="
-          file build/OpenFIREapp.app/Contents/MacOS/OpenFIREapp
-
-          echo ""
-          echo "==== lipo ===="
-          lipo -info build/OpenFIREapp.app/Contents/MacOS/OpenFIREapp
-
       - name: Install
         run: |
           cmake --install build --prefix build/out
@@ -70,6 +53,11 @@ jobs:
             echo "Application bundle not found!"
             exit 1
           fi
+
+          echo "==== Verifica Universal Binary ===="
+          file "$APP/Contents/MacOS/OpenFIREapp"
+          lipo -info "$APP/Contents/MacOS/OpenFIREapp"
+          echo "==================================="
 
           macdeployqt "$APP" -dmg
 
