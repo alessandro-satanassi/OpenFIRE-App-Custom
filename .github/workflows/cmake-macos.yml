@@ -8,72 +8,73 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v6
-      with:
-        submodules: 'true'
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
 
-    - name: Get short SHA
-      id: get-short-sha
-      run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Get short SHA
+        id: git
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    - name: Install Qt6
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '6.8.3'
-        host: 'mac'
-        arch: 'clang_64'
-        modules: 'qtserialport'
-        archives: 'qtbase qttranslations qttools qtsvg'
-        cache: true
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          host: "mac"
+          target: "desktop"
+          arch: "clang_64"
+          modules: "qtserialport"
+          archives: "qtbase qttools qttranslations qtsvg"
+          cache: true
 
-    - name: Fix Apple AGL Deprecation inside Xcode SDK Sysroot
-      run: |
-        # 1. Trova il percorso esatto dell'SDK macOS isolato (Sysroot) utilizzato da Xcode
-        SDK_PATH=$(xcrun --show-sdk-path)
-        echo "Active Xcode SDK Path: $SDK_PATH"
-        
-        # 2. Crea il symlink di AGL verso OpenGL DIRETTAMENTE dentro l'SDK di Xcode
-        # Questo elude il sandboxing del linker Apple (ld) su Xcode 15/16
-        sudo ln -sf "$SDK_PATH/System/Library/Frameworks/OpenGL.framework" "$SDK_PATH/System/Library/Frameworks/AGL.framework"
-        
-        # 3. Pulizia di sicurezza sui moduli FindOpenGL di sistema di CMake
-        sudo find / -name "FindOpenGL.cmake" -exec sed -i '' 's/-framework AGL//g; s/AGL\.framework//g' {} + 2>/dev/null || true
+      - name: Tool versions
+        run: |
+          cmake --version
+          clang --version
+          xcodebuild -version
+          which qmake
+          qmake -v
+          which macdeployqt
+          macdeployqt -h | head -n 2
 
-    - name: Configure CMake (Universal Binary)
-      run: >
-        cmake -B "${{ github.workspace }}/build"
-        -DCMAKE_BUILD_TYPE=Release
-        -DOFAPP_GITHASH="${{ steps.get-short-sha.outputs.id }}"
-        -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-        -DOPENGL_agl_LIBRARY="$(xcrun --show-sdk-path)/System/Library/Frameworks/OpenGL.framework"
-        -S "${{ github.workspace }}"
+      - name: Configure
+        run: |
+          cmake \
+            -S . \
+            -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
+            -DOFAPP_GITHASH="${{ steps.git.outputs.sha }}" \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 
-    - name: Build
-      run: cmake --build "${{ github.workspace }}/build" --config Release --parallel
+      - name: Build
+        run: |
+          cmake --build build --parallel --verbose
 
-    - name: Deploy and Create Universal DMG
-      run: |
-        cmake --install "${{ github.workspace }}/build" --prefix "${{ github.workspace }}/build/out"
-        APP_BUNDLE="${{ github.workspace }}/build/out/OpenFIREapp.app"
-        if [ ! -d "$APP_BUNDLE" ]; then
-          echo "App bundle non trovato!"
-          exit 1
-        fi
-        # Genera direttamente il file .dmg universale nativo (Intel + Apple Silicon)
-        macdeployqt "$APP_BUNDLE" -dmg
-        
-        # Rinomina il file dmg creato per chiarezza
-        cd "${{ github.workspace }}/build/out"
-        mv OpenFIREapp.dmg OpenFIREapp-macOS-Universal.dmg
+      - name: Install
+        run: |
+          cmake --install build --prefix build/out
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: OpenFIREapp-macOS-Universal-Release
-        path: build/out/OpenFIREapp-macOS-Universal.dmg
+      - name: Show output
+        run: |
+          find build/out -maxdepth 3
 
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v8
-      with:
-        name: OpenFIREapp-macOS-Universal-Release
-        path: ${{ github.workspace }}/downloaded-artifact
+      - name: Create DMG
+        run: |
+          APP="build/out/OpenFIREapp.app"
+
+          if [ ! -d "$APP" ]; then
+            echo "Bundle non trovato"
+            exit 1
+          fi
+
+          macdeployqt "$APP" -dmg
+
+          mv build/out/OpenFIREapp.dmg build/out/OpenFIREapp-macOS-Universal.dmg
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenFIREapp-macOS-Universal
+          path: build/out/OpenFIREapp-macOS-Universal.dmg
