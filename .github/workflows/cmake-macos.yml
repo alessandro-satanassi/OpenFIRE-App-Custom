@@ -62,9 +62,9 @@ jobs:
           exit 1
         fi
         macdeployqt "$APP_BUNDLE"
-        # Package the .app into a zip for easier artifact handling
+        # Il flag -y è fondamentale per mantenere intatti i symlink dei framework macOS
         cd "${{ github.workspace }}/build/out"
-        zip -r "OpenFIREapp-${{ matrix.sys_arch }}.zip" "OpenFIREapp.app"
+        zip -ry "OpenFIREapp-${{ matrix.sys_arch }}.zip" "OpenFIREapp.app"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
@@ -74,3 +74,6 @@ jobs:
 
     - name: Download a Build Artifact
       uses: actions/download-artifact@v8
+      with:
+        name: OpenFIREapp-${{ matrix.pretty }}-Qt6-${{ matrix.build_type }}
+        path: ${{ github.workspace }}/downloaded-artifact
