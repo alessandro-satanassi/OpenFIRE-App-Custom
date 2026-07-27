@@ -1,25 +1,11 @@
-name: CMake - macOS Packages
+name: CMake - macOS Universal Packages
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-
-      matrix:
-        os: [macos-latest, macos-13]
-        build_type: [Release]
-        include:
-          - os: macos-latest
-            sys_arch: arm64
-            pretty: "macOS Apple Silicon"
-          - os: macos-13
-            sys_arch: x86_64
-            pretty: "macOS Intel"
+  build-macos:
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v6
@@ -40,39 +26,46 @@ jobs:
         archives: 'qtbase qttranslations qttools qtsvg'
         cache: true
 
-    - name: Configure CMake
+    - name: Fix Apple AGL Deprecation in Qt SDK
+      # Ripulisce al volo i file di configurazione di Qt sul runner GitHub
+      # eliminando il riferimento legacy ad AGL senza dover toccare il tuo CMakeLists.txt
+      run: |
+        find /Users/runner/work -type f -name "*.cmake" -exec sed -i '' 's/-framework AGL//g; s/AGL\.framework//g' {} +
+
+    - name: Configure CMake (Universal Binary)
       run: >
         cmake -B "${{ github.workspace }}/build"
-        -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}"
+        -DCMAKE_BUILD_TYPE=Release
         -DOFAPP_GITHASH="${{ steps.get-short-sha.outputs.id }}"
-        -DCMAKE_OSX_ARCHITECTURES=${{ matrix.sys_arch }}
+        -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
         -S "${{ github.workspace }}"
 
     - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }} --parallel
+      run: cmake --build "${{ github.workspace }}/build" --config Release --parallel
 
-    - name: Deploy macOS App Bundle
+    - name: Deploy and Create Universal DMG
       run: |
         cmake --install "${{ github.workspace }}/build" --prefix "${{ github.workspace }}/build/out"
         APP_BUNDLE="${{ github.workspace }}/build/out/OpenFIREapp.app"
         if [ ! -d "$APP_BUNDLE" ]; then
-          echo "App bundle not found, searching..."
-          find "${{ github.workspace }}/build" -name "OpenFIREapp.app" -type d
+          echo "App bundle non trovato!"
           exit 1
         fi
-        macdeployqt "$APP_BUNDLE"
-        # Il flag -y è fondamentale per mantenere intatti i symlink dei framework macOS
+        # Genera direttamente il file .dmg universale nativo (Intel + Apple Silicon)
+        macdeployqt "$APP_BUNDLE" -dmg
+        
+        # Rinomina il file dmg creato per chiarezza
         cd "${{ github.workspace }}/build/out"
-        zip -ry "OpenFIREapp-${{ matrix.sys_arch }}.zip" "OpenFIREapp.app"
+        mv OpenFIREapp.dmg OpenFIREapp-macOS-Universal.dmg
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: OpenFIREapp-${{ matrix.pretty }}-Qt6-${{ matrix.build_type }}
-        path: build/out/OpenFIREapp-${{ matrix.sys_arch }}.zip
+        name: OpenFIREapp-macOS-Universal-Release
+        path: build/out/OpenFIREapp-macOS-Universal.dmg
 
     - name: Download a Build Artifact
       uses: actions/download-artifact@v8
       with:
-        name: OpenFIREapp-${{ matrix.pretty }}-Qt6-${{ matrix.build_type }}
+        name: OpenFIREapp-macOS-Universal-Release
         path: ${{ github.workspace }}/downloaded-artifact

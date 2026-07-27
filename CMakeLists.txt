@@ -109,34 +109,6 @@ else()
     target_link_libraries(OpenFIREapp PRIVATE Qt${QT_VERSION_MAJOR}::SvgWidgets)
 endif()
 
-# --- FIX PER MACOS / XCODE RECENTI (Risolve: "ld: framework 'AGL' not found") ---
-# Apple ha rimosso il framework AGL dai nuovi macOS SDK. Le librerie precompilate di Qt
-# o FindOpenGL possono però ereditare questo riferimento, facendo fallire il linker.
-if(APPLE)
-    # Evita che CMake agganci la libreria legacy AGL
-    set(OPENGL_agl_LIBRARY "" CACHE FILEPATH "" FORCE)
-    set(AGL_LIBRARY "" CACHE FILEPATH "" FORCE)
-
-    # Rimuove AGL dalle proprietà di collegamento (INTERFACE_LINK_LIBRARIES) di tutti i target Qt e OpenGL
-    foreach(_target Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::OpenGL Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::SvgWidgets OpenGL::GL OpenGL::GLU)
-        if(TARGET ${_target})
-            get_target_property(_libs ${_target} INTERFACE_LINK_LIBRARIES)
-            if(_libs)
-                list(FILTER _libs EXCLUDE REGEX ".*AGL.*")
-                set_target_properties(${_target} PROPERTIES INTERFACE_LINK_LIBRARIES "${_libs}")
-            endif()
-        endif()
-    endforeach()
-
-    # Rimuove eventuali riferimenti ad AGL direttamente dal target principale dell'applicazione
-    get_target_property(_app_libs OpenFIREapp LINK_LIBRARIES)
-    if(_app_libs)
-        list(FILTER _app_libs EXCLUDE REGEX ".*AGL.*")
-        set_target_properties(OpenFIREapp PROPERTIES LINK_LIBRARIES "${_app_libs}")
-    endif()
-endif()
-# ---------------------------------------------------------------------------------
-
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
