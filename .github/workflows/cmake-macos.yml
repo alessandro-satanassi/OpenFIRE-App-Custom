@@ -28,14 +28,12 @@ jobs:
           archives: "qtbase qttools qttranslations qtsvg"
           cache: true
 
-      - name: Tool versions
+      - name: Show Tool Versions
         run: |
           cmake --version
           clang --version
           xcodebuild -version
-          which qmake
           qmake -v
-          which macdeployqt
           macdeployqt -h | head -n 2
 
       - name: Configure
@@ -44,34 +42,45 @@ jobs:
             -S . \
             -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DOFAPP_GITHASH="${{ steps.git.outputs.sha }}" \
             -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 
       - name: Build
         run: |
-          cmake --build build --parallel --verbose
+          cmake --build build --parallel
+
+      - name: Verify Universal Binary
+        run: |
+          echo "==== file ===="
+          file build/OpenFIREapp.app/Contents/MacOS/OpenFIREapp
+
+          echo ""
+          echo "==== lipo ===="
+          lipo -info build/OpenFIREapp.app/Contents/MacOS/OpenFIREapp
 
       - name: Install
         run: |
           cmake --install build --prefix build/out
 
-      - name: Show output
-        run: |
-          find build/out -maxdepth 3
-
-      - name: Create DMG
+      - name: Create Universal DMG
         run: |
           APP="build/out/OpenFIREapp.app"
 
           if [ ! -d "$APP" ]; then
-            echo "Bundle non trovato"
+            echo "Application bundle not found!"
             exit 1
           fi
 
           macdeployqt "$APP" -dmg
 
-          mv build/out/OpenFIREapp.dmg build/out/OpenFIREapp-macOS-Universal.dmg
+          DMG="build/out/OpenFIREapp.dmg"
+
+          if [ ! -f "$DMG" ]; then
+            echo "DMG was not created!"
+            exit 1
+          fi
+
+          mv "$DMG" build/out/OpenFIREapp-macOS-Universal.dmg
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
