@@ -133,6 +133,10 @@ private slots:
 
     void on_oledAltAddrsToggle_stateChanged(int arg1);
 
+    void on_cameraModelUnlockToggle_stateChanged(int arg1);
+    void on_camModel_DFRobot_clicked();
+    void on_camModel_PAJ7025R2_clicked();
+    void on_camModel_PAJ7025R3_clicked();
     void on_tinyUSBLayoutToggle_stateChanged(int arg1);
 
     void on_tUSB_p1_toggled(bool checked);
@@ -178,7 +182,7 @@ private slots:
     /// system/background
     void on_tabWidget_currentChanged(int index);
 
-    void serialPort_readyRead();
+    void serialPort_readyRead(const uint8_t, const QByteArray&);
 
     void serialPort_SearchFinished();
 
@@ -244,6 +248,8 @@ private:
     /// @brief      Checks for differences in current staging settings
     /// @details    Controls enablement of "send to board" button
     void DiffUpdate();
+    void CommitRecoveryUiUpdate();
+    bool commitRecoveryUiActive = false;
 
     /// @brief      Checks for differences in NeoPixels settings
     /// @details    Controls enablement of certain settings in the NeoPixels section of settings
@@ -272,6 +278,8 @@ private:
     // result of async serial operations
     QFuture<bool> serialSearchFuture;
     QFutureWatcher<bool> serialSearchWatcher;
+
+    bool serialSearchPending = false;
 
     // Flag that's set during I/O operations so that the readyRead signal doesn't interfere and absorb RX buffer mid-method.
     bool serialActive = false;

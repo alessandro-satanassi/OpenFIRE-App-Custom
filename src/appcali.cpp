@@ -81,10 +81,10 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
                 scene.addItem(profileBitmaps[i]);
                 profileBitmaps[i]->setPixmap(GenerateText({caliTypesPrefixes.at(i)}));
                 if(i == 0)
-                     profileBitmaps[i]->setPos(scene.sceneRect().left()       + (80 * GetTextScale(TextSub)),
-                                               scene.sceneRect().center().y() - (24 * GetTextScale(TextSub)));
+                    profileBitmaps[i]->setPos(scene.sceneRect().left()       + (80 * GetTextScale(TextSub)),
+                                              scene.sceneRect().center().y() - (24 * GetTextScale(TextSub)));
                 else profileBitmaps[i]->setPos(profileBitmaps[i-1]->pos().x(),
-                                               profileBitmaps[i-1]->pos().y() + (profileBitmaps[i-1]->boundingRect().height()*GetTextScale(TextSub)));
+                                              profileBitmaps[i-1]->pos().y() + (profileBitmaps[i-1]->boundingRect().height()*GetTextScale(TextSub)));
                 profileBitmaps[i]->setVisible(false);
             }
 
@@ -321,6 +321,9 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
 
         qreal scaleX = scene.sceneRect().width() / 1920.0;
         qreal scaleY = scene.sceneRect().height() / 1080.0;
+        qreal scale = qMin(scaleX, scaleY);
+        qreal offsetX = scene.sceneRect().left() + (scene.sceneRect().width() - (1920.0 * scale)) / 2.0;
+        qreal offsetY = scene.sceneRect().top() + (scene.sceneRect().height() - (1080.0 * scale)) / 2.0;
 
         if(bitmapText) {
             headerBitmap->setPixmap(GenerateText({tr("     The array of shapes displayed onscreen     "),
@@ -355,12 +358,18 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
 
         for(int i = 0; i < testPointsCount; i++) {
             testPoints[i] = new QGraphicsEllipseItem();
-            testPoints[i]->setTransform(QTransform::fromScale(scaleX, scaleY));
+            testPoints[i]->setTransform(QTransform::fromScale(scale, scale));
+            testPoints[i]->setPos(offsetX, offsetY);
             scene.addItem(testPoints[i]);
         }
 
+        // Mouse position must still cover the entire monitor area.
+        testPoints[testPointMed]->setTransform(QTransform::fromScale(scaleX, scaleY));
+        testPoints[testPointMed]->setPos(scene.sceneRect().left(), scene.sceneRect().top());
+
         testBox = new QGraphicsPolygonItem();
-        testBox->setTransform(QTransform::fromScale(scaleX, scaleY));
+        testBox->setTransform(QTransform::fromScale(scale, scale));
+        testBox->setPos(offsetX, offsetY);
         testBox->setPen(QPen(Qt::gray, 2));
         scene.addItem(testBox);
 
@@ -370,6 +379,12 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         testPoints[testPointBR] ->setPen(QPen(Qt::cyan,  3));
         testPoints[testPointMed]->setPen(QPen(Qt::gray,  3));
         testPoints[testPointD]  ->setPen(QPen(Qt::red,   3));
+
+        // IR vertices inside the camera FOV are normally shown as hollow circles.
+        testPoints[testPointTL] ->setBrush(QBrush(Qt::NoBrush));
+        testPoints[testPointTR] ->setBrush(QBrush(Qt::NoBrush));
+        testPoints[testPointBL] ->setBrush(QBrush(Qt::NoBrush));
+        testPoints[testPointBR] ->setBrush(QBrush(Qt::NoBrush));
         break;
     }
 }
@@ -383,11 +398,11 @@ int AppCaliWindow::GetTextScale(const int &type)
 {
     if(scale == -1) {
         if(scene.sceneRect().height() >= 1440)
-             scale = ScaleHiDPI;
+            scale = ScaleHiDPI;
         else if(scene.sceneRect().height() >= 1080)
-             scale = ScaleBig;
+            scale = ScaleBig;
         else if(scene.sceneRect().height() >= 720)
-             scale = ScaleSmall;
+            scale = ScaleSmall;
         else scale = ScaleTiny;
     }
 
@@ -528,8 +543,8 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
 
             tutorialBitmap->setPixmap(  GenerateText({tr("Calibration can be exited without changes"),
-                                                      tr("  by pressing either Button A, Button B, "),
-                                                      tr("       or Button C (if available).       ")}));
+                                                    tr("  by pressing either Button A, Button B, "),
+                                                    tr("       or Button C (if available).       ")}));
             tutorialBitmap->setPos(scene.sceneRect().center().x()     - (tutorialBitmap->boundingRect().center().x() * tutorialBitmap->scale()),
                                    (scene.sceneRect().bottom() * 0.8) - (tutorialBitmap->boundingRect().center().y() * tutorialBitmap->scale()));
 
@@ -597,7 +612,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
     case Cali_Bottom:
         crosshairItem->setPos(scene.sceneRect().center().x() - (crosshairItem->boundingRect().center().x()*crosshairItem->scale()),
                               scene.sceneRect().bottom()     - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
-        
+
         if(bitmapText) {
             caliStageBitmap->setPixmap(GenerateText({tr("Cali Step 2:")}));
 
@@ -676,11 +691,11 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
 
         if(bitmapText) {
             if(topOffset    >= -32768  &&  topOffset    <= 32768    &&
-               bottomOffset >= -32768  &&  bottomOffset <= 32768    &&
-               leftOffset   >= -32768  &&  leftOffset   <= 32768    &&
-               rightOffset  >= -32768  &&  rightOffset  <= 32768    &&
-               topLeftLed   >= -32768  &&  topLeftLed   <= 32768    &&
-               topRightLed  >= -32768  &&  topRightLed  <= 32768) {
+                bottomOffset >= -32768  &&  bottomOffset <= 32768    &&
+                leftOffset   >= -32768  &&  leftOffset   <= 32768    &&
+                rightOffset  >= -32768  &&  rightOffset  <= 32768    &&
+                topLeftLed   >= -32768  &&  topLeftLed   <= 32768    &&
+                topRightLed  >= -32768  &&  topRightLed  <= 32768) {
 
                 caliStageBitmap->setPixmap( GenerateText({tr("Verify New Calibration:")}));
                 caliStageBitmap->setPos(scene.sceneRect().center().x()      - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
@@ -805,16 +820,47 @@ void AppCaliWindow::CaliModeTextUpdate(const uint8_t &type, const char* data)
 
 void AppCaliWindow::TestModeDraw(const int coordsList[12])
 {
-    testPoints[testPointTL]->setRect(   coordsList[0]  - 25,  coordsList[1]  - 25, 50, 50);
-    testPoints[testPointTR]->setRect(   coordsList[2]  - 25,  coordsList[3]  - 25, 50, 50);
-    testPoints[testPointBL]->setRect(   coordsList[4]  - 25,  coordsList[5]  - 25, 50, 50);
-    testPoints[testPointBR]->setRect(   coordsList[6]  - 25,  coordsList[7]  - 25, 50, 50);
-    testPoints[testPointMed]->setRect(  coordsList[8]  - 25,  coordsList[9]  - 25, 50, 50);
-    testPoints[testPointD]->setRect(    coordsList[10] - 25,  coordsList[11] - 25, 50, 50);
+    const int pointItems[4] = {
+        testPointTL,
+        testPointTR,
+        testPointBL,
+        testPointBR
+    };
 
-    testBox->setPolygon(QPolygonF() << QPointF(coordsList[0], coordsList[1])
-                                    << QPointF(coordsList[2], coordsList[3])
-                                    << QPointF(coordsList[6], coordsList[7])
-                                    << QPointF(coordsList[4], coordsList[5])
-                                    << QPointF(coordsList[0], coordsList[1]));
+    int pointX[4];
+    int pointY[4];
+    bool outsideFov[4];
+
+    // The firmware encodes the outside-FOV state in bit 0 of each IR point X:
+    // even = inside FOV, odd = outside FOV. Decode X without losing its sign.
+    for(int i = 0; i < 4; ++i) {
+        int encodedX = coordsList[i * 2];
+
+        outsideFov[i] = (encodedX % 2) != 0;
+        pointX[i] = (encodedX - (outsideFov[i] ? 1 : 0)) / 2;
+        pointY[i] = coordsList[(i * 2) + 1];
+
+        if(outsideFov[i]) {
+            // Filled circle = estimated vertex outside the camera FOV.
+            testPoints[pointItems[i]]->setBrush(QBrush(testPoints[pointItems[i]]->pen().color()));
+        } else {
+            testPoints[pointItems[i]]->setBrush(QBrush(Qt::NoBrush));
+        }
+
+        // Always draw the marker at its real decoded position.
+        // Qt naturally clips it at the canvas edge: it remains partially visible
+        // while it intersects the canvas and disappears once fully outside.
+        testPoints[pointItems[i]]->setRect(pointX[i] - 25, pointY[i] - 25, 50, 50);
+    }
+
+    testPoints[testPointMed]->setRect(coordsList[8]  - 25, coordsList[9]  - 25, 50, 50);
+    testPoints[testPointD]  ->setRect(coordsList[10] - 25, coordsList[11] - 25, 50, 50);
+
+    // Reconstruct the complete IR rectangle using the real decoded coordinates,
+    // even when one or more estimated vertices are outside the camera FOV.
+    testBox->setPolygon(QPolygonF() << QPointF(pointX[0], pointY[0])
+                                    << QPointF(pointX[1], pointY[1])
+                                    << QPointF(pointX[3], pointY[3])
+                                    << QPointF(pointX[2], pointY[2])
+                                    << QPointF(pointX[0], pointY[0]));
 }

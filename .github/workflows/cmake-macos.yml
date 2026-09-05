@@ -1,8 +1,7 @@
 name: CMake - macOS DMGs
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:

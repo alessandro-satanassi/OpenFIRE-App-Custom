@@ -22,6 +22,7 @@
 #include "appcommon.h"
 #include "ui_appmainwindow.h"
 #include "../boards/OpenFIREshared.h"
+#include <QThread>
 
 #include <QGraphicsScene>
 #include <QMessageBox>
@@ -68,8 +69,9 @@ guiWindow::guiWindow(QWidget *parent)
 #endif
 
     // Connect together Serial stuff
-    connect(&serialSearchWatcher, &QFutureWatcher<uint8_t>::finished, this, &guiWindow::serialPort_SearchFinished);
-    connect(&serial.port, &QSerialPort::readyRead, this, &guiWindow::serialPort_readyRead);
+    connect(&serialSearchWatcher, &QFutureWatcher<bool>::finished, this, &guiWindow::serialPort_SearchFinished);
+    //connect(&serial, &AppSerial::Serial_EventReceived, this, &guiWindow::serialPort_readyRead);
+    connect(&serial, &AppSerial::Serial_EventReceived, this, &guiWindow::serialPort_readyRead, Qt::QueuedConnection);
     connect(&serial, &AppSerial::Serial_SetProgressRange, this, &guiWindow::serialPort_progressSet);
     connect(&serial, &AppSerial::Serial_ProgressUpdate, this, &guiWindow::serialPort_progressUpdate);
 
@@ -261,6 +263,14 @@ guiWindow::guiWindow(QWidget *parent)
 
 guiWindow::~guiWindow()
 {
+
+    aliveTimer.stop();
+
+    if(serialSearchWatcher.isRunning())
+        serialSearchFuture.waitForFinished();
+
+    serialSearchPending = false;
+
     if(ui->comPortSelector->currentIndex() > 0)
         serial.Disconnect();
 
@@ -322,6 +332,31 @@ bool guiWindow::eventFilter(QObject* object, QEvent* event)
 
 void guiWindow::aliveTimer_timeout()
 {
+
+    /*
+    // Avoid starting a second scan if the previous one is still running.
+    if(serialSearchWatcher.isRunning())
+        return;
+    */
+
+    if(serialSearchPending || serialSearchWatcher.isRunning())
+        return;
+
+    serialSearchPending = true;
+
+
+#if QT_VERSION_MAJOR > 5
+    serialSearchFuture = QtConcurrent::run(&AppSerial::SearchPorts, &serial);
+#else
+    serialSearchFuture = QtConcurrent::run(&serial, &AppSerial::SearchPorts);
+#endif
+
+    serialSearchWatcher.setFuture(serialSearchFuture);
+}
+
+/*
+void guiWindow::aliveTimer_timeout()
+{
     serialSearchWatcher.setFuture(serialSearchFuture);
     // Why did Qt6 change this syntax?
 #if QT_VERSION_MAJOR > 5
@@ -330,7 +365,7 @@ void guiWindow::aliveTimer_timeout()
     serialSearchFuture = QtConcurrent::run(&serial, &AppSerial::SearchPorts);
 #endif
 }
-
+*/
 
 void guiWindow::BoxesUpdate()
 {
@@ -385,6 +420,7 @@ void guiWindow::BoxesUpdate()
 
 void guiWindow::DiffUpdate()
 {
+    CommitRecoveryUiUpdate();
     size_t settingsDiff = 0;
 
     if(memcmp(App_Common::boolSettings[App_Common::dataCurrent], App_Common::boolSettings[App_Common::dataOrig], sizeof(App_Common::boolSettings[App_Common::dataCurrent])))
@@ -410,7 +446,7 @@ void guiWindow::DiffUpdate()
         if(memcmp(&App_Common::profilesTable_orig.at(i), &App_Common::profilesTable.at(i), sizeof(App_Common::profilesTable_s)))
             ++settingsDiff;
 
-    if(settingsDiff) {
+    if(settingsDiff || serial.CommitNeedsRetry()) {
         ui->confirmButton->setText(tr("Save and Send Settings"));
         ui->confirmButton->setEnabled(true);
         ui->confirmButton->setIcon(QIcon::fromTheme("document-save"));
@@ -421,6 +457,22 @@ void guiWindow::DiffUpdate()
     }
 }
 
+
+// In recovery, keep editing and Save available but avoid using partial HW state.
+void guiWindow::CommitRecoveryUiUpdate()
+{
+    const bool pending = serial.CommitNeedsRetry();
+    if(!pending && !commitRecoveryUiActive)
+        return;
+    commitRecoveryUiActive = pending;
+    ui->buttonsTestArea->setEnabled(!pending);
+    ui->feedbackTestsBox->setEnabled(!pending);
+    ui->testBtn->setEnabled(!pending);
+    for(int i = 0; i < caliBtn.size(); ++i)
+        caliBtn.at(i)->setEnabled(!pending);
+    for(int i = 0; i < selectedProfile.size(); ++i)
+        selectedProfile.at(i)->setEnabled(!pending);
+}
 
 // Only runs either on initial load or save
 void guiWindow::LabelsUpdate()
@@ -517,6 +569,8 @@ void guiWindow::NewCaliWindow(const int &type) {
 
 void guiWindow::on_confirmButton_clicked()
 {
+    bool cameraChanged = (App_Common::settingsTable[App_Common::dataOrig][OF_Const::cameraModel] != App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel]);
+
     QMessageBox messageBox(QMessageBox::Information, tr("Commit Confirmation"), tr("Are these settings okay?"), QMessageBox::Yes | QMessageBox::No);
     messageBox.setInformativeText(tr("These settings will be committed to your lightgun. Is that okay?"));
 
@@ -530,6 +584,12 @@ void guiWindow::on_confirmButton_clicked()
             statusBar()->showMessage(tr("Sent settings successfully!"), 5000);
             ui->confirmButton->setEnabled(false);
             ui->confirmButton->setIcon(QIcon());
+
+            if (cameraChanged) {
+                QMessageBox advBox(QMessageBox::Information, tr("Camera Changed"), tr("Camera Model Changed Successfully"));
+                advBox.setInformativeText(tr("The lightgun has automatically swapped the active sensors.\n\nIf you experience any unexpected issues or the new camera fails to respond, we recommend physically restarting the microcontroller."));
+                advBox.exec();
+            }
 
             // sync settings
             memcpy(App_Common::boolSettings[App_Common::dataOrig],
@@ -562,12 +622,21 @@ void guiWindow::on_confirmButton_clicked()
             // update (clear) diffs
             PixelsDiff();
             DiffUpdate();
-        } else printf("Settings syncing failed!?\n");
+            
+            serialPort_progressSet(0);
+            ui->tabWidget->setEnabled(true);
+            ui->comPortSelector->setEnabled(true);
+            serialActive = false;
 
-        serialPort_progressSet(0);
-        ui->tabWidget->setEnabled(true);
-        ui->comPortSelector->setEnabled(true);
-        serialActive = false;
+        } else { 
+            printf("Settings syncing failed!?\n"); 
+            DiffUpdate(); // Save stays available even when normal diffs are zero.
+            serialPort_progressSet(0);
+            ui->tabWidget->setEnabled(true);
+            ui->comPortSelector->setEnabled(true);
+            serialActive = false;
+        }
+
     } else { statusBar()->showMessage(tr("Save operation canceled."), 3000); }
 }
 
@@ -760,7 +829,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                 ui->profilesArea->addWidget(aspectRatio.at(i),     i+1, 21);
                 ui->profilesArea->addWidget(color.at(i),           i+1, 23);
 
-                ui->caliBtnsLayout->addWidget(caliBtn.at(i), caliBtnRow, i);
+                //ui->caliBtnsLayout->addWidget(caliBtn.at(i), caliBtnRow, i);
+                ui->caliBtnsLayout->addWidget(caliBtn.at(i), caliBtnRow, i % 4);
             }
 
             // update button mapping tab
@@ -966,6 +1036,13 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->customLEDstaticBtn2->setStyleSheet(QString("background-color: #%1").arg(App_Common::settingsTable[App_Common::dataOrig][OF_Const::customLEDcolor2], 6, 16, QLatin1Char('0')));
             ui->customLEDstaticBtn3->setStyleSheet(QString("background-color: #%1").arg(App_Common::settingsTable[App_Common::dataOrig][OF_Const::customLEDcolor3], 6, 16, QLatin1Char('0')));
 
+            switch(App_Common::settingsTable[App_Common::dataOrig][OF_Const::cameraModel]) {
+            case OF_Const::DFRobot_SEN0158: ui->camModel_DFRobot->setChecked(true); break;
+            case OF_Const::PixArt_PAJ7025R2: ui->camModel_PAJ7025R2->setChecked(true); break;
+            case OF_Const::PixArt_PAJ7025R3: ui->camModel_PAJ7025R3->setChecked(true); break;
+            }
+            ui->cameraModelUnlockToggle->setChecked(false);
+
             switch(App_Common::tinyUSBtable.tinyUSBid) {
             case 1:
                 ui->tUSB_p1->setChecked(true);
@@ -1008,6 +1085,13 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->tabWidget->setCurrentIndex(0);
             ui->comPortSelector->setItemText(0, tr("[Disconnect Current Device]"));
 
+            if(App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
+                ui->baudResetBtn->setText(tr("Reboot to Bootloader"));
+            } else {
+                ui->baudResetBtn->setText(tr("Reboot Microcontroller"));
+            }
+
+            DiffUpdate(); // Also reflects a pending save reported on reconnect.
         } else ui->comPortSelector->setCurrentIndex(0);
 
         serialPort_progressSet(0);
@@ -1031,6 +1115,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
 
         if(serial.port.isOpen())
             serial.Disconnect();
+
+        CommitRecoveryUiUpdate();
 
         // reset temp label stylesheet to neutral
         ui->tmp36Label->setStyleSheet("");
@@ -1612,6 +1698,31 @@ void guiWindow::on_oledAltAddrsToggle_stateChanged(int arg1)
     DiffUpdate();
 }
 
+void guiWindow::on_cameraModelUnlockToggle_stateChanged(int arg1)
+{
+    bool enabled = (arg1 != 0);
+    ui->camModel_DFRobot->setEnabled(enabled);
+    ui->camModel_PAJ7025R2->setEnabled(enabled);
+    ui->camModel_PAJ7025R3->setEnabled(enabled);
+}
+
+void guiWindow::on_camModel_DFRobot_clicked()
+{
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] = OF_Const::DFRobot_SEN0158;
+    DiffUpdate();
+}
+
+void guiWindow::on_camModel_PAJ7025R2_clicked()
+{
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] = OF_Const::PixArt_PAJ7025R2;
+    DiffUpdate();
+}
+
+void guiWindow::on_camModel_PAJ7025R3_clicked()
+{
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] = OF_Const::PixArt_PAJ7025R3;
+    DiffUpdate();
+}
 
 void guiWindow::on_tinyUSBLayoutToggle_stateChanged(int arg1)
 {
@@ -1794,7 +1905,7 @@ void guiWindow::colorBoxes_clicked()
     }
 }
 
-
+/*
 void guiWindow::selectedProfile_isChecked(bool isChecked)
 {
     // apparently we get two signals at once? So just filter for the on.
@@ -1806,8 +1917,27 @@ void guiWindow::selectedProfile_isChecked(bool isChecked)
         }
     }
 }
+*/
 
+void guiWindow::selectedProfile_isChecked(bool isChecked)
+{
+    // Apparently we get two signals at once, so only process the checked one.
+    if(isChecked && !serialActive) {
+        const int profile = sender()->property("slot").toInt();
 
+        if(profile != App_Common::board.selectedProfile) {
+            char buf[] = {
+                (char)OF_Const::sCaliProfile, // Command
+                (char)OF_Const::sCaliProfile, // Subcommand: select profile only
+                (char)profile
+            };
+
+            serial.OneShotSend(buf, sizeof(buf));
+        }
+    }
+}
+
+/*
 void guiWindow::caliBtns_clicked()
 {
     NewCaliWindow(AppCaliWindow::modeCalibrate);
@@ -1817,47 +1947,67 @@ void guiWindow::caliBtns_clicked()
                   (char)OF_Const::sCaliStart,
                   static_cast<char>(App_Common::profilesTable.at(sender()->property("slot").toInt()).irSensitivity +
                                     (App_Common::profilesTable.at(sender()->property("slot").toInt()).layoutType << 4))};
-    serial.OneShotSend(buf, 4);
+    if(!serial.OneShotSend(buf, 4))
+        serial.FailOperation();
 }
+*/
 
+void guiWindow::caliBtns_clicked()
+{
+    const int profile = sender()->property("slot").toInt();
+
+    NewCaliWindow(AppCaliWindow::modeCalibrate);
+
+    char buf[] = {
+        (char)OF_Const::sCaliProfile, // Command
+        (char)OF_Const::sCaliStart,   // Subcommand: start calibration
+        (char)profile,
+        (char)(App_Common::profilesTable.at(profile).irSensitivity +
+                (App_Common::profilesTable.at(profile).layoutType << 4))
+    };
+
+    if(!serial.OneShotSend(buf, sizeof(buf)))
+        serial.FailOperation();
+}
 
 /// gun tests
 void guiWindow::on_rumbleTestBtn_clicked()
 {
-    char buf[2] = { (char)OF_Const::sTestRumble, true };
-    if(serial.OneShotSend(buf, sizeof(buf)))
+    //char buf[2] = { (char)OF_Const::sTestRumble, true };
+    if(serial.OneShotSend((char)OF_Const::sTestRumble))
         ui->statusBar->showMessage(tr("Sent a rumble test pulse."), 2500);
 }
 
 
 void guiWindow::on_solenoidTestBtn_clicked()
 {
-    char buf[2] = { (char)OF_Const::sTestSolenoid, true };
-    if(serial.OneShotSend(buf, sizeof(buf)))
+    //char buf[2] = { (char)OF_Const::sTestSolenoid, true };
+    if(serial.OneShotSend((char)OF_Const::sTestSolenoid))
         ui->statusBar->showMessage(tr("Sent a solenoid test pulse."), 2500);
 }
 
 
 void guiWindow::on_redLedTestBtn_clicked()
 {
-    char buf[2] = { (char)OF_Const::sTestLEDR, true };
-    if(serial.OneShotSend(buf, sizeof(buf)))
+    //char buf[2] = { (char)OF_Const::sTestLEDR, true };
+    //if(serial.OneShotSend(buf, sizeof(buf)))
+    if(serial.OneShotSend((char)OF_Const::sTestLEDR))
         ui->statusBar->showMessage(tr("Set LED to Red."), 2500);
 }
 
 
 void guiWindow::on_greenLedTestBtn_clicked()
 {
-    char buf[2] = { (char)OF_Const::sTestLEDG, true };
-    if(serial.OneShotSend(buf, sizeof(buf)))
+    //char buf[2] = { (char)OF_Const::sTestLEDG, true };
+    if(serial.OneShotSend((char)OF_Const::sTestLEDG))
         ui->statusBar->showMessage(tr("Set LED to Green."), 2500);
 }
 
 
 void guiWindow::on_blueLedTestBtn_clicked()
 {
-    char buf[2] = { (char)OF_Const::sTestLEDB, true };
-    if(serial.OneShotSend(buf, sizeof(buf)))
+    //char buf[2] = { (char)OF_Const::sTestLEDB, true };
+    if(serial.OneShotSend((char)OF_Const::sTestLEDB))
         ui->statusBar->showMessage(tr("Set LED to Blue."), 2500);
 }
 
@@ -1902,8 +2052,11 @@ void guiWindow::on_clearEepromBtn_clicked()
 
     if(messageBox.exec() == QMessageBox::Yes) {
         ui->statusBar->showMessage(tr("Board reset to initial settings."));
-        char buf[2] = { (char)OF_Const::sClearFlash, (char)OF_Const::sClearFlash };
-        serial.OneShotSend(buf, sizeof(buf));
+        //char buf[2] = { (char)OF_Const::sClearFlash, (char)OF_Const::sClearFlash };
+        //serial.OneShotSend(buf, sizeof(buf));
+        serial.OneShotSend((char)OF_Const::sClearFlash);
+        QThread::msleep(50);
+        serial.port.close();
         ui->comPortSelector->setCurrentIndex(0);
     } else ui->statusBar->showMessage(tr("Clear operation canceled."), 3000);
 }
@@ -1931,170 +2084,206 @@ void guiWindow::on_baudResetBtn_clicked()
     // QFile::copy("file", picoPath+"file");
 */
 
-    ui->statusBar->showMessage(tr("Board reset to bootloader."), 5000);
+    if (App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
+        ui->statusBar->showMessage(tr("Board reset to bootloader."), 5000);
+    } else {
+        ui->statusBar->showMessage(tr("Board restarted."), 5000);
+    }
     ui->comPortSelector->setCurrentIndex(0);
 }
 
 
-/// System/background
-// WARNING: make sure "serialActive" is set ON for important operations, or this will eat the fucker
-// TODO: move to appserial
-void guiWindow::serialPort_readyRead()
+/// System/background: AppSerial is the only code that reads QSerialPort.
+void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &payload)
 {
-#ifdef OFAPP_DEBUG
-    debugWindow.AppendText(serial.port.peek(serial.port.bytesAvailable()));
-#endif
+    #ifdef OFAPP_DEBUG
+    debugWindow.AppendText(payload);
+    #endif
 
-    if(!serialActive) {
-        while(serial.port.bytesAvailable()) {
-            switch(serial.port.read(1).at(0)) {
-            case (char)OF_Const::sBtnPressed:
-            {
-                int btn = serial.port.read(1).at(0);
-                if(btn < testLabel.count()) testLabel.at(btn)->setStyleSheet("background-color: #FF0000; font: bold");
-                break;
-            }
-            case (char)OF_Const::sBtnReleased:
-            {
-                int btn = serial.port.read(1).at(0);
-                if(btn < testLabel.count()) testLabel.at(btn)->setStyleSheet("");
-                break;
-            }
-            case (char)OF_Const::sTemperatureUpd:
-            {
-                unsigned int temp = serial.port.read(1).at(0);
+    // Transaction responses are consumed by AppSerial itself.  Keep ordinary
+    // asynchronous UI traffic quiet while a transaction is in progress, but
+    // never hide a validated device error.
+    if(serialActive && command != OF_Const::sError)
+        return;
 
-                if (temp == OF_Const::TEMPERATURE_SENSOR_ERROR_VALUE) {
-                    // Sensor error.
-                    ui->tmp36Label->setText(tr("Temperature: FAULT"));
-                    ui->tmp36Label->setStyleSheet("color: white; background-color: #FF0000; font: bold");
-                    break;
-                }
-
-                ui->tmp36Label->setText(tr("Temperature: %1°C").arg(temp));
-
-                if(     temp > App_Common::settingsTable[App_Common::dataOrig][OF_Const::tempShutdown])
-                    ui->tmp36Label->setStyleSheet("color: white;      background-color: #FF0000; font: bold");
-                else if(temp > App_Common::settingsTable[App_Common::dataOrig][OF_Const::tempWarning])
-                    ui->tmp36Label->setStyleSheet("color: light-gray; background-color: #EABD2B; font: bold");
-                else
-                    ui->tmp36Label->setStyleSheet("color: black;      background-color: #11D00A; font: bold");
-
-                break;
-            }
-            case (char)OF_Const::sAnalogPosUpd:
-            {
-                uint16_t oriPosX, oriPosY;
-                serial.port.read((char*)&oriPosX, 2);
-                serial.port.read((char*)&oriPosY, 2);
-                uint8_t posX = oriPosX/16;
-                uint8_t posY = oriPosY/16;
-                posX = ~posX;
-                posY = ~posY;
-
-                analogPos->setRect(posX - 8, posY - 8, 16, 16);
-                ui->aPosLabel->setText(QString("%1 , %2").arg(oriPosX).arg(oriPosY));
-
-                break;
-            }
-            case (char)OF_Const::sCurrentProf:
-            {
-                uint8_t selection = serial.port.read(1).at(0);
-
-                if(selection != App_Common::board.selectedProfile && selection < App_Common::profilesTable.size()) {
-                    App_Common::board.selectedProfile = selection;
-                    selectedProfile[selection]->setChecked(true);
-                }
-
-                DiffUpdate();
-                break;
-            }
-            case (char)OF_Const::sError:
-                switch(serial.port.read(1).at(0)) {
-                case (char)OF_Const::sErrCam:
-                    if(caliWindow != nullptr)
-                        caliWindow->Shutdown();
-                    serial.ShowError(tr("Device Error: Camera not available!"),
-                                     tr("<p>Data received from the board indicates that the camera is in a bad state.<br>"
-                                        "This can happen if, for example, the camera wires are crossed<br>"
-                                        "(data wire to clock pin, clock wire to data pin),<br>"
-                                        "or the camera pins are wired to a different component,<br>"
-                                        "such as a button or Force Feedback output.</p>"
-                                        "<p>You are able to change the camera pins in the <i>Boards Layout</i> tab<br>"
-                                        "if they should be mapped different GPIO;<br>"
-                                        "Otherwise, the camera wires must be resoldered to resolve this error.</p>"
-                                        "<p>IR Testing and Calibration will not be available while in this state.</p>"),
-                                     QMessageBox::Critical);
-                    break;
-                case (char)OF_Const::sErrPeriphGeneric:
-                    serial.ShowError(tr("Peripheral Device Error!"),
-                                     tr("<p>Data received from the board indicates that an I2C peripheral device failed to initialize.<br>"
-                                        "This can happen if, for example, the peripheral's wires are crossed<br>"
-                                        "(data wire to clock pin, clock wire to data pin),<br>"
-                                        "or the pins for the peripheral are set to a different component,<br>"
-                                        "such as a button or Force Feedback output.</p>"
-                                        "<p>Confirm that the wires for the peripheral are connected to the correct <i>Peripheral I2C</i> pins<br>"
-                                        "in the <i>Boards Layout</i> tab.</p>"),
-                                     QMessageBox::Critical);
-                    break;
-                default: break;
-                }
-                break;
-            case (char)OF_Const::sCaliStageUpd:
-                if(caliWindow != nullptr)
-                    if(caliWindow->GetWindowMode() == AppCaliWindow::modeCalibrate)
-                        caliWindow->CaliModeSet(serial.port.read(1).at(0));
-                break;
-            case (char)OF_Const::sCaliInfoUpd:
-                if(caliWindow != nullptr)
-                    if(caliWindow->GetWindowMode() == AppCaliWindow::modeCalibrate) {
-                        uint8_t type;
-                        serial.port.read((char*)&type, 1);
-                        caliWindow->CaliModeTextUpdate(type, serial.port.read(4).constData());
-                    }
-                break;
-            case (char)OF_Const::sTestCoords:
-                if(caliWindow != nullptr) {
-                    int coordsList[12];
-                    serial.port.read((char*)coordsList, sizeof(coordsList));
-
-                    caliWindow->TestModeDraw(coordsList);
-                } else serial.port.read(48);
-                break;
-            case (char)OF_Const::sClearFlash:
-                ui->comPortSelector->setCurrentIndex(0);
-                QMessageBox::information(this, tr("Successfully reset board settings"),
-                                         tr("Please unplug the board and reinsert it into the PC."));
-                break;
-            }
+    switch(command) {
+    case OF_Const::sBtnPressed:
+        if(payload.size() == 1) {
+            const uint8_t btn = (uint8_t)payload.at(0);
+            if(btn < testLabel.count())
+                testLabel.at(btn)->setStyleSheet("background-color: #FF0000; font: bold");
         }
+        break;
+
+    case OF_Const::sBtnReleased:
+        if(payload.size() == 1) {
+            const uint8_t btn = (uint8_t)payload.at(0);
+            if(btn < testLabel.count())
+                testLabel.at(btn)->setStyleSheet("");
+        }
+        break;
+
+    case OF_Const::sTemperatureUpd:
+        if(payload.size() == 1) {
+            const unsigned int temp = (uint8_t)payload.at(0);
+            if(temp == OF_Const::TEMPERATURE_SENSOR_ERROR_VALUE) {
+                ui->tmp36Label->setText(tr("Temperature: FAULT"));
+                ui->tmp36Label->setStyleSheet("color: white; background-color: #FF0000; font: bold");
+                break;
+            }
+
+            ui->tmp36Label->setText(tr("Temperature: %1°C").arg(temp));
+            if(temp > App_Common::settingsTable[App_Common::dataOrig][OF_Const::tempShutdown])
+                ui->tmp36Label->setStyleSheet("color: white;      background-color: #FF0000; font: bold");
+            else if(temp > App_Common::settingsTable[App_Common::dataOrig][OF_Const::tempWarning])
+                ui->tmp36Label->setStyleSheet("color: light-gray; background-color: #EABD2B; font: bold");
+            else
+                ui->tmp36Label->setStyleSheet("color: black;      background-color: #11D00A; font: bold");
+        }
+        break;
+
+    case OF_Const::sAnalogPosUpd:
+        if(payload.size() == 4) {
+            uint16_t oriPosX;
+            uint16_t oriPosY;
+            memcpy(&oriPosX, payload.constData(), sizeof(oriPosX));
+            memcpy(&oriPosY, payload.constData() + sizeof(oriPosX), sizeof(oriPosY));
+            uint8_t posX = ~(oriPosX / 16);
+            uint8_t posY = ~(oriPosY / 16);
+            analogPos->setRect(posX - 8, posY - 8, 16, 16);
+            ui->aPosLabel->setText(QString("%1 , %2").arg(oriPosX).arg(oriPosY));
+        }
+        break;
+
+    case OF_Const::sCurrentProf:
+        if(payload.size() == 1) {
+            const uint8_t selection = (uint8_t)payload.at(0);
+            if(selection != App_Common::board.selectedProfile && selection < App_Common::profilesTable.size()) {
+                App_Common::board.selectedProfile = selection;
+                selectedProfile[selection]->setChecked(true);
+            }
+            DiffUpdate();
+        }
+        break;
+
+    case OF_Const::sError:
+        if(!payload.isEmpty() &&
+           (uint8_t)payload.at(0) == AppSerial::APP_SERIAL_ERR_COMMIT_RETRY) {
+            // Queued error delivery must not undo a later successful retry.
+            if(!serial.CommitNeedsRetry())
+                break;
+            DiffUpdate();
+            ui->statusBar->showMessage(tr("Save not confirmed. Keep the board powered and retry Save."));
+            serial.ShowError(tr("Save not confirmed"),
+                tr("Saving failed or its result could not be confirmed. Your edits remain in this App; completed calibration remains in the powered board.\n\n"
+                   "Check the connection or the reported storage error, then press Save and Send Settings again. No restart is required for a recoverable save error. Hardware tests stay disabled until a save is confirmed.\n\n"
+                   "Disconnecting/reloading can replace unsent App edits with the board's partly updated settings. Restarting loses unsaved board RAM."));
+            break;
+        }
+        if(payload.isEmpty()) {
+            if(caliWindow != nullptr)
+                caliWindow->Shutdown();
+            ui->comPortSelector->setCurrentIndex(0);
+            ui->statusBar->showMessage(tr("Operation not confirmed: restart the microcontroller and reconnect."));
+            serial.ShowError(tr("Operation not confirmed"),
+                             tr("The operation failed or its result could not be confirmed. Restart the microcontroller and reconnect before continuing. If saving had already started, verify the settings and save them again after resolving the error."));
+            break;
+        }
+        if(payload.size() < 1)
+            break;
+        switch((uint8_t)payload.at(0)) {
+        case OF_Const::sErrCam:
+            if(caliWindow != nullptr)
+                caliWindow->Shutdown();
+            serial.ShowError(tr("Device Error: Camera not available!"),
+                             tr("<p>Data received from the board indicates that the camera is in a bad state.<br>"
+                                "This can happen if, for example, the camera wires are crossed<br>"
+                                "(data wire to clock pin, clock wire to data pin),<br>"
+                                "or the camera pins are wired to a different component,<br>"
+                                "such as a button or Force Feedback output.</p>"
+                                "<p>You are able to change the camera pins in the <i>Boards Layout</i> tab<br>"
+                                "if they should be mapped different GPIO;<br>"
+                                "Otherwise, the camera wires must be resoldered to resolve this error.</p>"
+                                "<p>IR Testing and Calibration will not be available while in this state.</p>"),
+                             QMessageBox::Critical);
+            break;
+        case OF_Const::sErrPeriphGeneric:
+            serial.ShowError(tr("Peripheral Device Error!"),
+                             tr("<p>Data received from the board indicates that an I2C peripheral device failed to initialize.<br>"
+                                "This can happen if, for example, the peripheral's wires are crossed<br>"
+                                "(data wire to clock pin, clock wire to data pin),<br>"
+                                "or the pins for the peripheral are set to a different component,<br>"
+                                "such as a button or Force Feedback output.</p>"
+                                "<p>Confirm that the wires for the peripheral are connected to the correct <i>Peripheral I2C</i> pins<br>"
+                                "in the <i>Boards Layout</i> tab.</p>"),
+                             QMessageBox::Critical);
+            break;
+        default:
+            break;
+        }
+        break;
+
+    case OF_Const::sCaliStageUpd:
+        if(payload.size() == 1 && caliWindow != nullptr &&
+           caliWindow->GetWindowMode() == AppCaliWindow::modeCalibrate)
+            caliWindow->CaliModeSet((uint8_t)payload.at(0));
+        break;
+
+    case OF_Const::sCaliInfoUpd:
+        if(payload.size() == 5 && caliWindow != nullptr &&
+           caliWindow->GetWindowMode() == AppCaliWindow::modeCalibrate)
+            caliWindow->CaliModeTextUpdate((uint8_t)payload.at(0), payload.constData() + 1);
+        break;
+
+    case OF_Const::sTestCoords:
+        if(payload.size() == (int)(sizeof(int) * 12) && caliWindow != nullptr) {
+            int coordsList[12];
+            memcpy(coordsList, payload.constData(), sizeof(coordsList));
+            caliWindow->TestModeDraw(coordsList);
+        }
+        break;
+
+    case OF_Const::sClearFlash:
+        ui->comPortSelector->setCurrentIndex(0);
+        QMessageBox::information(this,
+                                 tr("Successfully reset board settings"),
+                                 tr("Please unplug the board and reinsert it into the PC."));
+        break;
     }
 }
 
 
 void guiWindow::serialPort_SearchFinished()
 {
+
+    serialSearchPending = false;
+
     // if ports have changed
-    if(serialSearchFuture.result()) {
+    ////////if(serialSearchFuture.result()) {
+    if(serialSearchWatcher.result()) {
+
+        const QList<QSerialPortInfo> ports =
+            serial.CurrentPortsSnapshot();
+
         // ports have changed, update COM ports list
         // if comPort only has "Nothing", safe to add items
         if(ui->comPortSelector->count() == 0) {
-            if(serial.currentPorts.count()) {
+            if(ports.count()) {
                 ui->comPortSelector->addItem(tr("[Select a Device to Configure]"));
                 ui->comPortSelector->setCurrentIndex(0);
-                for(auto &port : std::as_const(serial.currentPorts))
+                for(auto &port : std::as_const(ports))
                     ui->comPortSelector->addItem(port.portName()+" (" + port.description() + ')');
             }
         // if comPort is filled
         // TODO: find some way to add new items without removing
         } else {
-            if(serial.currentPorts.count()) {
+            if(ports.count()) {
                 // if no active comPort
                 if(ui->comPortSelector->currentIndex() <= 0) {
                     while(ui->comPortSelector->count() > 1)
                         ui->comPortSelector->removeItem(1);
 
-                    for(const auto &newPort : std::as_const(serial.currentPorts))
+                    for(const auto &newPort : std::as_const(ports))
                         ui->comPortSelector->addItem(newPort.portName()+" (" + newPort.description() + ')');
                 // if comPort is active
                 } else {
@@ -2109,7 +2298,7 @@ void guiWindow::serialPort_SearchFinished()
                     // check if current comPort is still in devices list
                     // TODO: probably a better way of doing this, meh
                     bool inList = false;
-                    for(const auto &newPort : std::as_const(serial.currentPorts))
+                    for(const auto &newPort : std::as_const(ports))
                         if(ui->comPortSelector->currentText() == newPort.portName()+" (" + newPort.description() + ')')
                             inList = true;
                     if(!inList) {
@@ -2118,7 +2307,7 @@ void guiWindow::serialPort_SearchFinished()
                     }
 
                     // append new items to list
-                    for(const auto &newPort : std::as_const(serial.currentPorts))
+                    for(const auto &newPort : std::as_const(ports))
                         if(ui->comPortSelector->currentText() != newPort.portName()+" (" + newPort.description() + ')')
                             ui->comPortSelector->addItem(newPort.portName()+" (" + newPort.description() + ')');
                 }
@@ -2210,7 +2399,7 @@ void guiWindow::CaliWindowExiting(const int &mode,
     case AppCaliWindow::modeIRTest:
     {
         char buf[2] = { (char)OF_Const::sIRTest, false };
-        if(serial.OneShotSend(buf, sizeof(buf))) {
+        if(!serial.port.isOpen() || serial.OneShotSend(buf, sizeof(buf))) {
             ui->buttonsTestArea->setEnabled(true);
             ui->pinsTab->setEnabled(true);
             ui->settingsTab->setEnabled(true);
@@ -2235,7 +2424,8 @@ void guiWindow::CaliWindowExiting(const int &mode,
 
 void guiWindow::CaliWindowRequestedExit()
 {
-    serial.OneShotSend((char)OF_Const::serialTerminator);
+    if(!serial.OneShotSend((char)OF_Const::serialTerminator))
+        serial.FailOperation();
 }
 
 

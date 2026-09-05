@@ -1512,6 +1512,104 @@
              </spacer>
             </item>
             <item>
+             <widget class="QGroupBox" name="cameraModelGroupbox">
+              <property name="whatsThis">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the camera hardware physically installed in your lightgun.&lt;/p&gt;&lt;p&gt;The active camera hardware will be swapped automatically when the settings are saved.&lt;/p&gt;&lt;p&gt;A &lt;span style=&quot; font-weight:700;&quot;&gt;manual reboot is only recommended&lt;/span&gt; if you experience issues.&lt;/p&gt;&lt;p&gt;Remember to also configure the corresponding communication pins in the Pins Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="accessibleName">
+               <string>Infrared Camera Model</string>
+              </property>
+              <property name="title">
+               <string>CAMERA Model</string>
+              </property>
+              <property name="trackable" stdset="0">
+               <number>1</number>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_cameraModel">
+               <item alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="cameraModelUnlockToggle">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the camera hardware physically installed in your lightgun.&lt;/p&gt;&lt;p&gt;The active camera hardware will be swapped automatically when the settings are saved.&lt;/p&gt;&lt;p&gt;A &lt;span style=&quot; font-weight:700;&quot;&gt;manual reboot is only recommended&lt;/span&gt; if you experience issues.&lt;/p&gt;&lt;p&gt;Remember to also configure the corresponding communication pins in the Pins Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Infrared Camera Model</string>
+                 </property>
+                 <property name="text">
+                  <string>Unlock CAMERA Modification</string>
+                 </property>
+                 <property name="toolTip">
+                  <string>Warning: Modifying this is only required once when building the gun.</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_cameraModel">
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QRadioButton" name="camModel_DFRobot">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is an &lt;span style=&quot; font-weight:700;&quot;&gt;I2C&lt;/span&gt; camera module.&lt;/p&gt;&lt;p&gt;When selecting this model, ensure you have correctly mapped the &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SDA&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SCL&lt;/span&gt; pins in the Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>DFRobot SEN0158 / WiiCam</string>
+                   </property>
+                   <property name="text">
+                    <string>DFRobot SEN0158 / WiiCam</string>
+                   </property>
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QRadioButton" name="camModel_PAJ7025R2">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is an &lt;span style=&quot; font-weight:700;&quot;&gt;SPI&lt;/span&gt; camera module.&lt;/p&gt;&lt;p&gt;When selecting this model, ensure you have correctly mapped the &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_MOSI, cam_SPI_MISO, cam_SPI_SCK,&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_CS&lt;/span&gt; pins in the Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>PixArt PAJ7025 R2</string>
+                   </property>
+                   <property name="text">
+                    <string>PixArt PAJ7025 R2</string>
+                   </property>
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item alignment="Qt::AlignHCenter">
+                  <widget class="QRadioButton" name="camModel_PAJ7025R3">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is an &lt;span style=&quot; font-weight:700;&quot;&gt;SPI&lt;/span&gt; camera module.&lt;/p&gt;&lt;p&gt;When selecting this model, ensure you have correctly mapped the &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_MOSI, cam_SPI_MISO, cam_SPI_SCK,&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_CS&lt;/span&gt; pins in the Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>PixArt PAJ7025 R3</string>
+                   </property>
+                   <property name="text">
+                    <string>PixArt PAJ7025 R3</string>
+                   </property>
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
              <widget class="QGroupBox" name="tinyUSBGroupbox">
               <property name="title">
                <string>TinyUSB Identifier</string>
