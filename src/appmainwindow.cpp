@@ -605,6 +605,11 @@ void guiWindow::on_confirmButton_clicked()
                    App_Common::settingsTable[App_Common::dataCurrent],
                    sizeof(App_Common::settingsTable[App_Common::dataCurrent]));
 
+            // Copia “originale” delle associazioni pulsanti nell’App
+            memcpy(App_Common::inputFuncTable[App_Common::dataOrig],
+                   App_Common::inputFuncTable[App_Common::dataCurrent],
+                   sizeof(App_Common::inputFuncTable[App_Common::dataOrig]));
+
             memcpy(&App_Common::tinyUSBtable_orig,
                    &App_Common::tinyUSBtable,
                    sizeof(App_Common::tinyUSBtable_s));

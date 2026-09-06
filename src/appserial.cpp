@@ -1478,7 +1478,7 @@ void AppSerial::RebootToBootldr()
             port.setBaudRate(QSerialPort::Baud1200);
             port.setDataTerminalReady(false);
         } else {
-            const char payload = (char)OF_Const::sRebootToBootloader;
+            // const char payload = (char)OF_Const::sRebootToBootloader;
 
             const QByteArray frame = BuildFrame(
                 APP_SERIAL_TYPE_REQUEST,
