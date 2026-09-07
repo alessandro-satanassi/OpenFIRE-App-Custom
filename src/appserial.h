@@ -40,16 +40,20 @@ class AppSerial : public QObject
     Q_OBJECT
 
 public:
+    // Wire format: A5 5A | TYPE_FLAGS | COMMAND | SEQUENCE | LENGTH | PAYLOAD | CRC8.
+    // CRC covers TYPE_FLAGS through PAYLOAD, including an empty payload's header.
     static constexpr uint8_t APP_SERIAL_START_1       = 0xA5;
     static constexpr uint8_t APP_SERIAL_START_2       = 0x5A;
     static constexpr uint8_t APP_SERIAL_MAX_PAYLOAD   = 200;
-
-    static constexpr uint8_t APP_SERIAL_MAX_PROFILE_COUNT = 20;  // massimo numero di profili che l'app può gestire
-
     static constexpr uint8_t APP_SERIAL_OVERHEAD      = 7;
+
+    // Transport limits. Timeout values are milliseconds; retries exclude the first send.
     static constexpr int     APP_SERIAL_FRAME_TIMEOUT = 250;
     static constexpr int     APP_SERIAL_ACK_TIMEOUT   = 500;
     static constexpr uint8_t APP_SERIAL_MAX_RETRIES   = 3;
+
+    // Profiles are discovered from received records, up to this App-side limit.
+    static constexpr uint8_t APP_SERIAL_MAX_PROFILE_COUNT = 20;
 
     enum AppSerialType_e : uint8_t {
         APP_SERIAL_TYPE_REQUEST  = 0x00,
@@ -60,21 +64,32 @@ public:
         APP_SERIAL_FLAG_FINAL    = 0x80
     };
 
+    // Commit-retry sError payload: [retry required] [originating request command].
+    // Local GUI notifications may contain only the first byte.
+    static constexpr uint8_t APP_SERIAL_ERR_COMMIT_RETRY = 0x82;
+
     explicit AppSerial(QObject *parent = nullptr);
 
+    // Serial I/O and protocol state belong to this QObject's thread.
+    // Only device discovery runs in a worker, using the protected port-list cache.
     QSerialPort port;
 
-    /// @brief      Searches for new serial devices
-    /// @returns    Whether devices list has changed (true) or not (false)
-    /// @note       If found devices are different, this list is merged into the new currentPorts.
+    // ===== Device discovery and synchronization ==============================
+
+    /// @brief      Refreshes the cached list of OpenFIRE serial devices.
+    /// @returns    Whether the device count or port names changed.
+    /// @note       Replaces the cached list under its mutex; does not open a port.
     bool SearchPorts();
 
+    /// @brief      Returns a copy of the cached list under the same mutex.
     QList<QSerialPortInfo> CurrentPortsSnapshot() const;
 
     /// @brief      Loads the connected device's settings into App_Common.
     /// @returns    Success (true) or failure (false)
     /// @param      portName Displayed name from the device selector.
     bool GetSettings(const QString &portName);
+
+    // ===== Commands, settings and recovery ===================================
 
     /// @brief      Sends one framed command to the connected device.
     /// @note       Waits for delivery acknowledgement, not operation completion.
@@ -84,13 +99,13 @@ public:
     /// @brief      Sends App_Common settings and waits for the device's save result.
     /// @returns    Success (true) or failure (false)
     bool CommitSettings();
+    /// @brief      True after an incomplete or unconfirmed commit, until retry succeeds or state resets.
     bool CommitNeedsRetry() const { return appSerialCommitNeedsRetry; }
-
-    // sError payload: [retry required] [originating request command].
-    static constexpr uint8_t APP_SERIAL_ERR_COMMIT_RETRY = 0x82;
 
     /// @brief Close on a fatal error; require a board restart. Returns false.
     bool FailOperation();
+
+    // ===== Disconnect, bootloader and user messages ==========================
 
     /// @brief      Disconnects current serial device and clears port name
     void Disconnect();
@@ -103,6 +118,14 @@ public:
                    QMessageBox::Icon icon = QMessageBox::Warning);
 
 private:
+    // Operation deadlines (ms). Equal values have separate names where their
+    // purposes differ, so changing one policy does not silently change another.
+    static constexpr int APP_SERIAL_SETTINGS_TIMEOUT     = 2500;
+    static constexpr int APP_SERIAL_COMMIT_START_TIMEOUT = 2500;
+    static constexpr int APP_SERIAL_COMMIT_READY_TIMEOUT = 1000;
+    static constexpr int APP_SERIAL_SAVE_TIMEOUT         = 5000;
+    static constexpr int APP_SERIAL_DISCONNECT_TIMEOUT   = 2500;
+
     typedef struct AppSerialFrame_t {
         uint8_t typeFlags;
         uint8_t command;
@@ -111,24 +134,31 @@ private:
         uint8_t crc;
     } AppSerialFrame_s;
 
-    // Framing, delivery and response routing.
+    // ===== Frame encoding and incoming stream ================================
+
     static uint8_t AppSerialCRC8(const uint8_t *data, int length);
+    uint8_t NextSequence();
+    void ResetProtocolState();
     static QByteArray BuildFrame(uint8_t typeFlags, uint8_t command,
                                  uint8_t sequence, const char *payload, uint8_t length);
     bool SendAck(uint8_t command, uint8_t sequence);
+    // ProcessIncoming() is declared in private slots below.
+    void ParseIncoming();
+
+    // ===== Response routing, recovery and delivery ===========================
+
+    static bool IsTransactionResponse(uint8_t command);
+    void HandleFrame(const AppSerialFrame_s &frame);
+    bool CommitFailed();
     bool WaitForAck(uint8_t command, uint8_t sequence);
     // With a destination, remove and return the response; nullptr only waits.
     bool WaitForResponse(uint8_t command, AppSerialFrame_s *frame, int timeout);
-    bool BeginDock(QByteArray &deviceInfo);
-    void ResetProtocolState();
-    void ParseIncoming();
-    void HandleFrame(const AppSerialFrame_s &frame);
-    bool CommitFailed();
-    static bool IsTransactionResponse(uint8_t command);
-    uint8_t NextSequence();
-    void RequestToReboot();
 
-    // One settings record per frame; field names and wire values are unchanged.
+    // ===== Docking and settings records ======================================
+
+    bool BeginDock(QByteArray &deviceInfo);
+    // One settings record per frame. The command selects pins, profiles or
+    // fixed-size fields; callers supply the corresponding map and storage.
     bool ReceiveSettingsRecords(uint8_t command, void *dataPtr,
                                 const std::unordered_map<std::string_view, int> &dataMap,
                                 size_t dataSize);
@@ -136,20 +166,29 @@ private:
                              const std::unordered_map<std::string_view, int> &dataMap,
                              size_t dataSize, size_t profNum = 0);
 
-    /// @brief Primary list of OpenFIRE serial devices, protected for the scan worker.
+    // ===== Bootloader prompt =================================================
+
+    void RequestToReboot();
+
+    // ===== State =============================================================
+
+    // Discovery cache: both lists are protected by currentPortsMutex below.
     QList<QSerialPortInfo> currentPorts;
     QStringList currentPortsNames;
 
+    // Incoming bytes, decoded transaction responses and partial-frame deadline.
     QByteArray appSerialRxBuffer;
     QList<AppSerialFrame_s> appSerialResponses;
     QElapsedTimer appSerialRxTimer;
 
+    // Current request and most recently received acknowledgement.
     uint8_t appSerialTxSequence = 0;
     uint8_t appSerialLastRequest = 0;
     bool appSerialAckReceived = false;
     uint8_t appSerialAckCommand = 0;
     uint8_t appSerialAckSequence = 0;
 
+    // Last reliable response: retransmissions are ACKed without applying twice.
     bool appSerialLastRxValid = false;
     uint8_t appSerialLastRxTypeFlags = 0;
     uint8_t appSerialLastRxCommand = 0;
@@ -157,27 +196,33 @@ private:
     uint8_t appSerialLastRxLength = 0;
     uint8_t appSerialLastRxCRC = 0;
 
+    // Non-modal error message; do not open a second one while it is visible.
     QMessageBox syncError;
 
+    // Protects the discovery cache; serial protocol state is not shared with the worker.
     mutable QMutex currentPortsMutex;
+
+    // Session lifetime and recoverable commit state are separate concerns.
     bool appSerialSessionActive = false;
     bool appSerialCommitInProgress = false;
     bool appSerialCommitNeedsRetry = false;
     bool appSerialCommitError = false;
+    // Avoid reusing the previous start/save ID on the next attempt after a wrap.
     uint8_t appSerialLastStartSequence = 0;
     uint8_t appSerialLastSaveSequence = 0;
 
 private slots:
+    // Queued readyRead handler; synchronous waits also call it directly.
     void ProcessIncoming();
 
 signals:
-    /// @brief
+    /// @brief      Sets the progress indicator's upper limit.
     void Serial_SetProgressRange(const int &);
 
-    /// @brief
+    /// @brief      Updates progress and, when supplied, its descriptive text.
     void Serial_ProgressUpdate(const int &, const QString& = nullptr);
 
-    /// @brief      Delivers a complete validated asynchronous App event.
+    /// @brief      Delivers decoded device events and local operation errors to the GUI.
     void Serial_EventReceived(const uint8_t, const QByteArray&);
 };
 

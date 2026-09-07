@@ -273,7 +273,7 @@ void AppSerial::ParseIncoming()
     }
 }
 
-// ===== Response routing and delivery ========================================
+// ===== Response routing and recovery ========================================
 
 bool AppSerial::IsTransactionResponse(uint8_t command)
 {
@@ -293,7 +293,6 @@ bool AppSerial::IsTransactionResponse(uint8_t command)
     }
 }
 
-
 void AppSerial::HandleFrame(const AppSerialFrame_s &frame)
 {
     const uint8_t type = frame.typeFlags & APP_SERIAL_TYPE_MASK;
@@ -306,6 +305,8 @@ void AppSerial::HandleFrame(const AppSerialFrame_s &frame)
         return;
     }
 
+    // Reliable responses are ACKed even when duplicate or stale. Only an
+    // accepted response reaches the transaction queue or the common event path.
     if(type == APP_SERIAL_TYPE_RESPONSE) {
         const uint8_t length = (uint8_t)frame.payload.size();
         const bool duplicate =
@@ -373,6 +374,7 @@ void AppSerial::HandleFrame(const AppSerialFrame_s &frame)
             deliverEvent = true;
     }
 
+    // Both wire events and non-transaction responses use this GUI delivery path.
     if(!deliverEvent)
         return;
 
@@ -425,6 +427,8 @@ bool AppSerial::FailOperation()
     }
     return false;
 }
+
+// ===== Reliable command delivery and response waits ==========================
 
 bool AppSerial::WaitForAck(uint8_t command, uint8_t sequence)
 {
@@ -572,6 +576,7 @@ bool AppSerial::WaitForResponse(uint8_t command, AppSerialFrame_s *frame, int ti
     return false;
 }
 
+// ===== Dock handshake: raw request, framed response ==========================
 
 bool AppSerial::BeginDock(QByteArray &deviceInfo)
 {
@@ -583,8 +588,10 @@ bool AppSerial::BeginDock(QByteArray &deviceInfo)
         (char)OF_Const::sDock2
     };
 
+    // Local Dock policy (ms), independent of framed command/response timeouts.
     const int dockTimeout = 3000;
     const int retryInterval = 750;
+    const int writeTimeout = 250;
 
     QElapsedTimer timer;
     timer.start();
@@ -625,7 +632,7 @@ bool AppSerial::BeginDock(QByteArray &deviceInfo)
                 << "[AppSerial] Incomplete initial Dock write:"
                 << written << "of" << sizeof(dock) << "bytes.";
             } else if(port.bytesToWrite() > 0 &&
-                       !port.waitForBytesWritten(250) &&
+                       !port.waitForBytesWritten(writeTimeout) &&
                        port.bytesToWrite() > 0) {
                 qWarning().noquote()
                 << "[AppSerial] Initial Dock write timed out;"
@@ -787,8 +794,10 @@ bool AppSerial::GetSettings(const QString &portName)
                   QMessageBox::Warning);
     }
 
+    // For the fixed tables below, wait for the first record before clearing the
+    // destination. ReceiveSettingsRecords() then consumes that queued record.
     if(!SendCommand(OF_Const::sGetToggles) ||
-       !WaitForResponse(OF_Const::sGetToggles, nullptr, 2500))
+       !WaitForResponse(OF_Const::sGetToggles, nullptr, APP_SERIAL_SETTINGS_TIMEOUT))
         return false;
     memset(App_Common::boolSettings, false, sizeof(App_Common::boolSettings));
     if(!ReceiveSettingsRecords(OF_Const::sGetToggles,
@@ -804,7 +813,7 @@ bool AppSerial::GetSettings(const QString &portName)
 
     if(App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins]) {
         if(!SendCommand(OF_Const::sGetPins) ||
-           !WaitForResponse(OF_Const::sGetPins, nullptr, 2500))
+           !WaitForResponse(OF_Const::sGetPins, nullptr, APP_SERIAL_SETTINGS_TIMEOUT))
             return false;
         App_Common::inputsMap_orig.clear();
         App_Common::inputsMap.clear();
@@ -822,7 +831,7 @@ bool AppSerial::GetSettings(const QString &portName)
     emit Serial_ProgressUpdate(3, tr("Getting Settings (2)"));
 
     if(!SendCommand(OF_Const::sGetSettings) ||
-       !WaitForResponse(OF_Const::sGetSettings, nullptr, 2500))
+       !WaitForResponse(OF_Const::sGetSettings, nullptr, APP_SERIAL_SETTINGS_TIMEOUT))
         return false;
     memset(App_Common::settingsTable, 0, sizeof(App_Common::settingsTable));
     if(!ReceiveSettingsRecords(OF_Const::sGetSettings,
@@ -837,7 +846,7 @@ bool AppSerial::GetSettings(const QString &portName)
     emit Serial_ProgressUpdate(4, tr("Getting Button Mappings"));
 
     if(!SendCommand(OF_Const::sGetBtns) ||
-       !WaitForResponse(OF_Const::sGetBtns, nullptr, 2500))
+       !WaitForResponse(OF_Const::sGetBtns, nullptr, APP_SERIAL_SETTINGS_TIMEOUT))
         return false;
     memset(App_Common::inputFuncTable, 0, sizeof(App_Common::inputFuncTable));
     if(!ReceiveSettingsRecords(OF_Const::sGetBtns,
@@ -854,7 +863,7 @@ bool AppSerial::GetSettings(const QString &portName)
     App_Common::profilesTable_orig.clear();
 
     if(!SendCommand(OF_Const::sGetProfile) ||
-       !WaitForResponse(OF_Const::sGetProfile, nullptr, 2500))
+       !WaitForResponse(OF_Const::sGetProfile, nullptr, APP_SERIAL_SETTINGS_TIMEOUT))
         return false;
     if(!ReceiveSettingsRecords(OF_Const::sGetProfile,
                                nullptr,
@@ -868,6 +877,10 @@ bool AppSerial::GetSettings(const QString &portName)
     return true;
 }
 
+// ===== Settings record decoding =============================================
+// Payload: field name + NUL, value size, optional profile number, value bytes.
+// CurrentProf has no profile-number byte; an empty FINAL ends the record stream.
+
 bool AppSerial::ReceiveSettingsRecords(
     uint8_t command,
     void *dataPtr,
@@ -876,7 +889,7 @@ bool AppSerial::ReceiveSettingsRecords(
 {
     for(;;) {
         AppSerialFrame_s frame;
-        if(!WaitForResponse(command, &frame, 2500))
+        if(!WaitForResponse(command, &frame, APP_SERIAL_SETTINGS_TIMEOUT))
             return false;
 
         if(frame.typeFlags & APP_SERIAL_FLAG_FINAL) {
@@ -911,6 +924,7 @@ bool AppSerial::ReceiveSettingsRecords(
             return false;
         }
 
+        // The view is used only while this frame's payload remains alive.
         const std::string_view fieldName(payload.constData(), (size_t)nullPos);
         int pos = nullPos + 1;
         const uint8_t valueSize = (uint8_t)payload.at(pos++);
@@ -1028,14 +1042,15 @@ bool AppSerial::CommitSettings()
     emit Serial_SetProgressRange(8);
     emit Serial_ProgressUpdate(0, tr("Waiting for board..."));
 
+    // Preserve both phases: wait without consuming, then retrieve and validate.
     if(!SendCommand(OF_Const::sCommitStart) ||
-       !WaitForResponse(OF_Const::sCommitStart, nullptr, 2500)) {
+       !WaitForResponse(OF_Const::sCommitStart, nullptr, APP_SERIAL_COMMIT_START_TIMEOUT)) {
         qWarning().noquote() << "[AppSerial] Commit failed while starting the transaction.";
         return CommitFailed();
     }
 
     AppSerialFrame_s ready;
-    if(!WaitForResponse(OF_Const::sCommitStart, &ready, 1000)) {
+    if(!WaitForResponse(OF_Const::sCommitStart, &ready, APP_SERIAL_COMMIT_READY_TIMEOUT)) {
         qWarning().noquote() << "[AppSerial] Commit-start confirmation was not available.";
         return CommitFailed();
     }
@@ -1051,6 +1066,7 @@ bool AppSerial::CommitSettings()
         return CommitFailed();
     }
 
+    // Include the pin group when custom pins are being disabled as well.
     if(App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins] ||
        App_Common::boolSettings[App_Common::dataOrig][OF_Const::customPins]) {
         emit Serial_ProgressUpdate(2, tr("Sending Pins Map..."));
@@ -1104,8 +1120,9 @@ bool AppSerial::CommitSettings()
     if(!SendCommand(OF_Const::sSave))
         return CommitFailed();
 
+    // A delivery ACK is not a save result: wait for the device's actual outcome.
     AppSerialFrame_s saved;
-    if(!WaitForResponse(OF_Const::sSave, &saved, 5000)) {
+    if(!WaitForResponse(OF_Const::sSave, &saved, APP_SERIAL_SAVE_TIMEOUT)) {
         qWarning().noquote() << "[AppSerial] No final save result received from the device.";
         return CommitFailed();
     }
@@ -1125,6 +1142,8 @@ bool AppSerial::CommitSettings()
     emit Serial_ProgressUpdate(8);
     return true;
 }
+
+// ===== Settings record encoding =============================================
 
 bool AppSerial::SendSettingsRecords(
     uint8_t command,
@@ -1151,6 +1170,7 @@ bool AppSerial::SendSettingsRecords(
         payload[length++] = '\0';
 
         if(command == OF_Const::sCommitProfile) {
+            // Calibration geometry stays in the firmware; send App-writable fields.
             if(pair.second < OF_Const::profIrSens)
                 continue;
             if(pair.second == OF_Const::profCurrent) {
@@ -1218,7 +1238,7 @@ void AppSerial::Disconnect()
 
             if(WaitForResponse(OF_Const::serialTerminator,
                              &finalResponse,
-                             2500)) {
+                             APP_SERIAL_DISCONNECT_TIMEOUT)) {
                 if(!(finalResponse.typeFlags & APP_SERIAL_FLAG_FINAL) ||
                     !finalResponse.payload.isEmpty()) {
                     qWarning().noquote()
@@ -1265,6 +1285,8 @@ void AppSerial::RebootToBootldr()
             port.setBaudRate(QSerialPort::Baud1200);
             port.setDataTerminalReady(false);
         } else {
+            // Local write deadline only (ms): bootloader entry does not wait for ACK.
+            const int writeTimeout = 500;
             const QByteArray frame = BuildFrame(
                 APP_SERIAL_TYPE_REQUEST,
                 OF_Const::sRebootToBootloader,
@@ -1280,7 +1302,7 @@ void AppSerial::RebootToBootldr()
 
                 // Wait only for local transmission, never for an ACK.
                 while(port.bytesToWrite() > 0) {
-                    const int remaining = 500 - (int)timer.elapsed();
+                    const int remaining = writeTimeout - (int)timer.elapsed();
 
                     if(remaining <= 0 ||
                         (!port.waitForBytesWritten(remaining) &&
