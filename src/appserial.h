@@ -25,13 +25,15 @@
 #include <QElapsedTimer>
 #include <QList>
 #include <QMessageBox>
+#include <QMutex>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QString>
+#include <QStringList>
+#include <cstddef>
 #include <cstdint>
 #include <string_view>
 #include <unordered_map>
-
-#include <QMutex>
 
 class AppSerial : public QObject
 {
@@ -60,21 +62,7 @@ public:
 
     explicit AppSerial(QObject *parent = nullptr);
 
-    enum {
-        Serial_SearchPorts = 0,
-        Serial_GetSettings,
-        Serial_OneShot,
-        Serial_Sync,
-        Serial_Disconnect
-    } serialReturnTypes_e;
-
     QSerialPort port;
-
-    /// @brief      Primary list of found serial devices
-    /// @note       Only to be updated when new found ports list is different from this one.
-    QList<QSerialPortInfo> currentPorts;
-
-    QStringList currentPortsNames;
 
     /// @brief      Searches for new serial devices
     /// @returns    Whether devices list has changed (true) or not (false)
@@ -83,35 +71,17 @@ public:
 
     QList<QSerialPortInfo> CurrentPortsSnapshot() const;
 
-    /// @brief      Creates a string list of ports based on given list of serial devices
-    /// @returns    New list of port names
-    /// @param      QList
-    ///             Serial ports list
-    QStringList GeneratePortsList(const QList<QSerialPortInfo> &);
-
-    /// @brief      Grabs settings from connected Serial device to App_Const
+    /// @brief      Loads the connected device's settings into App_Common.
     /// @returns    Success (true) or failure (false)
-    /// @param      Index of currentPorts list to pull from
-    bool GetSettings(const QString &);
+    /// @param      portName Displayed name from the device selector.
+    bool GetSettings(const QString &portName);
 
-    /// @brief      Macro for saving batches of settings being received over serial
+    /// @brief      Sends one framed command to the connected device.
+    /// @note       Waits for delivery acknowledgement, not operation completion.
     /// @returns    Success (true) or failure (false)
-    /// @param      void*
-    ///             Pointer to data array
-    /// @param      unordered_map
-    ///             Map from OF_Const::OFPresets to reference for string names and respective indices
-    /// @param      size_t
-    ///             Size of data blocks that void* points to, for correct seeks through array elements by address
-    bool BatchStoreSettings(void*, const std::unordered_map<std::string_view, int>&, const size_t&);
+    bool SendCommand(uint8_t command, const char *payload = nullptr, size_t length = 0);
 
-    /// @brief      Sends serial message to currently connected Serial device
-    /// @returns    Success (true) or failure (false)
-    /// @param      QString
-    ///             String to send to device
-    bool OneShotSend(const char*, const unsigned int & = 0, const bool & = false);
-    bool OneShotSend(const char &, const bool & = false);
-
-    /// @brief      Commits settings (App_Const) to currently connected Serial device
+    /// @brief      Sends App_Common settings and waits for the device's save result.
     /// @returns    Success (true) or failure (false)
     bool CommitSettings();
     bool CommitNeedsRetry() const { return appSerialCommitNeedsRetry; }
@@ -122,34 +92,15 @@ public:
     /// @brief Close on a fatal error; require a board restart. Returns false.
     bool FailOperation();
 
-    /// @brief      Macro for committing batches of data to board
-    /// @returns    Success (true) or failure (false)
-    /// @param      void*
-    ///             Pointer to data array
-    /// @param      unordered_map
-    ///             Map from OF_Const::OFPresets to reference for string names and respective indices
-    /// @param      size_t
-    ///             Size of data blocks that void* points to, for correct seeks through array elements by address
-    bool BatchSendSettings(void*, const std::unordered_map<std::string_view, int>&, const size_t&, const size_t& = 0);
-
     /// @brief      Disconnects current serial device and clears port name
     void Disconnect();
 
-    /// @brief      Prompts user to reboot to bootloader
-    void RequestToReboot();
-
-    /// @brief      Sends magic baud 1200 signal to reset connected board to bootloader
+    /// @brief      Enters the bootloader using RP2040's 1200-baud touch or the ESP32 command.
     void RebootToBootldr();
 
     /// @brief      Show error message popup regarding serial
-    void ShowError(const QString& titleText, const QString& text, const QMessageBox::Icon icon = QMessageBox::Warning) {
-        if(!syncError.isVisible()) {
-            syncError.setWindowTitle(titleText);
-            syncError.setText(text);
-            syncError.setIcon(icon);
-            syncError.show();
-        }
-    }
+    void ShowError(const QString &titleText, const QString &text,
+                   QMessageBox::Icon icon = QMessageBox::Warning);
 
 private:
     typedef struct AppSerialFrame_t {
@@ -160,20 +111,34 @@ private:
         uint8_t crc;
     } AppSerialFrame_s;
 
-    static uint8_t AppSerialCRC8(const uint8_t*, int);
-    QByteArray BuildFrame(uint8_t, uint8_t, uint8_t, const char*, uint8_t) const;
-    bool SendReliableFrame(uint8_t, const char*, uint8_t);
-    bool SendAck(uint8_t, uint8_t);
-    bool WaitForAck(uint8_t, uint8_t);
-    bool WaitForResponse(uint8_t, int = 1000);
-    bool TakeResponse(uint8_t, AppSerialFrame_s&, int = 1000);
-    bool BeginDock(QByteArray&);
+    // Framing, delivery and response routing.
+    static uint8_t AppSerialCRC8(const uint8_t *data, int length);
+    static QByteArray BuildFrame(uint8_t typeFlags, uint8_t command,
+                                 uint8_t sequence, const char *payload, uint8_t length);
+    bool SendAck(uint8_t command, uint8_t sequence);
+    bool WaitForAck(uint8_t command, uint8_t sequence);
+    // With a destination, remove and return the response; nullptr only waits.
+    bool WaitForResponse(uint8_t command, AppSerialFrame_s *frame, int timeout);
+    bool BeginDock(QByteArray &deviceInfo);
     void ResetProtocolState();
     void ParseIncoming();
-    void HandleFrame(const AppSerialFrame_s&);
+    void HandleFrame(const AppSerialFrame_s &frame);
     bool CommitFailed();
-    bool IsTransactionResponse(uint8_t) const;
+    static bool IsTransactionResponse(uint8_t command);
     uint8_t NextSequence();
+    void RequestToReboot();
+
+    // One settings record per frame; field names and wire values are unchanged.
+    bool ReceiveSettingsRecords(uint8_t command, void *dataPtr,
+                                const std::unordered_map<std::string_view, int> &dataMap,
+                                size_t dataSize);
+    bool SendSettingsRecords(uint8_t command, const void *dataPtr,
+                             const std::unordered_map<std::string_view, int> &dataMap,
+                             size_t dataSize, size_t profNum = 0);
+
+    /// @brief Primary list of OpenFIRE serial devices, protected for the scan worker.
+    QList<QSerialPortInfo> currentPorts;
+    QStringList currentPortsNames;
 
     QByteArray appSerialRxBuffer;
     QList<AppSerialFrame_s> appSerialResponses;
@@ -193,8 +158,6 @@ private:
     uint8_t appSerialLastRxCRC = 0;
 
     QMessageBox syncError;
-
-    char TXbuf[APP_SERIAL_MAX_PAYLOAD + 1];
 
     mutable QMutex currentPortsMutex;
     bool appSerialSessionActive = false;

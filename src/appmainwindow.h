@@ -281,7 +281,7 @@ private:
 
     bool serialSearchPending = false;
 
-    // Flag that's set during I/O operations so that the readyRead signal doesn't interfere and absorb RX buffer mid-method.
+    // Prevent asynchronous UI updates while a connection or save transaction is running.
     bool serialActive = false;
 
     /// @brief      Timer that probes the board if it's still plugged in

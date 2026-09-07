@@ -70,7 +70,6 @@ guiWindow::guiWindow(QWidget *parent)
 
     // Connect together Serial stuff
     connect(&serialSearchWatcher, &QFutureWatcher<bool>::finished, this, &guiWindow::serialPort_SearchFinished);
-    //connect(&serial, &AppSerial::Serial_EventReceived, this, &guiWindow::serialPort_readyRead);
     connect(&serial, &AppSerial::Serial_EventReceived, this, &guiWindow::serialPort_readyRead, Qt::QueuedConnection);
     connect(&serial, &AppSerial::Serial_SetProgressRange, this, &guiWindow::serialPort_progressSet);
     connect(&serial, &AppSerial::Serial_ProgressUpdate, this, &guiWindow::serialPort_progressUpdate);
@@ -332,13 +331,6 @@ bool guiWindow::eventFilter(QObject* object, QEvent* event)
 
 void guiWindow::aliveTimer_timeout()
 {
-
-    /*
-    // Avoid starting a second scan if the previous one is still running.
-    if(serialSearchWatcher.isRunning())
-        return;
-    */
-
     if(serialSearchPending || serialSearchWatcher.isRunning())
         return;
 
@@ -353,19 +345,6 @@ void guiWindow::aliveTimer_timeout()
 
     serialSearchWatcher.setFuture(serialSearchFuture);
 }
-
-/*
-void guiWindow::aliveTimer_timeout()
-{
-    serialSearchWatcher.setFuture(serialSearchFuture);
-    // Why did Qt6 change this syntax?
-#if QT_VERSION_MAJOR > 5
-    serialSearchFuture = QtConcurrent::run(&AppSerial::SearchPorts, &serial);
-#else
-    serialSearchFuture = QtConcurrent::run(&serial, &AppSerial::SearchPorts);
-#endif
-}
-*/
 
 void guiWindow::BoxesUpdate()
 {
@@ -1093,7 +1072,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             if(App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
                 ui->baudResetBtn->setText(tr("Reboot to Bootloader"));
             } else {
-                ui->baudResetBtn->setText(tr("Reboot Microcontroller"));
+                ui->baudResetBtn->setText(tr("Restart Microcontroller in Firmware Update Mode"));
             }
 
             DiffUpdate(); // Also reflects a pending save reported on reconnect.
@@ -1910,20 +1889,6 @@ void guiWindow::colorBoxes_clicked()
     }
 }
 
-/*
-void guiWindow::selectedProfile_isChecked(bool isChecked)
-{
-    // apparently we get two signals at once? So just filter for the on.
-    if(isChecked && !serialActive) {
-        // Demultiplexing to figure out which "pin" this combobox that's calling correlates to.
-        if(sender()->property("slot").toInt() != App_Common::board.selectedProfile) {
-            char buf[] = {(char)OF_Const::sCaliProfile, static_cast<char>(sender()->property("slot").toInt())};
-            serial.OneShotSend(buf, 2);
-        }
-    }
-}
-*/
-
 void guiWindow::selectedProfile_isChecked(bool isChecked)
 {
     // Apparently we get two signals at once, so only process the checked one.
@@ -1931,31 +1896,15 @@ void guiWindow::selectedProfile_isChecked(bool isChecked)
         const int profile = sender()->property("slot").toInt();
 
         if(profile != App_Common::board.selectedProfile) {
-            char buf[] = {
-                (char)OF_Const::sCaliProfile, // Command
+            const char payload[] = {
                 (char)OF_Const::sCaliProfile, // Subcommand: select profile only
                 (char)profile
             };
 
-            serial.OneShotSend(buf, sizeof(buf));
+            serial.SendCommand(OF_Const::sCaliProfile, payload, sizeof(payload));
         }
     }
 }
-
-/*
-void guiWindow::caliBtns_clicked()
-{
-    NewCaliWindow(AppCaliWindow::modeCalibrate);
-
-    char buf[] = {(char)OF_Const::sCaliProfile,
-                  static_cast<char>(sender()->property("slot").toInt()),
-                  (char)OF_Const::sCaliStart,
-                  static_cast<char>(App_Common::profilesTable.at(sender()->property("slot").toInt()).irSensitivity +
-                                    (App_Common::profilesTable.at(sender()->property("slot").toInt()).layoutType << 4))};
-    if(!serial.OneShotSend(buf, 4))
-        serial.FailOperation();
-}
-*/
 
 void guiWindow::caliBtns_clicked()
 {
@@ -1963,80 +1912,71 @@ void guiWindow::caliBtns_clicked()
 
     NewCaliWindow(AppCaliWindow::modeCalibrate);
 
-    char buf[] = {
-        (char)OF_Const::sCaliProfile, // Command
+    const char payload[] = {
         (char)OF_Const::sCaliStart,   // Subcommand: start calibration
         (char)profile,
         (char)(App_Common::profilesTable.at(profile).irSensitivity +
                 (App_Common::profilesTable.at(profile).layoutType << 4))
     };
 
-    if(!serial.OneShotSend(buf, sizeof(buf)))
+    if(!serial.SendCommand(OF_Const::sCaliProfile, payload, sizeof(payload)))
         serial.FailOperation();
 }
 
 /// gun tests
 void guiWindow::on_rumbleTestBtn_clicked()
 {
-    //char buf[2] = { (char)OF_Const::sTestRumble, true };
-    if(serial.OneShotSend((char)OF_Const::sTestRumble))
+    if(serial.SendCommand(OF_Const::sTestRumble))
         ui->statusBar->showMessage(tr("Sent a rumble test pulse."), 2500);
 }
 
 
 void guiWindow::on_solenoidTestBtn_clicked()
 {
-    //char buf[2] = { (char)OF_Const::sTestSolenoid, true };
-    if(serial.OneShotSend((char)OF_Const::sTestSolenoid))
+    if(serial.SendCommand(OF_Const::sTestSolenoid))
         ui->statusBar->showMessage(tr("Sent a solenoid test pulse."), 2500);
 }
 
 
 void guiWindow::on_redLedTestBtn_clicked()
 {
-    //char buf[2] = { (char)OF_Const::sTestLEDR, true };
-    //if(serial.OneShotSend(buf, sizeof(buf)))
-    if(serial.OneShotSend((char)OF_Const::sTestLEDR))
+    if(serial.SendCommand(OF_Const::sTestLEDR))
         ui->statusBar->showMessage(tr("Set LED to Red."), 2500);
 }
 
 
 void guiWindow::on_greenLedTestBtn_clicked()
 {
-    //char buf[2] = { (char)OF_Const::sTestLEDG, true };
-    if(serial.OneShotSend((char)OF_Const::sTestLEDG))
+    if(serial.SendCommand(OF_Const::sTestLEDG))
         ui->statusBar->showMessage(tr("Set LED to Green."), 2500);
 }
 
 
 void guiWindow::on_blueLedTestBtn_clicked()
 {
-    //char buf[2] = { (char)OF_Const::sTestLEDB, true };
-    if(serial.OneShotSend((char)OF_Const::sTestLEDB))
+    if(serial.SendCommand(OF_Const::sTestLEDB))
         ui->statusBar->showMessage(tr("Set LED to Blue."), 2500);
 }
 
 
 void guiWindow::on_testBtn_clicked()
 {
+    bool startTest = true;
+
     if(App_Common::profilesTable.at(App_Common::board.selectedProfile).layoutType != App_Common::profilesTable_orig.at(App_Common::board.selectedProfile).layoutType) {
-        if(QMessageBox::information(this,
-                                    tr("Warning: Unsaved Changes"),
-                                    tr("Your current calibration profile has an unsaved IR Layout type change.\n"
-                                       "Test Mode relies on the profile's settings since the last save, and may not work as expected.\n"
-                                       "It is recommended that you save your changes before continuing.\n\n"
-                                       "Continue to Test Mode?"),
-                                    QMessageBox::Yes | QMessageBox::No)
-            == QMessageBox::Yes) {
-            char buf[2] = { (char)OF_Const::sIRTest, true };
-            if(serial.OneShotSend(buf, sizeof(buf)))
-                NewCaliWindow(AppCaliWindow::modeIRTest);
-        }
-    } else {
-        char buf[2] = { (char)OF_Const::sIRTest, true };
-        if(serial.OneShotSend(buf, sizeof(buf)))
-            NewCaliWindow(AppCaliWindow::modeIRTest);
+        startTest = QMessageBox::information(
+                        this,
+                        tr("Warning: Unsaved Changes"),
+                        tr("Your current calibration profile has an unsaved IR Layout type change.\n"
+                           "Test Mode relies on the profile's settings since the last save, and may not work as expected.\n"
+                           "It is recommended that you save your changes before continuing.\n\n"
+                           "Continue to Test Mode?"),
+                        QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
     }
+
+    const char enabled = true;
+    if(startTest && serial.SendCommand(OF_Const::sIRTest, &enabled, sizeof(enabled)))
+        NewCaliWindow(AppCaliWindow::modeIRTest);
 }
 
 
@@ -2057,9 +1997,7 @@ void guiWindow::on_clearEepromBtn_clicked()
 
     if(messageBox.exec() == QMessageBox::Yes) {
         ui->statusBar->showMessage(tr("Board reset to initial settings."));
-        //char buf[2] = { (char)OF_Const::sClearFlash, (char)OF_Const::sClearFlash };
-        //serial.OneShotSend(buf, sizeof(buf));
-        serial.OneShotSend((char)OF_Const::sClearFlash);
+        serial.SendCommand(OF_Const::sClearFlash);
         QThread::msleep(50);
         serial.port.close();
         ui->comPortSelector->setCurrentIndex(0);
@@ -2264,7 +2202,6 @@ void guiWindow::serialPort_SearchFinished()
     serialSearchPending = false;
 
     // if ports have changed
-    ////////if(serialSearchFuture.result()) {
     if(serialSearchWatcher.result()) {
 
         const QList<QSerialPortInfo> ports =
@@ -2403,8 +2340,9 @@ void guiWindow::CaliWindowExiting(const int &mode,
     }
     case AppCaliWindow::modeIRTest:
     {
-        char buf[2] = { (char)OF_Const::sIRTest, false };
-        if(!serial.port.isOpen() || serial.OneShotSend(buf, sizeof(buf))) {
+        const char enabled = false;
+        if(!serial.port.isOpen() ||
+           serial.SendCommand(OF_Const::sIRTest, &enabled, sizeof(enabled))) {
             ui->buttonsTestArea->setEnabled(true);
             ui->pinsTab->setEnabled(true);
             ui->settingsTab->setEnabled(true);
@@ -2429,7 +2367,7 @@ void guiWindow::CaliWindowExiting(const int &mode,
 
 void guiWindow::CaliWindowRequestedExit()
 {
-    if(!serial.OneShotSend((char)OF_Const::serialTerminator))
+    if(!serial.SendCommand(OF_Const::serialTerminator))
         serial.FailOperation();
 }
 

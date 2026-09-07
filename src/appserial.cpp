@@ -22,11 +22,9 @@
 #include "../boards/OpenFIREshared.h"
 #include <QDebug>
 #include <QMessageBox>
-#include <QThread>
-#include <qtconcurrentrun.h>
-#include <cstring>
-
 #include <QMutexLocker>
+#include <cstring>
+#include <utility>
 
 static QString AppSerialHex(const uint8_t value)
 {
@@ -47,8 +45,22 @@ AppSerial::AppSerial(QObject *parent)
     // and never pay a full timeout for a frame that was already received.
     connect(&port, &QSerialPort::readyRead,
             this, &AppSerial::ProcessIncoming,
-            Qt::QueuedConnection);
+             Qt::QueuedConnection);
 }
+
+void AppSerial::ShowError(const QString &titleText, const QString &text,
+                          QMessageBox::Icon icon)
+{
+    if(syncError.isVisible())
+        return;
+
+    syncError.setWindowTitle(titleText);
+    syncError.setText(text);
+    syncError.setIcon(icon);
+    syncError.show();
+}
+
+// ===== Frame encoding and incoming stream ====================================
 
 uint8_t AppSerial::AppSerialCRC8(const uint8_t *data, int length)
 {
@@ -94,7 +106,7 @@ QByteArray AppSerial::BuildFrame(uint8_t typeFlags,
                                  uint8_t command,
                                  uint8_t sequence,
                                  const char *payload,
-                                 uint8_t length) const
+                                 uint8_t length)
 {
     if(length > APP_SERIAL_MAX_PAYLOAD || (length > 0 && payload == nullptr)) {
         qWarning().noquote() << "[AppSerial] Cannot build frame: invalid payload for command"
@@ -261,7 +273,9 @@ void AppSerial::ParseIncoming()
     }
 }
 
-bool AppSerial::IsTransactionResponse(uint8_t command) const
+// ===== Response routing and delivery ========================================
+
+bool AppSerial::IsTransactionResponse(uint8_t command)
 {
     switch(command) {
     case OF_Const::sDock2:
@@ -280,69 +294,10 @@ bool AppSerial::IsTransactionResponse(uint8_t command) const
 }
 
 
-/*
 void AppSerial::HandleFrame(const AppSerialFrame_s &frame)
 {
     const uint8_t type = frame.typeFlags & APP_SERIAL_TYPE_MASK;
-
-    if(type == APP_SERIAL_TYPE_ACK) {
-        appSerialAckCommand = frame.command;
-        appSerialAckSequence = frame.sequence;
-        appSerialAckReceived = true;
-        return;
-    }
-
-    if(type == APP_SERIAL_TYPE_RESPONSE) {
-        const uint8_t length = (uint8_t)frame.payload.size();
-        const bool duplicate = appSerialLastRxValid &&
-                               appSerialLastRxTypeFlags == frame.typeFlags &&
-                               appSerialLastRxCommand == frame.command &&
-                               appSerialLastRxSequence == frame.sequence &&
-                               appSerialLastRxLength == length &&
-                               appSerialLastRxCRC == frame.crc;
-
-        if(!duplicate) {
-            appSerialLastRxValid = true;
-            appSerialLastRxTypeFlags = frame.typeFlags;
-            appSerialLastRxCommand = frame.command;
-            appSerialLastRxSequence = frame.sequence;
-            appSerialLastRxLength = length;
-            appSerialLastRxCRC = frame.crc;
-        }
-
-        SendAck(frame.command, frame.sequence);
-        if(duplicate)
-            return;
-
-        // Only responses with an unambiguous transaction command belong in
-        // this queue. sError has no originating-command field, so retaining it
-        // here could make a later, unrelated transaction fail as if the old
-        // error belonged to it. Errors are still ACKed above and delivered to
-        // the UI immediately below.
-        if(IsTransactionResponse(frame.command))
-            appSerialResponses.append(frame);
-
-        if(!IsTransactionResponse(frame.command)) {
-            if(frame.command == OF_Const::sError)
-                qWarning().noquote() << "[AppSerial] Device reported an error; payload:"
-                                     << frame.payload.toHex(' ');
-            emit Serial_EventReceived(frame.command, frame.payload);
-        }
-        return;
-    }
-
-    if(type == APP_SERIAL_TYPE_EVENT) {
-        if(frame.command == OF_Const::sError)
-            qWarning().noquote() << "[AppSerial] Device reported an asynchronous error; payload:"
-                                 << frame.payload.toHex(' ');
-        emit Serial_EventReceived(frame.command, frame.payload);
-    }
-}
-*/
-
-void AppSerial::HandleFrame(const AppSerialFrame_s &frame)
-{
-    const uint8_t type = frame.typeFlags & APP_SERIAL_TYPE_MASK;
+    bool deliverEvent = type == APP_SERIAL_TYPE_EVENT;
 
     if(type == APP_SERIAL_TYPE_ACK) {
         appSerialAckCommand = frame.command;
@@ -414,44 +369,33 @@ void AppSerial::HandleFrame(const AppSerialFrame_s &frame)
                 << "while waiting for"
                 << AppSerialHex(appSerialLastRequest) << '.';
 #endif
-        } else {
-            if(frame.command == OF_Const::sError) {
-                qWarning().noquote()
-                << "[AppSerial] Device reported an error; payload:"
-                << frame.payload.toHex(' ');
-            }
+        } else
+            deliverEvent = true;
+    }
 
-            if(frame.command == OF_Const::sError && frame.payload.isEmpty()) {
-                if(appSerialCommitInProgress)
-                    appSerialCommitError = true;
-                else if(appSerialCommitNeedsRetry)
-                    emit Serial_EventReceived(OF_Const::sError,
-                        QByteArray(1, (char)APP_SERIAL_ERR_COMMIT_RETRY));
-                else FailOperation();
-            }
-            else emit Serial_EventReceived(frame.command, frame.payload);
-        }
+    if(!deliverEvent)
+        return;
 
+    if(frame.command == OF_Const::sError) {
+        qWarning().noquote()
+            << (type == APP_SERIAL_TYPE_EVENT ?
+                "[AppSerial] Device reported an asynchronous error; payload:" :
+                "[AppSerial] Device reported an error; payload:")
+            << frame.payload.toHex(' ');
+    }
+
+    if(frame.command != OF_Const::sError || !frame.payload.isEmpty()) {
+        emit Serial_EventReceived(frame.command, frame.payload);
         return;
     }
 
-    if(type == APP_SERIAL_TYPE_EVENT) {
-        if(frame.command == OF_Const::sError) {
-            qWarning().noquote()
-            << "[AppSerial] Device reported an asynchronous error; payload:"
-            << frame.payload.toHex(' ');
-        }
-
-        if(frame.command == OF_Const::sError && frame.payload.isEmpty()) {
-            if(appSerialCommitInProgress)
-                appSerialCommitError = true;
-            else if(appSerialCommitNeedsRetry)
-                emit Serial_EventReceived(OF_Const::sError,
-                    QByteArray(1, (char)APP_SERIAL_ERR_COMMIT_RETRY));
-            else FailOperation();
-        }
-        else emit Serial_EventReceived(frame.command, frame.payload);
-    }
+    if(appSerialCommitInProgress)
+        appSerialCommitError = true;
+    else if(appSerialCommitNeedsRetry)
+        emit Serial_EventReceived(OF_Const::sError,
+                                  QByteArray(1, (char)APP_SERIAL_ERR_COMMIT_RETRY));
+    else
+        FailOperation();
 }
 
 // Commit failure is recoverable while both peers retain their RAM.
@@ -517,17 +461,17 @@ bool AppSerial::WaitForAck(uint8_t command, uint8_t sequence)
     return false;
 }
 
-bool AppSerial::SendReliableFrame(uint8_t command, const char *payload, uint8_t length)
+bool AppSerial::SendCommand(uint8_t command, const char *payload, size_t length)
 {
+    if(length > APP_SERIAL_MAX_PAYLOAD || (length > 0 && payload == nullptr)) {
+        qWarning().noquote() << "[AppSerial] SendCommand rejected invalid payload for command"
+                             << AppSerialHex(command) << "length" << (qulonglong)length << '.';
+        return false;
+    }
+
     if(!port.isOpen()) {
         qWarning().noquote() << "[AppSerial] Cannot send command"
                              << AppSerialHex(command) << ": serial port is closed.";
-        return false;
-    }
-    if(length > APP_SERIAL_MAX_PAYLOAD) {
-        qWarning().noquote() << "[AppSerial] Cannot send command"
-                             << AppSerialHex(command) << ": payload length" << (unsigned int)length
-                             << "exceeds the" << APP_SERIAL_MAX_PAYLOAD << "byte limit.";
         return false;
     }
 
@@ -543,7 +487,7 @@ bool AppSerial::SendReliableFrame(uint8_t command, const char *payload, uint8_t 
             sequence = NextSequence();
         appSerialLastSaveSequence = sequence;
     }
-    const QByteArray frame = BuildFrame(APP_SERIAL_TYPE_REQUEST, command, sequence, payload, length);
+    const QByteArray frame = BuildFrame(APP_SERIAL_TYPE_REQUEST, command, sequence, payload, (uint8_t)length);
     if(frame.isEmpty()) {
         qWarning().noquote() << "[AppSerial] Frame creation failed for command"
                              << AppSerialHex(command) << "sequence" << (unsigned int)sequence << '.';
@@ -595,36 +539,7 @@ bool AppSerial::SendReliableFrame(uint8_t command, const char *payload, uint8_t 
     return false;
 }
 
-bool AppSerial::WaitForResponse(uint8_t command, int timeout)
-{
-    QElapsedTimer timer;
-    timer.start();
-
-    for(;;) {
-        ProcessIncoming();
-        if(!port.isOpen() || (appSerialCommitInProgress && appSerialCommitError))
-            return false;
-
-        for(int i = 0; i < appSerialResponses.size(); ++i) {
-            if(appSerialResponses.at(i).command == command)
-                return true;
-        }
-
-        const int remaining = timeout - (int)timer.elapsed();
-        if(remaining <= 0)
-            break;
-
-        // The queued readyRead slot cannot consume the frame from inside this
-        // blocking call. Loop back and let ProcessIncoming() validate it.
-        port.waitForReadyRead(remaining);
-    }
-
-    qWarning().noquote() << "[AppSerial] Response timeout for command"
-                         << AppSerialHex(command) << "after" << timeout << "ms.";
-    return false;
-}
-
-bool AppSerial::TakeResponse(uint8_t command, AppSerialFrame_s &frame, int timeout)
+bool AppSerial::WaitForResponse(uint8_t command, AppSerialFrame_s *frame, int timeout)
 {
     QElapsedTimer timer;
     timer.start();
@@ -636,7 +551,8 @@ bool AppSerial::TakeResponse(uint8_t command, AppSerialFrame_s &frame, int timeo
 
         for(int i = 0; i < appSerialResponses.size(); ++i) {
             if(appSerialResponses.at(i).command == command) {
-                frame = appSerialResponses.takeAt(i);
+                if(frame != nullptr)
+                    *frame = appSerialResponses.takeAt(i);
                 return true;
             }
         }
@@ -649,44 +565,13 @@ bool AppSerial::TakeResponse(uint8_t command, AppSerialFrame_s &frame, int timeo
         port.waitForReadyRead(remaining);
     }
 
-    qWarning().noquote() << "[AppSerial] Timed out while retrieving response for command"
+    qWarning().noquote() << (frame != nullptr ?
+                             "[AppSerial] Timed out while retrieving response for command" :
+                             "[AppSerial] Response timeout for command")
                          << AppSerialHex(command) << "after" << timeout << "ms.";
     return false;
 }
 
-
-/*
-bool AppSerial::BeginDock(QByteArray &deviceInfo)
-{
-    ResetProtocolState();
-    port.readAll();
-
-    const char dock[] = {(char)OF_Const::sDock1, (char)OF_Const::sDock2};
-    const qint64 written = port.write(dock, sizeof(dock));
-    if(written != sizeof(dock)) {
-        qWarning().noquote() << "[AppSerial] Could not write the complete initial Dock request:"
-                             << written << "of" << sizeof(dock) << "bytes.";
-        return false;
-    }
-    if(port.bytesToWrite() > 0 && !port.waitForBytesWritten(1000) && port.bytesToWrite() > 0) {
-        qWarning().noquote() << "[AppSerial] Initial Dock request write timed out.";
-        return false;
-    }
-
-    AppSerialFrame_s frame;
-    if(!TakeResponse(OF_Const::sDock2, frame, 3000)) {
-        qWarning().noquote() << "[AppSerial] No valid board-information frame received during Dock.";
-        return false;
-    }
-    if((frame.typeFlags & APP_SERIAL_FLAG_FINAL) || frame.payload.isEmpty()) {
-        qWarning().noquote() << "[AppSerial] Invalid board-information response: unexpected final flag or empty payload.";
-        return false;
-    }
-
-    deviceInfo = frame.payload;
-    return true;
-}
-*/
 
 bool AppSerial::BeginDock(QByteArray &deviceInfo)
 {
@@ -724,7 +609,6 @@ bool AppSerial::BeginDock(QByteArray &deviceInfo)
                 return false;
             }
 
-            appSerialSessionActive = true;
             deviceInfo = frame.payload;
             return true;
         }
@@ -768,6 +652,8 @@ bool AppSerial::BeginDock(QByteArray &deviceInfo)
     return false;
 }
 
+// ===== Device discovery and initial synchronization ==========================
+
 bool AppSerial::SearchPorts()
 {
     QList<QSerialPortInfo> serialFoundList = QSerialPortInfo::availablePorts();
@@ -795,7 +681,10 @@ bool AppSerial::SearchPorts()
         return false;
 
     currentPorts = serialFoundList;
-    currentPortsNames = GeneratePortsList(currentPorts);
+    currentPortsNames.clear();
+    currentPortsNames.reserve(currentPorts.size());
+    for(const auto &currentPort : std::as_const(currentPorts))
+        currentPortsNames.append(currentPort.portName());
 
 #ifdef OFAPP_DEBUG
     qDebug().noquote() << "[AppSerial] OpenFIRE device list changed:"
@@ -811,62 +700,11 @@ QList<QSerialPortInfo> AppSerial::CurrentPortsSnapshot() const
     return currentPorts;
 }
 
-
-/*
-bool AppSerial::SearchPorts()
-{
-    QList<QSerialPortInfo> serialFoundList = QSerialPortInfo::availablePorts();
-    if(!serialFoundList.isEmpty()) {
-        for(int i = serialFoundList.length() - 1; i >= 0; --i) {
-            if(serialFoundList.at(i).vendorIdentifier() == 0xF143) {
-                printf("Found device @ %s\n", serialFoundList.at(i).systemLocation().toLocal8Bit().constData());
-            } else {
-                if(!serialFoundList.at(i).systemLocation().contains("tty"))
-                    printf("Deleting dummy device %s\n", serialFoundList.at(i).systemLocation().toLocal8Bit().constData());
-                serialFoundList.removeAt(i);
-            }
-        }
-
-        if(currentPorts.size() != serialFoundList.size()) {
-            currentPorts = serialFoundList;
-            printf("Current ports list does not match new list, overriding...\n");
-            currentPortsNames = GeneratePortsList(currentPorts);
-            return true;
-        }
-
-        for(const auto &foundPort : std::as_const(serialFoundList)) {
-            if(!currentPortsNames.contains(foundPort.portName())) {
-                currentPorts = serialFoundList;
-                printf("%s not found in current ports, overriding old serial devices list...\n",
-                       foundPort.portName().toLocal8Bit().constData());
-                currentPortsNames = GeneratePortsList(currentPorts);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    return true;
-}
-*/
-
-
-QStringList AppSerial::GeneratePortsList(const QList<QSerialPortInfo> &portsList)
-{
-    QStringList newList;
-    for(const auto &newPort : portsList)
-        newList.append(newPort.portName());
-    return newList;
-}
-
 bool AppSerial::GetSettings(const QString &portName)
 {
     if(port.isOpen())
         Disconnect();
 
-    /*
-    for(const auto &curPort : std::as_const(currentPorts)) {
-    */
     const QList<QSerialPortInfo> ports = CurrentPortsSnapshot();
 
     for(const auto &curPort : ports) {
@@ -949,12 +787,14 @@ bool AppSerial::GetSettings(const QString &portName)
                   QMessageBox::Warning);
     }
 
-    if(!OneShotSend((char)OF_Const::sGetToggles, true))
+    if(!SendCommand(OF_Const::sGetToggles) ||
+       !WaitForResponse(OF_Const::sGetToggles, nullptr, 2500))
         return false;
     memset(App_Common::boolSettings, false, sizeof(App_Common::boolSettings));
-    if(!BatchStoreSettings(App_Common::boolSettings[App_Common::dataCurrent],
-                           App_Common::OFPresets.boolTypes_Strings,
-                           sizeof(App_Common::boolSettings[App_Common::dataCurrent]) / OF_Const::boolTypesCount))
+    if(!ReceiveSettingsRecords(OF_Const::sGetToggles,
+                               App_Common::boolSettings[App_Common::dataCurrent],
+                               App_Common::OFPresets.boolTypes_Strings,
+                               sizeof(App_Common::boolSettings[App_Common::dataCurrent]) / OF_Const::boolTypesCount))
         return false;
     memcpy(App_Common::boolSettings[App_Common::dataOrig],
            App_Common::boolSettings[App_Common::dataCurrent],
@@ -963,13 +803,15 @@ bool AppSerial::GetSettings(const QString &portName)
     emit Serial_ProgressUpdate(2, tr("Getting Settings (1)"));
 
     if(App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins]) {
-        if(!OneShotSend((char)OF_Const::sGetPins, true))
+        if(!SendCommand(OF_Const::sGetPins) ||
+           !WaitForResponse(OF_Const::sGetPins, nullptr, 2500))
             return false;
         App_Common::inputsMap_orig.clear();
         App_Common::inputsMap.clear();
-        if(!BatchStoreSettings(&App_Common::inputsMap_orig,
-                               App_Common::OFPresets.boardInputs_Strings,
-                               0))
+        if(!ReceiveSettingsRecords(OF_Const::sGetPins,
+                                   &App_Common::inputsMap_orig,
+                                   App_Common::OFPresets.boardInputs_Strings,
+                                   0))
             return false;
     } else {
         for(int i = 0; i < OF_Const::boardInputsCount; ++i)
@@ -979,12 +821,14 @@ bool AppSerial::GetSettings(const QString &portName)
 
     emit Serial_ProgressUpdate(3, tr("Getting Settings (2)"));
 
-    if(!OneShotSend((char)OF_Const::sGetSettings, true))
+    if(!SendCommand(OF_Const::sGetSettings) ||
+       !WaitForResponse(OF_Const::sGetSettings, nullptr, 2500))
         return false;
     memset(App_Common::settingsTable, 0, sizeof(App_Common::settingsTable));
-    if(!BatchStoreSettings(App_Common::settingsTable[App_Common::dataCurrent],
-                           App_Common::OFPresets.settingsTypes_Strings,
-                           sizeof(App_Common::settingsTable[App_Common::dataCurrent]) / OF_Const::settingsTypesCount))
+    if(!ReceiveSettingsRecords(OF_Const::sGetSettings,
+                               App_Common::settingsTable[App_Common::dataCurrent],
+                               App_Common::OFPresets.settingsTypes_Strings,
+                               sizeof(App_Common::settingsTable[App_Common::dataCurrent]) / OF_Const::settingsTypesCount))
         return false;
     memcpy(App_Common::settingsTable[App_Common::dataOrig],
            App_Common::settingsTable[App_Common::dataCurrent],
@@ -992,12 +836,14 @@ bool AppSerial::GetSettings(const QString &portName)
 
     emit Serial_ProgressUpdate(4, tr("Getting Button Mappings"));
 
-    if(!OneShotSend((char)OF_Const::sGetBtns, true))
+    if(!SendCommand(OF_Const::sGetBtns) ||
+       !WaitForResponse(OF_Const::sGetBtns, nullptr, 2500))
         return false;
     memset(App_Common::inputFuncTable, 0, sizeof(App_Common::inputFuncTable));
-    if(!BatchStoreSettings(App_Common::inputFuncTable[App_Common::dataCurrent],
-                           App_Common::OFPresets.boardInputs_Strings,
-                           sizeof(App_Common::inputFuncTable[App_Common::dataCurrent]) / BUTTON_COUNT))
+    if(!ReceiveSettingsRecords(OF_Const::sGetBtns,
+                               App_Common::inputFuncTable[App_Common::dataCurrent],
+                               App_Common::OFPresets.boardInputs_Strings,
+                               sizeof(App_Common::inputFuncTable[App_Common::dataCurrent]) / BUTTON_COUNT))
         return false;
     memcpy(App_Common::inputFuncTable[App_Common::dataOrig],
            App_Common::inputFuncTable[App_Common::dataCurrent],
@@ -1007,11 +853,13 @@ bool AppSerial::GetSettings(const QString &portName)
     App_Common::profilesTable.clear();
     App_Common::profilesTable_orig.clear();
 
-    if(!OneShotSend((char)OF_Const::sGetProfile, true))
+    if(!SendCommand(OF_Const::sGetProfile) ||
+       !WaitForResponse(OF_Const::sGetProfile, nullptr, 2500))
         return false;
-    if(!BatchStoreSettings(nullptr,
-                           App_Common::OFPresets.profSettingTypes_Strings,
-                           sizeof(float)))
+    if(!ReceiveSettingsRecords(OF_Const::sGetProfile,
+                               nullptr,
+                               App_Common::OFPresets.profSettingTypes_Strings,
+                               sizeof(float)))
         return false;
 
     App_Common::profilesTable_orig = App_Common::profilesTable;
@@ -1020,25 +868,26 @@ bool AppSerial::GetSettings(const QString &portName)
     return true;
 }
 
-bool AppSerial::BatchStoreSettings(void *dataPtr,
-                                   const std::unordered_map<std::string_view, int> &dataMap,
-                                   const size_t &dataSize)
+bool AppSerial::ReceiveSettingsRecords(
+    uint8_t command,
+    void *dataPtr,
+    const std::unordered_map<std::string_view, int> &dataMap,
+    size_t dataSize)
 {
     for(;;) {
         AppSerialFrame_s frame;
-        if(!TakeResponse(appSerialLastRequest, frame, 2500))
+        if(!WaitForResponse(command, &frame, 2500))
             return false;
 
         if(frame.typeFlags & APP_SERIAL_FLAG_FINAL) {
             if(!frame.payload.isEmpty()) {
                 qWarning().noquote() << "[AppSerial] Malformed final record for command"
-                                     << AppSerialHex(appSerialLastRequest)
+                                     << AppSerialHex(command)
                                      << ": final payload must be empty.";
                 return false;
             }
 
-
-            if(&dataMap == &App_Common::OFPresets.profSettingTypes_Strings) {
+            if(command == OF_Const::sGetProfile) {
                 if(App_Common::profilesTable.isEmpty() ||
                     App_Common::profilesTable.size() > APP_SERIAL_MAX_PROFILE_COUNT ||
                     App_Common::board.selectedProfile < 0 ||
@@ -1056,44 +905,45 @@ bool AppSerial::BatchStoreSettings(void *dataPtr,
         const int nullPos = payload.indexOf('\0');
         if(nullPos < 0 || nullPos + 1 >= payload.size()) {
             qWarning().noquote() << "[AppSerial] Malformed settings record for command"
-                                 << AppSerialHex(appSerialLastRequest)
+                                 << AppSerialHex(command)
                                  << ": missing field terminator or value length; payload size"
                                  << payload.size() << '.';
             return false;
         }
 
-        const QByteArray name = payload.left(nullPos + 1);
+        const std::string_view fieldName(payload.constData(), (size_t)nullPos);
         int pos = nullPos + 1;
         const uint8_t valueSize = (uint8_t)payload.at(pos++);
 
-        if(!dataMap.count(name.constData())) {
+        const auto field = dataMap.find(fieldName);
+        if(field == dataMap.end()) {
             #ifdef OFAPP_DEBUG
             qDebug().noquote() << "[AppSerial] Ignoring unknown settings field"
-                               << name.constData() << "for forward compatibility.";
+                               << AppSerialFieldName(fieldName) << "for forward compatibility.";
             #endif
             continue;
         }
 
-        const int index = dataMap.at(name.constData());
+        const int index = field->second;
         if(index < 0) {
             #ifdef OFAPP_DEBUG
             qDebug().noquote() << "[AppSerial] Ignoring disabled settings field"
-                               << name.constData() << '.';
+                               << AppSerialFieldName(fieldName) << '.';
             #endif
             continue;
         }
 
-        if(dataPtr == &App_Common::inputsMap_orig) {
+        if(command == OF_Const::sGetPins) {
             if(valueSize != sizeof(int8_t) || pos + valueSize != payload.size()) {
                 qWarning().noquote() << "[AppSerial] Malformed pin record"
-                                     << name.constData() << ": declared value size"
+                                     << AppSerialFieldName(fieldName) << ": declared value size"
                                      << (unsigned int)valueSize << "payload size" << payload.size() << '.';
                 return false;
             }
             int8_t pin = 0;
             memcpy(&pin, payload.constData() + pos, sizeof(pin));
             App_Common::inputsMap_orig[index] = pin;
-        } else if(&dataMap == &App_Common::OFPresets.profSettingTypes_Strings) {
+        } else if(command == OF_Const::sGetProfile) {
             if(index == OF_Const::profCurrent) {
                 // CurrentProf is intentionally a one-byte wire value; the UI
                 // stores it in a native int only after decoding it.
@@ -1102,10 +952,6 @@ bool AppSerial::BatchStoreSettings(void *dataPtr,
                                          << (unsigned int)valueSize << "payload size" << payload.size() << '.';
                     return false;
                 }
-                /*
-                App_Common::board.selectedProfile = (uint8_t)payload.at(pos);
-                */
-
                 const uint8_t selectedProfile = (uint8_t)payload.at(pos);
                 if(selectedProfile >= APP_SERIAL_MAX_PROFILE_COUNT) {
                     qWarning().noquote()
@@ -1119,7 +965,7 @@ bool AppSerial::BatchStoreSettings(void *dataPtr,
             } else {
                 if(pos >= payload.size()) {
                     qWarning().noquote() << "[AppSerial] Malformed profile record"
-                                         << name.constData() << ": missing profile number.";
+                                         << AppSerialFieldName(fieldName) << ": missing profile number.";
                     return false;
                 }
                 const uint8_t profNum = (uint8_t)payload.at(pos++);
@@ -1138,7 +984,7 @@ bool AppSerial::BatchStoreSettings(void *dataPtr,
                                             sizeof(App_Common::profilesTable_s::profName) : dataSize;
                 if(valueSize != expectedSize || pos + valueSize != payload.size()) {
                     qWarning().noquote() << "[AppSerial] Malformed profile record"
-                                         << name.constData() << "profile" << (unsigned int)profNum
+                                         << AppSerialFieldName(fieldName) << "profile" << (unsigned int)profNum
                                          << ": declared value size" << (unsigned int)valueSize
                                          << "expected" << expectedSize
                                          << "payload size" << payload.size() << '.';
@@ -1152,7 +998,7 @@ bool AppSerial::BatchStoreSettings(void *dataPtr,
         } else {
             if(valueSize != dataSize || pos + valueSize != payload.size()) {
                 qWarning().noquote() << "[AppSerial] Malformed settings record"
-                                     << name.constData() << ": declared value size"
+                                     << AppSerialFieldName(fieldName) << ": declared value size"
                                      << (unsigned int)valueSize << "expected" << dataSize
                                      << "payload size" << payload.size() << '.';
                 return false;
@@ -1166,30 +1012,7 @@ bool AppSerial::BatchStoreSettings(void *dataPtr,
     }
 }
 
-bool AppSerial::OneShotSend(const char *string, const unsigned int &len, const bool &waitForResponse)
-{
-    if(string == nullptr || len == 0 || len > APP_SERIAL_MAX_PAYLOAD + 1) {
-        qWarning().noquote() << "[AppSerial] OneShotSend rejected invalid buffer or length"
-                             << len << '.';
-        return false;
-    }
-
-    const uint8_t command = (uint8_t)string[0];
-    const uint8_t payloadLength = (uint8_t)(len - 1);
-    if(!SendReliableFrame(command, payloadLength ? &string[1] : nullptr, payloadLength))
-        return false;
-
-    return !waitForResponse || WaitForResponse(command, 2500);
-}
-
-bool AppSerial::OneShotSend(const char &chara, const bool &waitForResponse)
-{
-    const uint8_t command = (uint8_t)chara;
-    if(!SendReliableFrame(command, nullptr, 0))
-        return false;
-
-    return !waitForResponse || WaitForResponse(command, 2500);
-}
+// ===== Settings commit ======================================================
 
 bool AppSerial::CommitSettings()
 {
@@ -1205,15 +1028,14 @@ bool AppSerial::CommitSettings()
     emit Serial_SetProgressRange(8);
     emit Serial_ProgressUpdate(0, tr("Waiting for board..."));
 
-    //const char start[] = {(char)OF_Const::sCommitStart, (char)true};
-    //if(!OneShotSend(start, sizeof(start), true)) {
-    if(!OneShotSend((char)OF_Const::sCommitStart, true)) {
+    if(!SendCommand(OF_Const::sCommitStart) ||
+       !WaitForResponse(OF_Const::sCommitStart, nullptr, 2500)) {
         qWarning().noquote() << "[AppSerial] Commit failed while starting the transaction.";
         return CommitFailed();
     }
 
     AppSerialFrame_s ready;
-    if(!TakeResponse(OF_Const::sCommitStart, ready, 1000)) {
+    if(!WaitForResponse(OF_Const::sCommitStart, &ready, 1000)) {
         qWarning().noquote() << "[AppSerial] Commit-start confirmation was not available.";
         return CommitFailed();
     }
@@ -1222,9 +1044,10 @@ bool AppSerial::CommitSettings()
         return CommitFailed();
 
     emit Serial_ProgressUpdate(1, tr("Sending Toggles..."));
-    if(!BatchSendSettings(App_Common::boolSettings[App_Common::dataCurrent],
-                          App_Common::OFPresets.boolTypes_Strings,
-                          sizeof(App_Common::boolSettings[App_Common::dataCurrent]) / OF_Const::boolTypesCount)) {
+    if(!SendSettingsRecords(OF_Const::sCommitToggles,
+                            App_Common::boolSettings[App_Common::dataCurrent],
+                            App_Common::OFPresets.boolTypes_Strings,
+                            sizeof(App_Common::boolSettings[App_Common::dataCurrent]) / OF_Const::boolTypesCount)) {
         return CommitFailed();
     }
 
@@ -1235,50 +1058,54 @@ bool AppSerial::CommitSettings()
         for(size_t i = 0; i < OF_Const::boardInputsCount; ++i)
             inputMapFW[i] = App_Common::inputsMap.value(i);
 
-        if(!BatchSendSettings(inputMapFW,
-                              App_Common::OFPresets.boardInputs_Strings,
-                              sizeof(inputMapFW) / OF_Const::boardInputsCount)) {
+        if(!SendSettingsRecords(OF_Const::sCommitPins,
+                                inputMapFW,
+                                App_Common::OFPresets.boardInputs_Strings,
+                                sizeof(inputMapFW) / OF_Const::boardInputsCount)) {
             return CommitFailed();
         }
     }
 
     emit Serial_ProgressUpdate(3, tr("Sending Settings..."));
-    if(!BatchSendSettings(App_Common::settingsTable[App_Common::dataCurrent],
-                          App_Common::OFPresets.settingsTypes_Strings,
-                          sizeof(App_Common::settingsTable[App_Common::dataCurrent]) / OF_Const::settingsTypesCount)) {
+    if(!SendSettingsRecords(OF_Const::sCommitSettings,
+                            App_Common::settingsTable[App_Common::dataCurrent],
+                            App_Common::OFPresets.settingsTypes_Strings,
+                            sizeof(App_Common::settingsTable[App_Common::dataCurrent]) / OF_Const::settingsTypesCount)) {
         return CommitFailed();
     }
 
     emit Serial_ProgressUpdate(4, tr("Sending Buttons..."));
-    if(!BatchSendSettings(App_Common::inputFuncTable[App_Common::dataCurrent],
-                          App_Common::OFPresets.boardInputs_Strings,
-                          sizeof(App_Common::inputFuncTable[App_Common::dataCurrent]) / BUTTON_COUNT)) {
+    if(!SendSettingsRecords(OF_Const::sCommitBtns,
+                            App_Common::inputFuncTable[App_Common::dataCurrent],
+                            App_Common::OFPresets.boardInputs_Strings,
+                            sizeof(App_Common::inputFuncTable[App_Common::dataCurrent]) / BUTTON_COUNT)) {
         return CommitFailed();
     }
 
     emit Serial_ProgressUpdate(5, tr("Sending Profile Data..."));
     for(size_t i = 0; i < App_Common::profilesTable.count(); ++i) {
-        if(!BatchSendSettings(&App_Common::profilesTable[i],
-                              App_Common::OFPresets.profSettingTypes_Strings,
-                              sizeof(float),
-                              i)) {
+        if(!SendSettingsRecords(OF_Const::sCommitProfile,
+                                &App_Common::profilesTable[i],
+                                App_Common::OFPresets.profSettingTypes_Strings,
+                                sizeof(float),
+                                i)) {
             return CommitFailed();
         }
     }
 
     emit Serial_ProgressUpdate(6, tr("Sending TinyUSB ID Data..."));
-    TXbuf[0] = (char)OF_Const::sCommitID;
-    memcpy(&TXbuf[1], &App_Common::tinyUSBtable, sizeof(App_Common::tinyUSBtable_s));
-    if(!OneShotSend(TXbuf, 1 + sizeof(App_Common::tinyUSBtable_s))) {
+    if(!SendCommand(OF_Const::sCommitID,
+                    (const char*)&App_Common::tinyUSBtable,
+                    sizeof(App_Common::tinyUSBtable_s))) {
         return CommitFailed();
     }
 
     emit Serial_ProgressUpdate(7, tr("Saving..."));
-    if(!OneShotSend((char)OF_Const::sSave, false))
+    if(!SendCommand(OF_Const::sSave))
         return CommitFailed();
 
     AppSerialFrame_s saved;
-    if(!TakeResponse(OF_Const::sSave, saved, 5000)) {
+    if(!WaitForResponse(OF_Const::sSave, &saved, 5000)) {
         qWarning().noquote() << "[AppSerial] No final save result received from the device.";
         return CommitFailed();
     }
@@ -1299,81 +1126,71 @@ bool AppSerial::CommitSettings()
     return true;
 }
 
-bool AppSerial::BatchSendSettings(void *dataPtr,
-                                  const std::unordered_map<std::string_view, int> &dataMap,
-                                  const size_t &dataSize,
-                                  const size_t &profNum)
+bool AppSerial::SendSettingsRecords(
+    uint8_t command,
+    const void *dataPtr,
+    const std::unordered_map<std::string_view, int> &dataMap,
+    size_t dataSize,
+    size_t profNum)
 {
-    uint8_t command = 0;
+    char payload[APP_SERIAL_MAX_PAYLOAD];
     bool profCurrentMarked = false;
 
-    if(dataPtr == &App_Common::boolSettings[App_Common::dataCurrent])
-        command = OF_Const::sCommitToggles;
-    else if(dataPtr == &App_Common::inputFuncTable[App_Common::dataCurrent])
-        command = OF_Const::sCommitBtns;
-    else if(&dataMap == &App_Common::OFPresets.boardInputs_Strings)
-        command = OF_Const::sCommitPins;
-    else if(dataPtr == &App_Common::settingsTable[App_Common::dataCurrent])
-        command = OF_Const::sCommitSettings;
-    else if(&dataMap == &App_Common::OFPresets.profSettingTypes_Strings)
-        command = OF_Const::sCommitProfile;
-
-    if(command == 0) {
-        qWarning().noquote() << "[AppSerial] Cannot send settings batch: unsupported data table.";
-        return false;
-    }
-
-    for(auto &pair : dataMap) {
+    for(const auto &pair : dataMap) {
         if(pair.second < 0)
             continue;
 
-        size_t txLen = 1;
-        TXbuf[0] = (char)command;
-        if(txLen + pair.first.length() + 1 > sizeof(TXbuf)) {
+        size_t length = 0;
+        if(pair.first.length() + 1 > sizeof(payload)) {
             qWarning().noquote() << "[AppSerial] Settings field name is too long for command"
                                  << AppSerialHex(command) << ':' << AppSerialFieldName(pair.first) << '.';
             return false;
         }
-        memcpy(&TXbuf[txLen], pair.first.data(), pair.first.length());
-        txLen += pair.first.length();
-        TXbuf[txLen++] = '\0';
+        memcpy(payload, pair.first.data(), pair.first.length());
+        length += pair.first.length();
+        payload[length++] = '\0';
 
-        if(&dataMap == &App_Common::OFPresets.profSettingTypes_Strings) {
+        if(command == OF_Const::sCommitProfile) {
             if(pair.second < OF_Const::profIrSens)
                 continue;
             if(pair.second == OF_Const::profCurrent) {
+                // Preserve the existing one-per-batch record and ignore aliases.
                 if(profCurrentMarked)
                     continue;
-                TXbuf[txLen++] = sizeof(uint8_t);
-                TXbuf[txLen++] = App_Common::board.selectedProfile;
+                if(length + 2 > sizeof(payload)) {
+                    qWarning().noquote() << "[AppSerial] Current-profile record exceeds the payload limit.";
+                    return false;
+                }
+                payload[length++] = sizeof(uint8_t);
+                payload[length++] = (char)App_Common::board.selectedProfile;
                 profCurrentMarked = true;
             } else {
                 const size_t valueSize = pair.second == OF_Const::profName ?
                                          sizeof(App_Common::profilesTable_s::profName) : dataSize;
-                if(txLen + 2 + valueSize > sizeof(TXbuf)) {
+                if(length + 2 + valueSize > sizeof(payload)) {
                     qWarning().noquote() << "[AppSerial] Profile record exceeds the payload limit:"
                                          << AppSerialFieldName(pair.first) << "profile" << profNum << '.';
                     return false;
                 }
-                TXbuf[txLen++] = (char)valueSize;
-                TXbuf[txLen++] = (char)profNum;
-                memcpy(&TXbuf[txLen], (uint8_t*)dataPtr + (dataSize * pair.second), valueSize);
-                txLen += valueSize;
+                payload[length++] = (char)valueSize;
+                payload[length++] = (char)profNum;
+                memcpy(&payload[length], (const uint8_t*)dataPtr + (dataSize * pair.second), valueSize);
+                length += valueSize;
             }
         } else {
-            if(dataPtr == App_Common::inputFuncTable[App_Common::dataCurrent] && pair.second >= BUTTON_COUNT - 1)
+            if(command == OF_Const::sCommitBtns && pair.second >= BUTTON_COUNT - 1)
                 continue;
-            if(txLen + 1 + dataSize > sizeof(TXbuf)) {
+            if(length + 1 + dataSize > sizeof(payload)) {
                 qWarning().noquote() << "[AppSerial] Settings record exceeds the payload limit:"
                                      << AppSerialFieldName(pair.first) << '.';
                 return false;
             }
-            TXbuf[txLen++] = (char)dataSize;
-            memcpy(&TXbuf[txLen], (uint8_t*)dataPtr + (dataSize * pair.second), dataSize);
-            txLen += dataSize;
+            payload[length++] = (char)dataSize;
+            memcpy(&payload[length], (const uint8_t*)dataPtr + (dataSize * pair.second), dataSize);
+            length += dataSize;
         }
 
-        if(!OneShotSend(TXbuf, (unsigned int)txLen, false)) {
+        if(!SendCommand(command, payload, length)) {
             qWarning().noquote() << "[AppSerial] Failed to send settings field"
                                  << AppSerialFieldName(pair.first) << "using command"
                                  << AppSerialHex(command) << '.';
@@ -1384,36 +1201,23 @@ bool AppSerial::BatchSendSettings(void *dataPtr,
     return true;
 }
 
-/*
-void AppSerial::Disconnect()
-{
-    if(port.isOpen()) {
-        const char message[] = {(char)OF_Const::serialTerminator,
-                                (char)OF_Const::serialTerminator,
-                                (char)OF_Const::serialTerminator};
-        OneShotSend(message, sizeof(message));
-        port.close();
-    }
-
-    ResetProtocolState();
-    port.setPortName("");
-}
-*/
+// ===== Disconnect and bootloader ============================================
 
 void AppSerial::Disconnect()
 {
     if(port.isOpen() && appSerialSessionActive) {
-        const char message[] = {
-            (char)OF_Const::serialTerminator,
+        // Together with the command byte this preserves the FE FE FE
+        // full-disconnect marker used by the firmware.
+        const char payload[] = {
             (char)OF_Const::serialTerminator,
             (char)OF_Const::serialTerminator
         };
 
-        if(OneShotSend(message, sizeof(message))) {
+        if(SendCommand(OF_Const::serialTerminator, payload, sizeof(payload))) {
             AppSerialFrame_s finalResponse;
 
-            if(TakeResponse(OF_Const::serialTerminator,
-                             finalResponse,
+            if(WaitForResponse(OF_Const::serialTerminator,
+                             &finalResponse,
                              2500)) {
                 if(!(finalResponse.typeFlags & APP_SERIAL_FLAG_FINAL) ||
                     !finalResponse.payload.isEmpty()) {
@@ -1453,23 +1257,6 @@ void AppSerial::RequestToReboot()
         RebootToBootldr();
 }
 
-/*
-void AppSerial::RebootToBootldr()
-{
-    if(App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
-        port.setBaudRate(QSerialPort::Baud1200);
-        port.setDataTerminalReady(false);
-    } else {
-        const char message[] = {(char)OF_Const::sRebootToBootloader,
-                                (char)OF_Const::sRebootToBootloader};
-        OneShotSend(message, sizeof(message));
-    }
-
-    port.close();
-    ResetProtocolState();
-}
-*/
-
 void AppSerial::RebootToBootldr()
 {
     if(port.isOpen()) {
@@ -1478,8 +1265,6 @@ void AppSerial::RebootToBootldr()
             port.setBaudRate(QSerialPort::Baud1200);
             port.setDataTerminalReady(false);
         } else {
-            // const char payload = (char)OF_Const::sRebootToBootloader;
-
             const QByteArray frame = BuildFrame(
                 APP_SERIAL_TYPE_REQUEST,
                 OF_Const::sRebootToBootloader,
@@ -1513,4 +1298,3 @@ void AppSerial::RebootToBootldr()
 
     ResetProtocolState();
 }
-
