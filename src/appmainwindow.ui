@@ -1328,6 +1328,25 @@
                  </property>
                 </widget>
                </item>
+               <item row="1" column="0" alignment="Qt::AlignHCenter">
+                <widget class="QCheckBox" name="pedalWirelessToggle">
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable if you use a &lt;span style=&quot; font-style:italic;&quot;&gt;wireless pedal.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;With no pin mapped to &lt;span style=&quot; font-style:italic;&quot;&gt;Pedal&lt;/span&gt; or &lt;span style=&quot; font-style:italic;&quot;&gt;Alt Pedal,&lt;/span&gt; the only pedal the lightgun can have is a wireless one, and looking for it takes several seconds at every battery start. With this disabled the lightgun does not look for it at all and starts straight away.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;This setting does nothing when a pin is mapped to either pedal:&lt;/span&gt; a wired pedal is always used, and no wireless one is looked for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Wireless Pedal Toggle</string>
+                 </property>
+                 <property name="text">
+                  <string>Wireless pedal</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -2634,12 +2653,6 @@
      <height>20</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuAbout">
-    <property name="title">
-     <string>About</string>
-    </property>
-    <addaction name="actionAbout_UI"/>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
@@ -2650,6 +2663,8 @@
     <addaction name="actionOpenFIRE_on_the_Web"/>
     <addaction name="actionOpenFIRE_Documentation"/>
     <addaction name="actionOpenFIRE_Serial_Usage"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout_UI"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -2660,7 +2675,6 @@
    </widget>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
-   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar">
    <property name="sizeGripEnabled">
@@ -2669,7 +2683,7 @@
   </widget>
   <action name="actionAbout_UI">
    <property name="text">
-    <string>&amp;About OpenFIRE...</string>
+    <string>About OpenFIRE...</string>
    </property>
   </action>
   <action name="actionOpenFIRE_Documentation">

@@ -218,11 +218,23 @@ guiWindow::guiWindow(QWidget *parent)
         testLabel.at(i)->setAlignment(Qt::AlignCenter);
         testLabel.at(i)->setFrameStyle(QFrame::Box | QFrame::Raised);
 
+        // A long name (the wireless pedal ones) wraps inside its own box
+        // instead of stretching its column.
+        testLabel.at(i)->setWordWrap(true);
+
         // third/second/first row of buttons
         if(i > 9)        ui->btnsLayout->addWidget(testLabel.at(i), 2, i-10);
         else if(i > 4)   ui->btnsLayout->addWidget(testLabel.at(i), 1, i-5);
         else             ui->btnsLayout->addWidget(testLabel.at(i), 0, i);
     }
+
+    // The five columns share the width evenly, so no single label can widen one
+    // of them and leave the others cramped; the three rows share the height the
+    // same way, so a box that wraps onto three lines does not shrink the others.
+    for(int column = 0; column < 5; ++column)
+        ui->btnsLayout->setColumnStretch(column, 1);
+    for(int row = 0; row < 3; ++row)
+        ui->btnsLayout->setRowStretch(row, 1);
 
     // Setup analog stick viewer
     ui->analogGfxView->setScene(&analogGfxScene);
@@ -458,12 +470,26 @@ void guiWindow::LabelsUpdate()
 {
     // because App_Common::inputsMap uses pin no. starting from 0
     for(uint8_t i = 0; i < testLabel.count(); ++i) {
+        const QString name = QString::fromUtf8(App_Common::OFPresets.boardInputs_sortedStr[i+1]);
+
         testLabel.at(i)->setStyleSheet("");
         if(App_Common::inputsMap.value(i) >= 0) {
-            testLabel.at(i)->setText(App_Common::OFPresets.boardInputs_sortedStr[i+1]);
+            testLabel.at(i)->setText(name);
             testLabel.at(i)->setEnabled(true);
+
+        // No pin for either pedal and the board was saved with the wireless pedal
+        // box ticked: say so, and whether one actually paired at startup.
+        } else if(IsPedal(i) && PedalWirelessMode()) {
+            if(App_Common::board.pedalWireless) {
+                testLabel.at(i)->setText(tr("%1\n(wireless)").arg(name));
+                testLabel.at(i)->setEnabled(true);
+            } else {
+                testLabel.at(i)->setText(tr("%1\n(wireless, disconnected)").arg(name));
+                testLabel.at(i)->setEnabled(false);
+            }
+
         } else {
-            testLabel.at(i)->setText(QByteArray(App_Common::OFPresets.boardInputs_sortedStr[i+1]) + " (N/C)");
+            testLabel.at(i)->setText(tr("%1 (N/C)").arg(name));
             testLabel.at(i)->setEnabled(false);
         }
     }
@@ -1000,6 +1026,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->holdToPauseToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::holdToPause]);
             ui->commonAnodeToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::commonAnode]);
             ui->lowButtonsToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::lowButtonsMode]);
+            ui->pedalWirelessToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::pedalWireless]);
             ui->rumbleFFToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumbleFF]);
             ui->rumbleIntensityBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleStrength]);
             ui->rumbleLengthBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleInterval]);
@@ -1083,6 +1110,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
         ui->boardLabel->clear();
         ui->versionLabel->clear();
         App_Common::board.type.clear();
+        App_Common::board.pedalWireless = false;
 
         // just in case
         ui->buttonsTestArea->setEnabled(true);
@@ -1246,7 +1274,7 @@ void guiWindow::pinBoxes_currentIndexChanged(int index)
 
     ui->aStickFuncBox->setEnabled(App_Common::inputsMap.value(OF_Const::analogX) >= 0 && App_Common::inputsMap.value(OF_Const::analogY) >= 0);
     for(int i = 0; i < BUTTON_COUNT-1; ++i)
-        btnFuncGBoxes.at(i)->setEnabled(App_Common::inputsMap.value(i) >= 0);
+        btnFuncGBoxes.at(i)->setEnabled(InputAvailable(i));
 
     DiffUpdate();
 }
@@ -1460,6 +1488,20 @@ void guiWindow::on_commonAnodeToggle_stateChanged(int arg1)
 void guiWindow::on_lowButtonsToggle_stateChanged(int arg1)
 {
     App_Common::boolSettings[App_Common::dataCurrent][OF_Const::lowButtonsMode] = arg1;
+    DiffUpdate();
+}
+
+
+void guiWindow::on_pedalWirelessToggle_stateChanged(int arg1)
+{
+    App_Common::boolSettings[App_Common::dataCurrent][OF_Const::pedalWireless] = arg1;
+
+    // A wireless pedal has no pin, but it is still an input whose outputs are
+    // worth setting: its mapping rows follow the box.
+    for(int i = 0; i < BUTTON_COUNT-1; ++i)
+        if(IsPedal(i))
+            btnFuncGBoxes.at(i)->setEnabled(InputAvailable(i));
+
     DiffUpdate();
 }
 
@@ -2007,7 +2049,7 @@ void guiWindow::on_clearEepromBtn_clicked()
 
 void guiWindow::on_baudResetBtn_clicked()
 {
-    serial.RebootToBootldr();
+    const bool sent = serial.RebootToBootldr();
 
     /* test stuff for potential app FW update functionality
     // At least on my system, the Bootloader device takes ~7s to appear
@@ -2027,7 +2069,9 @@ void guiWindow::on_baudResetBtn_clicked()
     // QFile::copy("file", picoPath+"file");
 */
 
-    if (App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
+    if(!sent) {
+        ui->statusBar->showMessage(tr("The restart command could not be sent: reconnect and try again."), 10000);
+    } else if (App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
         ui->statusBar->showMessage(tr("Board reset to bootloader."), 5000);
     } else {
         ui->statusBar->showMessage(tr("Board restarted."), 5000);

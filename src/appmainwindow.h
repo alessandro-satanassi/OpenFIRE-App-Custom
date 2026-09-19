@@ -99,6 +99,8 @@ private slots:
 
     void on_lowButtonsToggle_stateChanged(int arg1);
 
+    void on_pedalWirelessToggle_stateChanged(int arg1);
+
     void on_rumbleFFToggle_stateChanged(int arg1);
 
     void on_tempWarningBox_valueChanged(int arg1);
@@ -244,6 +246,30 @@ private:
 
     /// @brief      Converts system name to display name, provided in OF_Const::boardNames
     QString PrettifyName(QString);
+
+    /// @brief      True for the two pedal inputs
+    static bool IsPedal(const int &input) {
+        return input == OF_Const::btnPedal || input == OF_Const::btnPedal2;
+    }
+
+    /// @brief      The only pedal the board can have is a wireless one
+    /// @details    The setting *as saved on the board* is on and neither pedal has a pin.
+    ///             As soon as one of the two has a pin, a wired pedal is assumed and
+    ///             everything about the wireless one is irrelevant.
+    static bool PedalWirelessMode() {
+        return App_Common::boolSettings[App_Common::dataOrig][OF_Const::pedalWireless] &&
+               App_Common::inputsMap.value(OF_Const::btnPedal)  < 0 &&
+               App_Common::inputsMap.value(OF_Const::btnPedal2) < 0;
+    }
+
+    /// @brief      An input whose outputs can be mapped
+    /// @details    It has a pin, or it is a pedal and the wireless pedal box is
+    ///             ticked: the mapping is sent to the board either way.
+    static bool InputAvailable(const int &input) {
+        return App_Common::inputsMap.value(input) >= 0 ||
+               (IsPedal(input) &&
+                App_Common::boolSettings[App_Common::dataCurrent][OF_Const::pedalWireless]);
+    }
 
     /// @brief      Checks for differences in current staging settings
     /// @details    Controls enablement of "send to board" button

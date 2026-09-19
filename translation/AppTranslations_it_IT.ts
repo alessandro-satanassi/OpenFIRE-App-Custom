@@ -1618,8 +1618,8 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
     <message>
         <location filename="../src/appmainwindow.ui" line="2574"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1608"/>
-        <source>&amp;About OpenFIRE...</source>
-        <translation>&amp;Informazioni su OpenFIRE...</translation>
+        <source>About OpenFIRE...</source>
+        <translation>Informazioni su OpenFIRE...</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2585"/>
@@ -2160,6 +2160,38 @@ Sei sicuro?</translation>
         <location filename="../src/appmainwindow.cpp" line="2375"/>
         <source>Canceled custom layout save operation.</source>
         <translation>Operazione di salvataggio del layout personalizzato annullata.</translation>
+    </message>
+    <message>
+        <source>Wireless pedal</source>
+        <translation>Pedale wireless</translation>
+    </message>
+    <message>
+        <source>Wireless Pedal Toggle</source>
+        <translation>Interruttore pedale wireless</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable if you use a &lt;span style=&quot; font-style:italic;&quot;&gt;wireless pedal.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;With no pin mapped to &lt;span style=&quot; font-style:italic;&quot;&gt;Pedal&lt;/span&gt; or &lt;span style=&quot; font-style:italic;&quot;&gt;Alt Pedal,&lt;/span&gt; the only pedal the lightgun can have is a wireless one, and looking for it takes several seconds at every battery start. With this disabled the lightgun does not look for it at all and starts straight away.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;This setting does nothing when a pin is mapped to either pedal:&lt;/span&gt; a wired pedal is always used, and no wireless one is looked for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Attiva se usi un &lt;span style=&quot; font-style:italic;&quot;&gt;pedale wireless.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Se nessun pin è assegnato a &lt;span style=&quot; font-style:italic;&quot;&gt;Pedale&lt;/span&gt; o &lt;span style=&quot; font-style:italic;&quot;&gt;Pedale alternativo,&lt;/span&gt; l'unico pedale che la lightgun può avere è wireless, e cercarlo costa diversi secondi a ogni accensione a batteria. Con questa opzione disattivata la lightgun non lo cerca affatto e parte subito.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;L'opzione non ha effetto se un pin è assegnato a uno dei due pedali:&lt;/span&gt; in quel caso vale sempre il pedale via cavo e nessun pedale wireless viene cercato.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>%1 (N/C)</source>
+        <translation>%1 (N/C)</translation>
+    </message>
+    <message>
+        <source>%1
+(wireless)</source>
+        <translation>%1
+(wireless)</translation>
+    </message>
+    <message>
+        <source>%1
+(wireless, disconnected)</source>
+        <translation>%1
+(wireless, disconnesso)</translation>
+    </message>
+    <message>
+        <source>The restart command could not be sent: reconnect and try again.</source>
+        <translation>Non è stato possibile inviare il comando di riavvio: riconnetti e riprova.</translation>
     </message>
 </context>
 </TS>

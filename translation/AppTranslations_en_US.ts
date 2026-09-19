@@ -862,7 +862,7 @@
     <message>
         <location filename="../src/appmainwindow.ui" line="1888"/>
         <location filename="../build/Desktop_Qt_6_8_2_llvm_mingw_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1225"/>
-        <source>&amp;About OpenFIRE...</source>
+        <source>About OpenFIRE...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -905,6 +905,36 @@
         <location filename="../src/appmainwindow.ui" line="1922"/>
         <location filename="../build/Desktop_Qt_6_8_2_llvm_mingw_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1236"/>
         <source>Export Custom Layout...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wireless pedal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wireless Pedal Toggle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enable if you use a &lt;span style=&quot; font-style:italic;&quot;&gt;wireless pedal.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;With no pin mapped to &lt;span style=&quot; font-style:italic;&quot;&gt;Pedal&lt;/span&gt; or &lt;span style=&quot; font-style:italic;&quot;&gt;Alt Pedal,&lt;/span&gt; the only pedal the lightgun can have is a wireless one, and looking for it takes several seconds at every battery start. With this disabled the lightgun does not look for it at all and starts straight away.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;This setting does nothing when a pin is mapped to either pedal:&lt;/span&gt; a wired pedal is always used, and no wireless one is looked for.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 (N/C)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1
+(wireless)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1
+(wireless, disconnected)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The restart command could not be sent: reconnect and try again.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

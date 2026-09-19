@@ -778,10 +778,21 @@ bool AppSerial::GetSettings(const QString &portName)
            &App_Common::tinyUSBtable,
            sizeof(App_Common::tinyUSBtable_s));
 
-    const int tailOffset = usbOffset + sizeof(App_Common::tinyUSBtable_s);
-    if(boardInfo.size() >= tailOffset + 2 &&
-       boardInfo.at(tailOffset) == separator &&
-       (uint8_t)boardInfo.at(tailOffset + 1) == OF_Const::sError) {
+    // Trailers of the board information: (separator, marker) pairs, in any number
+    // and in any order, so that a marker added later does not shift the others.
+    bool cameraError = false;
+    App_Common::board.pedalWireless = false;
+
+    for(int at = usbOffset + (int)sizeof(App_Common::tinyUSBtable_s);
+        at + 1 < boardInfo.size() && boardInfo.at(at) == separator;
+        at += 2) {
+        switch((uint8_t)boardInfo.at(at + 1)) {
+        case OF_Const::sError:          cameraError = true;                     break;
+        case OF_Const::sPedalWireless:  App_Common::board.pedalWireless = true; break;
+        }
+    }
+
+    if(cameraError) {
         ShowError(tr("Device Error: Camera not available!"),
                   tr("<p>Data received from the board indicates that the camera is in a bad state.<br>"
                      "This can happen if, for example, the camera wires are crossed<br>"
@@ -1277,13 +1288,16 @@ void AppSerial::RequestToReboot()
         RebootToBootldr();
 }
 
-void AppSerial::RebootToBootldr()
+bool AppSerial::RebootToBootldr()
 {
+    bool sent = false;
+
     if(port.isOpen()) {
         if(App_Common::board.arch ==
             App_Common::OFPresets.boardArchs[OF_Const::boardRP]) {
             port.setBaudRate(QSerialPort::Baud1200);
             port.setDataTerminalReady(false);
+            sent = true;
         } else {
             // Local write deadline only (ms): bootloader entry does not wait for ACK.
             const int writeTimeout = 500;
@@ -1299,6 +1313,7 @@ void AppSerial::RebootToBootldr()
             } else {
                 QElapsedTimer timer;
                 timer.start();
+                sent = true;
 
                 // Wait only for local transmission, never for an ACK.
                 while(port.bytesToWrite() > 0) {
@@ -1309,6 +1324,8 @@ void AppSerial::RebootToBootldr()
                          port.bytesToWrite() > 0)) {
                         qWarning()
                         << "[AppSerial] Reboot command write did not complete.";
+                        // The bytes are still queued: the board has not seen them.
+                        sent = false;
                         break;
                     }
                 }
@@ -1319,4 +1336,6 @@ void AppSerial::RebootToBootldr()
     }
 
     ResetProtocolState();
+
+    return sent;
 }

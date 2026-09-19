@@ -65,6 +65,13 @@ public:
         QByteArray type;
         QByteArray arch;
         QByteArray version;
+        // A wireless pedal is paired: reported by the board among the trailers
+        // of the board information (OF_Const::sPedalWireless).
+        // No default member initializer: `board` below is a static member of this
+        // same class, and the initializer would be needed before the class is
+        // complete (GCC/Clang refuse it). Static storage zeroes it, and every dock
+        // and disconnect writes it anyway.
+        bool       pedalWireless;
     } boardInfo_s;
 
     typedef struct tinyUSBtable_t {

@@ -111,7 +111,9 @@ public:
     void Disconnect();
 
     /// @brief      Enters the bootloader using RP2040's 1200-baud touch or the ESP32 command.
-    void RebootToBootldr();
+    /// @return     false only if the ESP32 request could not be handed to the port:
+    ///             the board has not been restarted and the caller must say so.
+    bool RebootToBootldr();
 
     /// @brief      Show error message popup regarding serial
     void ShowError(const QString &titleText, const QString &text,
