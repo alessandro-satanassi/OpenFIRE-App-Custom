@@ -101,6 +101,8 @@ private slots:
 
     void on_pedalWirelessToggle_stateChanged(int arg1);
 
+    void on_bootOutputModeBox_currentIndexChanged(int index);
+
     void on_rumbleFFToggle_stateChanged(int arg1);
 
     void on_tempWarningBox_valueChanged(int arg1);

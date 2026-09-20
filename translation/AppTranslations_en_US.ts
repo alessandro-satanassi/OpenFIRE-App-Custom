@@ -692,7 +692,7 @@
     <message>
         <location filename="../src/appmainwindow.ui" line="919"/>
         <location filename="../build/Desktop_Qt_6_8_2_llvm_mingw_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1417"/>
-        <source>Input</source>
+        <source>Input / Output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -935,6 +935,30 @@
     </message>
     <message>
         <source>The restart command could not be sent: reconnect and try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Startup mode:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Startup Mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Absolute Mouse</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Gamepad (right stick)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Gamepad (left stick)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;What the lightgun is to the computer &lt;span style=&quot; font-weight:700;&quot;&gt;the moment you switch it on.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Absolute Mouse&lt;/span&gt; is the default and what the lightgun has always done: aiming moves the mouse pointer.&lt;/p&gt;&lt;p&gt;The two &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad&lt;/span&gt; settings turn it into a controller instead, with the aim riding one of the two analog sticks. That is what MiSTer FPGA, several frontends and two-player setups on Windows expect. If the aim ends up on the wrong stick, pick the other one.&lt;/p&gt;&lt;p&gt;A game can still switch the lightgun over while it runs, and it stays switched until something changes it again: this only decides where it starts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -1306,7 +1306,7 @@
             <item>
              <widget class="QGroupBox" name="inputBox">
               <property name="title">
-               <string>Input</string>
+               <string>Input / Output</string>
               </property>
               <layout class="QGridLayout" name="gridLayout_7">
                <item row="0" column="0" alignment="Qt::AlignHCenter">
@@ -1346,6 +1346,71 @@
                   <number>1</number>
                  </property>
                 </widget>
+               </item>
+               <item row="2" column="0">
+                <layout class="QHBoxLayout" name="bootOutputLayout">
+                <item>
+                 <spacer name="bootOutputSpacerLeft">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                 <item>
+                  <widget class="QLabel" name="label_bootOutput">
+                   <property name="text">
+                    <string>Startup mode:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="bootOutputModeBox">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;What the lightgun is to the computer &lt;span style=&quot; font-weight:700;&quot;&gt;the moment you switch it on.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Absolute Mouse&lt;/span&gt; is the default and what the lightgun has always done: aiming moves the mouse pointer.&lt;/p&gt;&lt;p&gt;The two &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad&lt;/span&gt; settings turn it into a controller instead, with the aim riding one of the two analog sticks. That is what MiSTer FPGA, several frontends and two-player setups on Windows expect. If the aim ends up on the wrong stick, pick the other one.&lt;/p&gt;&lt;p&gt;A game can still switch the lightgun over while it runs, and it stays switched until something changes it again: this only decides where it starts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Startup Mode</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Absolute Mouse</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gamepad (right stick)</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gamepad (left stick)</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                <item>
+                 <spacer name="bootOutputSpacerRight">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                </layout>
                </item>
               </layout>
              </widget>

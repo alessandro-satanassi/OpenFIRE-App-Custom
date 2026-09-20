@@ -1027,6 +1027,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->commonAnodeToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::commonAnode]);
             ui->lowButtonsToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::lowButtonsMode]);
             ui->pedalWirelessToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::pedalWireless]);
+            ui->bootOutputModeBox->setCurrentIndex(App_Common::settingsTable[App_Common::dataOrig][OF_Const::bootOutputMode]);
             ui->rumbleFFToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumbleFF]);
             ui->rumbleIntensityBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleStrength]);
             ui->rumbleLengthBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleInterval]);
@@ -1501,6 +1502,19 @@ void guiWindow::on_pedalWirelessToggle_stateChanged(int arg1)
     for(int i = 0; i < BUTTON_COUNT-1; ++i)
         if(IsPedal(i))
             btnFuncGBoxes.at(i)->setEnabled(InputAvailable(i));
+
+    DiffUpdate();
+}
+
+
+void guiWindow::on_bootOutputModeBox_currentIndexChanged(int index)
+{
+    // A value the box cannot show (an unknown mode from a newer board) leaves the
+    // combo at -1: the stored value is kept as it is rather than overwritten.
+    if(index < 0)
+        return;
+
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::bootOutputMode] = index;
 
     DiffUpdate();
 }

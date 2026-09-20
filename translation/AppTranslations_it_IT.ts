@@ -1460,7 +1460,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
     <message>
         <location filename="../src/appmainwindow.ui" line="1309"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1838"/>
-        <source>Input</source>
+        <source>Input / Output</source>
         <translation></translation>
     </message>
     <message>
@@ -2192,6 +2192,30 @@ Sei sicuro?</translation>
     <message>
         <source>The restart command could not be sent: reconnect and try again.</source>
         <translation>Non è stato possibile inviare il comando di riavvio: riconnetti e riprova.</translation>
+    </message>
+    <message>
+        <source>Startup mode:</source>
+        <translation>Modalità all'avvio:</translation>
+    </message>
+    <message>
+        <source>Startup Mode</source>
+        <translation>Modalità all'avvio</translation>
+    </message>
+    <message>
+        <source>Absolute Mouse</source>
+        <translation>Mouse assoluto</translation>
+    </message>
+    <message>
+        <source>Gamepad (right stick)</source>
+        <translation>Gamepad (stick destro)</translation>
+    </message>
+    <message>
+        <source>Gamepad (left stick)</source>
+        <translation>Gamepad (stick sinistro)</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;What the lightgun is to the computer &lt;span style=&quot; font-weight:700;&quot;&gt;the moment you switch it on.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Absolute Mouse&lt;/span&gt; is the default and what the lightgun has always done: aiming moves the mouse pointer.&lt;/p&gt;&lt;p&gt;The two &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad&lt;/span&gt; settings turn it into a controller instead, with the aim riding one of the two analog sticks. That is what MiSTer FPGA, several frontends and two-player setups on Windows expect. If the aim ends up on the wrong stick, pick the other one.&lt;/p&gt;&lt;p&gt;A game can still switch the lightgun over while it runs, and it stays switched until something changes it again: this only decides where it starts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cosa è la lightgun per il computer &lt;span style=&quot; font-weight:700;&quot;&gt;nel momento in cui la accendi.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Mouse assoluto&lt;/span&gt; è il valore predefinito ed è quello che la lightgun ha sempre fatto: la mira muove il puntatore del mouse.&lt;/p&gt;&lt;p&gt;Le due voci &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad&lt;/span&gt; la trasformano invece in un controller, con la mira su uno dei due stick analogici. È quello che si aspettano MiSTer FPGA, diversi frontend e le partite in due su Windows. Se la mira finisce sullo stick sbagliato, scegli l'altro.&lt;/p&gt;&lt;p&gt;Un gioco può comunque cambiarla mentre è in funzione, e resta cambiata finché qualcos'altro non la cambia di nuovo: questa voce decide solo da dove parte.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 </TS>

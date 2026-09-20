@@ -220,6 +220,7 @@ public:
         tempShutdown,
         analogMode,
         cameraModel, // inserita per CAM
+        bootOutputMode,
         // Add here
         settingsTypesCount
     } settingsTypes_e;
@@ -240,6 +241,7 @@ public:
         {"TempDanger",          tempShutdown        },
         {"AnalogMode",          analogMode          },
         {"CameraModel",         cameraModel         },  // inserira per CAM
+        {"BootOutputMode",      bootOutputMode      },
     };
 
     enum {
@@ -247,6 +249,16 @@ public:
         analogModeDpad,
         analogModeKeys
     } analogModeSettings_e;
+
+    // What the board presents to the host when it starts. Zero is the absolute
+    // mouse, so a board that has never seen this setting behaves as it always did.
+    // In gamepad mode the aim rides one of the two analog sticks and the physical
+    // stick, if any, takes the other one; z/rz are never used.
+    enum {
+        bootOutputMouse = 0,     // absolute mouse (serial M0x0)
+        bootOutputGamepadRight,  // gamepad, aim on the right stick (serial M0x1)
+        bootOutputGamepadLeft    // gamepad, aim on the left stick (serial M0x1L)
+    } bootOutputModeSettings_e;
 
     // Profile data type indices
     // this MUST match the order of ProfileData_s in (FW)OpenFIREprefs
@@ -376,8 +388,12 @@ public:
         sRebootToBootloader = 0xF0, // 245
 
         sError = 0xFA, // 250
+
+        
         // Trailer of the board information: a wireless pedal is paired (see sDock2).
         sPedalWireless = 0xFB, // 251
+        
+        
         sSave = 0xFC, // 252
         sClearFlash = 0xFD, // 253
         // Terminates out of any current mode, or undocks
