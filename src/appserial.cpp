@@ -784,12 +784,22 @@ bool AppSerial::GetSettings(const QString &portName)
     App_Common::board.pedalWireless = false;
 
     for(int at = usbOffset + (int)sizeof(App_Common::tinyUSBtable_s);
-        at + 1 < boardInfo.size() && boardInfo.at(at) == separator;
-        at += 2) {
-        switch((uint8_t)boardInfo.at(at + 1)) {
-        case OF_Const::sError:          cameraError = true;                     break;
-        case OF_Const::sPedalWireless:  App_Common::board.pedalWireless = true; break;
-        }
+        at + 1 < boardInfo.size() && boardInfo.at(at) == separator;) {
+        const uint8_t marker = (uint8_t)boardInfo.at(at + 1);
+        if(marker == OF_Const::sError)         { cameraError = true;                     at += 2; continue; }
+        if(marker == OF_Const::sPedalWireless) { App_Common::board.pedalWireless = true; at += 2; continue; }
+
+        // Every marker that is not one of the two flags above carries a length byte and
+        // then its data, so a marker a later firmware adds is skipped whole and the ones
+        // after it are still read (see sVersionFull in OpenFIREshared.h). This App has no
+        // use for the complete version: only the web App, which is published one folder
+        // per version, needs to know which one it is talking to.
+        if(at + 2 >= boardInfo.size())
+            break;                                                  // its length is missing
+        const int length = (uint8_t)boardInfo.at(at + 2);
+        if(at + 3 + length > boardInfo.size())
+            break;                                                  // cut short: stop here
+        at += 3 + length;
     }
 
     if(cameraError) {
