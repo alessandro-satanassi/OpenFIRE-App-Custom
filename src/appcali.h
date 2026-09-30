@@ -25,6 +25,7 @@
 #include <QKeyEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSvgItem>
+#include <QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -103,6 +104,13 @@ public:
     /// @param      Array of ints
     ///             Coordinates of the twelve test points used to draw
     void TestModeDraw(const int[12]);
+
+    /// @brief      Store the camera blob data of the test points (sTestBlobs)
+    /// @details    Sent by the firmware just before each sTestCoords: version byte, then for each
+    ///             emitter (TL, TR, BL, BR) flags (bit 0 seen), average brightness, max brightness,
+    ///             area (uint16 LE). Unknown versions or short payloads are ignored.
+    /// @param      Payload bytes and their count
+    void TestModeBlobs(const uint8_t *, const int &);
 
     int GetWindowMode() { return mode; }
 
@@ -200,6 +208,45 @@ private:
 
     /// @brief      Test Mode polygon that connects across the test points
     QGraphicsPolygonItem *testBox;
+
+    /// @brief      Test Mode blob data (sTestBlobs) of each emitter, as received
+    struct TestBlob_s {
+        bool seen = false;
+        uint8_t avg = 0;
+        uint8_t max = 0;
+        uint16_t area = 0;
+    };
+    TestBlob_s testBlobs[4];
+
+    /// @brief      Test Mode circle of each emitter, smoothed over the 20 Hz updates
+    struct TestBlobLevel_s {
+        bool valid = false;
+        qreal radius = 0;   // 1920x1080 test space
+        qreal center = 0;   // fill 0..1 at the centre (max brightness)
+        qreal edge = 0;     // fill 0..1 at the edge (average brightness)
+    };
+    TestBlobLevel_s testBlobLevels[4];
+
+    /// @brief      Time of the last sTestBlobs; blob data older than IRTEST_BLOBS_MAX_AGE is not used
+    QElapsedTimer testBlobsTimer;
+
+    /// @brief      True when recent sTestBlobs data is available (otherwise the classic view is drawn)
+    bool TestBlobsFresh() const;
+
+    /// @brief      Draws one emitter from its blob data (seen: sized gradient circle; not seen: dashed circle with a red X)
+    void TestModeDrawEmitter(const int &, const qreal &, const qreal &);
+
+    /// @brief      Red X of the emitters not seen by the camera
+    QGraphicsPathItem *testNotSeenMarks[4] = {nullptr, nullptr, nullptr, nullptr};
+
+    /// @brief      Area and brightness under each emitter, shown with the --irdebug argument
+    QGraphicsPixmapItem *testBlobInfo[4] = {nullptr, nullptr, nullptr, nullptr};
+    bool testBlobDebug = false;
+
+    /// @brief      Scale and offset of the 1920x1080 test space in the scene
+    qreal testScale = 1;
+    qreal testOffsetX = 0;
+    qreal testOffsetY = 0;
 
     /// @brief      Text bitmaps generated from test font files
     /// @details    Contents are generated at runtime from GenerateText

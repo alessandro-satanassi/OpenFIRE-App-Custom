@@ -22,6 +22,60 @@
 
 #include <QScreen>
 #include <QBitmap>
+#include <QPainterPath>
+#include <QtMath>
+
+namespace {
+
+// ----- IR test blobs (sTestBlobs) ---------------------------------------------------
+// Same values as the web app (webapp/js/app/fullscreen.js). The camera drivers of the
+// firmware already normalise the data, so every camera uses the same scale here.
+// Radius (1920x1080 test space) grows with sqrt(area): IRTEST_BLOB_RADIUS_MAX at
+// IRTEST_BLOB_AREA_MAX, the largest blob the PAJ7025 DSP reports. The firmware DFRobot
+// driver relies on these two values for its equivalent area (ReadDFRobotExtended).
+constexpr int IRTEST_BLOB_AREA_MAX = 300;
+constexpr qreal IRTEST_BLOB_RADIUS_MAX = 60;
+constexpr qreal IRTEST_BLOB_RADIUS_MIN = 6;
+// Size of the circles of the emitters seen: multiplies the radius above (min and max
+// included). Change only this to draw them bigger or smaller.
+constexpr qreal IRTEST_BLOB_RADIUS_SCALE = 3;
+constexpr qreal IRTEST_EMITTER_RADIUS = 25; // circle not seen / older firmware, not scaled
+// Detected blobs are always above the camera brightness threshold (130-150): this
+// range becomes 0..1 of the fill (radial gradient: centre = max, edge = average).
+constexpr int IRTEST_BRIGHTNESS_MIN = 128;
+constexpr int IRTEST_BRIGHTNESS_MAX = 255;
+// Exponential average of radius and brightness (not of the position) against flicker:
+// weight of the new 20 Hz sample.
+constexpr qreal IRTEST_SMOOTHING = 0.5;
+// Blob data older than this (ms) is not used: classic view as with older firmware.
+constexpr qint64 IRTEST_BLOBS_MAX_AGE = 250;
+constexpr uint8_t IRTEST_BLOBS_VERSION = 1;
+constexpr int IRTEST_BLOBS_LENGTH = 21;
+
+QColor IrTestNotSeenColor() { return QColor(0xff, 0x30, 0x30); }
+
+/// Brightness 0..255 -> 0..1 fill over the range of detected blobs.
+qreal IrTestBrightnessLevel(const int &value)
+{
+    const qreal t = (qreal)(value - IRTEST_BRIGHTNESS_MIN) / (IRTEST_BRIGHTNESS_MAX - IRTEST_BRIGHTNESS_MIN);
+    return qBound((qreal)0, t, (qreal)1);
+}
+
+/// Lines padded to the same length, centred like the web app bitmap text.
+QStringList IrTestCentredLines(const QStringList &lines)
+{
+    int width = 0;
+    for(const QString &line : lines)
+        width = qMax(width, (int)line.length());
+    QStringList centred;
+    for(const QString &line : lines) {
+        const int left = (width - (int)line.length()) / 2;
+        centred << QString(left, QChar(' ')) + line + QString(width - (int)line.length() - left, QChar(' '));
+    }
+    return centred;
+}
+
+} // namespace
 
 AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
     : QWidget(parent)
@@ -367,11 +421,38 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         testPoints[testPointMed]->setTransform(QTransform::fromScale(scaleX, scaleY));
         testPoints[testPointMed]->setPos(scene.sceneRect().left(), scene.sceneRect().top());
 
+        testScale = scale;
+        testOffsetX = offsetX;
+        testOffsetY = offsetY;
+        testBlobDebug = QCoreApplication::arguments().contains("--irdebug");
+
+        // Red X of the emitters not seen (sTestBlobs): drawn with its emitter,
+        // below the mouse circle, the D point and the box like in the web app.
+        for(int i = 0; i < 4; ++i) {
+            testNotSeenMarks[i] = new QGraphicsPathItem();
+            testNotSeenMarks[i]->setTransform(QTransform::fromScale(scale, scale));
+            testNotSeenMarks[i]->setPos(offsetX, offsetY);
+            QPen markPen(IrTestNotSeenColor(), 3);
+            markPen.setCapStyle(Qt::RoundCap);
+            testNotSeenMarks[i]->setPen(markPen);
+            testNotSeenMarks[i]->setVisible(false);
+            scene.addItem(testNotSeenMarks[i]);
+            testNotSeenMarks[i]->stackBefore(testPoints[testPointMed]);
+        }
+
         testBox = new QGraphicsPolygonItem();
         testBox->setTransform(QTransform::fromScale(scale, scale));
         testBox->setPos(offsetX, offsetY);
         testBox->setPen(QPen(Qt::gray, 2));
         scene.addItem(testBox);
+
+        // --irdebug: area and brightness under each emitter, over everything else.
+        for(int i = 0; i < 4; ++i) {
+            testBlobInfo[i] = new QGraphicsPixmapItem();
+            testBlobInfo[i]->setScale(GetTextScale(TextSmall));
+            testBlobInfo[i]->setVisible(false);
+            scene.addItem(testBlobInfo[i]);
+        }
 
         testPoints[testPointTL] ->setPen(QPen(Qt::green, 3));
         testPoints[testPointTR] ->setPen(QPen(Qt::green, 3));
@@ -831,6 +912,10 @@ void AppCaliWindow::TestModeDraw(const int coordsList[12])
     int pointY[4];
     bool outsideFov[4];
 
+    // With recent sTestBlobs data the emitters show the camera blobs,
+    // otherwise (older firmware) the classic circles are drawn.
+    const bool blobView = TestBlobsFresh();
+
     // The firmware encodes the outside-FOV state in bit 0 of each IR point X:
     // even = inside FOV, odd = outside FOV. Decode X without losing its sign.
     for(int i = 0; i < 4; ++i) {
@@ -839,6 +924,15 @@ void AppCaliWindow::TestModeDraw(const int coordsList[12])
         outsideFov[i] = (encodedX % 2) != 0;
         pointX[i] = (encodedX - (outsideFov[i] ? 1 : 0)) / 2;
         pointY[i] = coordsList[(i * 2) + 1];
+
+        if(blobView) {
+            TestModeDrawEmitter(i, pointX[i], pointY[i]);
+            continue;
+        }
+
+        // Classic view: plain 3 px outline, no X.
+        testPoints[pointItems[i]]->setPen(QPen(testPoints[pointItems[i]]->pen().color(), 3));
+        testNotSeenMarks[i]->setVisible(false);
 
         if(outsideFov[i]) {
             // Filled circle = estimated vertex outside the camera FOV.
@@ -863,4 +957,114 @@ void AppCaliWindow::TestModeDraw(const int coordsList[12])
                                     << QPointF(pointX[3], pointY[3])
                                     << QPointF(pointX[2], pointY[2])
                                     << QPointF(pointX[0], pointY[0]));
+
+    // --irdebug: area and max/average brightness under each emitter circle.
+    for(int i = 0; i < 4; ++i) {
+        if(!testBlobDebug || !blobView) {
+            testBlobInfo[i]->setVisible(false);
+            continue;
+        }
+        const TestBlob_s &blob = testBlobs[i];
+        const QStringList text = blob.seen
+            ? QStringList{QString("A %1").arg((int)blob.area), QString("%1/%2").arg((int)blob.max).arg((int)blob.avg)}
+            : QStringList{QString("--")};
+        testBlobInfo[i]->setPixmap(GenerateText(IrTestCentredLines(text)));
+        const qreal radius = testBlobLevels[i].valid ? testBlobLevels[i].radius : IRTEST_EMITTER_RADIUS;
+        const qreal x = testOffsetX + pointX[i] * testScale;
+        const qreal y = testOffsetY + (pointY[i] + radius + 4) * testScale;
+        testBlobInfo[i]->setPos(x - testBlobInfo[i]->boundingRect().width() * testBlobInfo[i]->scale() / 2, y);
+        testBlobInfo[i]->setVisible(true);
+    }
+}
+
+void AppCaliWindow::TestModeBlobs(const uint8_t *payload, const int &length)
+{
+    if(mode != modeIRTest || payload == nullptr ||
+       length < IRTEST_BLOBS_LENGTH || payload[0] != IRTEST_BLOBS_VERSION)
+        return;
+
+    // After a gap the average starts again from the new values.
+    if(!TestBlobsFresh())
+        for(TestBlobLevel_s &level : testBlobLevels)
+            level.valid = false;
+
+    for(int i = 0; i < 4; ++i) {
+        const uint8_t *entry = payload + 1 + i * 5;
+        TestBlob_s &blob = testBlobs[i];
+        blob.seen = (entry[0] & 0x01) != 0;
+        blob.avg = entry[1];
+        blob.max = entry[2];
+        blob.area = (uint16_t)(entry[3] | (entry[4] << 8));
+
+        TestBlobLevel_s &level = testBlobLevels[i];
+        if(!blob.seen) {
+            level.valid = false; // a new sighting starts from its own values
+            continue;
+        }
+
+        const qreal k = qSqrt((qreal)qMin((int)blob.area, IRTEST_BLOB_AREA_MAX) / IRTEST_BLOB_AREA_MAX);
+        const qreal radius = qMax(IRTEST_BLOB_RADIUS_MIN, IRTEST_BLOB_RADIUS_MAX * k) * IRTEST_BLOB_RADIUS_SCALE;
+        const qreal center = IrTestBrightnessLevel(blob.max);
+        const qreal edge = IrTestBrightnessLevel(blob.avg);
+
+        if(!level.valid) {
+            level.valid = true;
+            level.radius = radius;
+            level.center = center;
+            level.edge = edge;
+        } else {
+            level.radius += IRTEST_SMOOTHING * (radius - level.radius);
+            level.center += IRTEST_SMOOTHING * (center - level.center);
+            level.edge += IRTEST_SMOOTHING * (edge - level.edge);
+        }
+    }
+
+    testBlobsTimer.start();
+}
+
+bool AppCaliWindow::TestBlobsFresh() const
+{
+    return testBlobsTimer.isValid() && testBlobsTimer.elapsed() <= IRTEST_BLOBS_MAX_AGE;
+}
+
+void AppCaliWindow::TestModeDrawEmitter(const int &index, const qreal &x, const qreal &y)
+{
+    QGraphicsEllipseItem *item = testPoints[testPointTL + index];
+    const QColor color = item->pen().color();
+    const TestBlobLevel_s &level = testBlobLevels[index];
+
+    if(testBlobs[index].seen && level.valid) {
+        // Seen: radius from the blob area, radial gradient from the max brightness
+        // (centre) to the average brightness (edge), outline in the emitter colour.
+        const qreal r = level.radius;
+        QColor centerColor = color;
+        QColor edgeColor = color;
+        centerColor.setAlphaF((float)level.center);
+        edgeColor.setAlphaF((float)level.edge);
+        QRadialGradient gradient(QPointF(x, y), r);
+        gradient.setColorAt(0, centerColor);
+        gradient.setColorAt(1, edgeColor);
+        item->setBrush(QBrush(gradient));
+        item->setPen(QPen(color, qMax((qreal)2, 1 / testScale))); // at least 1 screen pixel
+        item->setRect(x - r, y - r, 2 * r, 2 * r);
+        testNotSeenMarks[index]->setVisible(false);
+    } else {
+        // Not seen: dashed circle in the emitter colour with a red X.
+        const qreal r = IRTEST_EMITTER_RADIUS;
+        QPen pen(color, 3);
+        pen.setCapStyle(Qt::FlatCap); // dashes of exactly 6 px like the web app
+        pen.setDashPattern({6.0 / 3, 5.0 / 3}); // 6 px dash, 5 px gap (units of the 3 px width)
+        item->setPen(pen);
+        item->setBrush(QBrush(Qt::NoBrush));
+        item->setRect(x - r, y - r, 2 * r, 2 * r);
+
+        const qreal d = r * 0.62;
+        QPainterPath cross;
+        cross.moveTo(x - d, y - d);
+        cross.lineTo(x + d, y + d);
+        cross.moveTo(x + d, y - d);
+        cross.lineTo(x - d, y + d);
+        testNotSeenMarks[index]->setPath(cross);
+        testNotSeenMarks[index]->setVisible(true);
+    }
 }

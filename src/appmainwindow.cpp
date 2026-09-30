@@ -2236,6 +2236,11 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
             caliWindow->CaliModeTextUpdate((uint8_t)payload.at(0), payload.constData() + 1);
         break;
 
+    case OF_Const::sTestBlobs:
+        if(caliWindow != nullptr && caliWindow->GetWindowMode() == AppCaliWindow::modeIRTest)
+            caliWindow->TestModeBlobs((const uint8_t*)payload.constData(), (int)payload.size());
+        break;
+
     case OF_Const::sTestCoords:
         if(payload.size() == (int)(sizeof(int) * 12) && caliWindow != nullptr) {
             int coordsList[12];
