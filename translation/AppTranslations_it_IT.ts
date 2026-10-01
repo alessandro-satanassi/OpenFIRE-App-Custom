@@ -5,39 +5,33 @@
     <name>AppAbout</name>
     <message>
         <location filename="../src/appabout.ui" line="17"/>
-        <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appabout.h" line="133"/>
-        <source>About OpenFIRE</source>
-        <translation>Informazioni su OpenFIRE</translation>
+        <source>About OpenFIRE ESP32</source>
+        <translation>Informazioni su OpenFIRE ESP32</translation>
     </message>
     <message>
         <location filename="../src/appabout.ui" line="70"/>
-        <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appabout.h" line="135"/>
-        <source>Made with blood, sweat, and Qt </source>
-        <translation>Fatto con sangue, sudore e Qt </translation>
+        <source>OpenFIRE ESP32 Desktop App · Qt </source>
+        <translation>App desktop OpenFIRE ESP32 · Qt </translation>
     </message>
     <message>
         <location filename="../src/appabout.ui" line="88"/>
-        <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appabout.h" line="136"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Primary OpenFIRE Firmware maintainership and Desktop App developed by &lt;a href=&quot;https://github.com/SeongGino&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;That One Seong&lt;/span&gt;&lt;/a&gt;.&lt;br/&gt;If this software has given you any value,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;La manutenzione principale del firmware OpenFIRE e lo sviluppo dell’app Desktop sono a cura di &lt;a href=&quot;https://github.com/SeongGino&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;That One Seong&lt;/span&gt;&lt;/a&gt;.&lt;br/&gt;Se questo software ti è stato utile,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This App was created by &lt;b&gt;Alessandro Satanassi&lt;/b&gt; from the original OpenFIRE App, and extended and modified for the OpenFIRE ESP32 firmware.&lt;/p&gt;&lt;p&gt;Heartfelt thanks to &lt;a href=&quot;https://github.com/SeongGino&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;That One Seong&lt;/span&gt;&lt;/a&gt;, author of the &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-App&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;original OpenFIRE App&lt;/span&gt;&lt;/a&gt; and lead developer of the &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-Firmware&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;OpenFIRE firmware&lt;/span&gt;&lt;/a&gt;: without his work this App would not exist.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Questa App è stata realizzata da &lt;b&gt;Alessandro Satanassi&lt;/b&gt; a partire dall&apos;App OpenFIRE originale ed è stata integrata e modificata per il firmware OpenFIRE ESP32.&lt;/p&gt;&lt;p&gt;Un sentito grazie a &lt;a href=&quot;https://github.com/SeongGino&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;That One Seong&lt;/span&gt;&lt;/a&gt;, autore dell&apos;&lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-App&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;App OpenFIRE originale&lt;/span&gt;&lt;/a&gt; e sviluppatore principale del &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-Firmware&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;firmware OpenFIRE&lt;/span&gt;&lt;/a&gt;: senza il suo lavoro questa App non esisterebbe.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../src/appabout.ui" line="104"/>
-        <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appabout.h" line="137"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://ko-fi.com/thatoneseong&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;/&gt;&lt;img src=&quot;:/icon/donate.svg&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
+        <location filename="../src/appabout.ui" line="109"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This App is free and open-source software, distributed under the &lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;GNU GPL v3&lt;/span&gt;&lt;/a&gt; license and without any warranty.&lt;/p&gt;&lt;p&gt;If this App and the &lt;a href=&quot;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;OpenFIRE ESP32 firmware&lt;/span&gt;&lt;/a&gt; have been useful to you, you can support Alessandro Satanassi&apos;s work:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Questa App è software libero e gratuito, distribuita con licenza &lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;GNU GPL v3&lt;/span&gt;&lt;/a&gt; e senza alcuna garanzia.&lt;/p&gt;&lt;p&gt;Se questa App e il &lt;a href=&quot;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;firmware OpenFIRE ESP32&lt;/span&gt;&lt;/a&gt; ti sono stati utili, puoi sostenere il lavoro di Alessandro Satanassi:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../src/appabout.ui" line="117"/>
-        <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appabout.h" line="138"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Special Thanks:&lt;br/&gt;Samuel Ballantyne, for their work on the original &lt;a href=&quot;https://github.com/samuelballantyne/IR-Light-Gun&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;SAMCO lightgun system&lt;/span&gt;&lt;/a&gt;.&lt;br/&gt;Mike Lynch, AKA Prow7, for their enhanced fork and libraries.&lt;br/&gt;&lt;a href=&quot;https://forum.arcadecontrols.com/index.php/board,20.0.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;The ArcadeControls forums&lt;/span&gt;&lt;/a&gt; for their support.&lt;br/&gt;All the early GitHub testers for their feedback.&lt;br/&gt;And You, for enjoying this software!&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;OpenFIRE, as the name implies, is FREE SOFTWARE;&lt;br/&gt;if you have paid for the firmware or this utility, you have been scammed and should demand your money back!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Ringraziamenti speciali:&lt;br/&gt;Samuel Ballantyne, per il suo lavoro sull&apos;originale &lt;a href=&quot;https://github.com/samuelballantyne/IR-Light-Gun&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;SAMCO lightgun system&lt;/span&gt;&lt;/a&gt;.&lt;br/&gt;Mike Lynch, alias Prow7, per il suo fork migliorato e le librerie.&lt;br/&gt;&lt;a href=&quot;https://forum.arcadecontrols.com/index.php/board,20.0.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Il forum di ArcadeControls&lt;/span&gt;&lt;/a&gt; per il supporto.&lt;br/&gt;Tutti i primi tester di GitHub per i loro feedback.&lt;br/&gt;E a Te, per apprezzare questo software!&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;OpenFIRE, come suggerisce il nome, è SOFTWARE GRATUITO;&lt;br/&gt;se hai pagato per il firmware o per questa utility, sei stato truffato e dovresti pretendere il rimborso!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <location filename="../src/appabout.ui" line="136"/>
+        <source>Support Alessandro Satanassi on Ko-fi</source>
+        <translation>Sostieni Alessandro Satanassi su Ko-fi</translation>
     </message>
     <message>
-        <location filename="../src/appabout.ui" line="151"/>
-        <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appabout.h" line="139"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-Firmware&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Firmware&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-App&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Desktop Source&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;discord.com/invite/dFw5z6PBQv&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Discord&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
+        <location filename="../src/appabout.ui" line="167"/>
+        <source>© 2025 Team OpenFIRE (original OpenFIRE App) · © 2026 Alessandro Satanassi (OpenFIRE ESP32 App)</source>
+        <translation>© 2025 Team OpenFIRE (App OpenFIRE originale) · © 2026 Alessandro Satanassi (App OpenFIRE ESP32)</translation>
     </message>
 </context>
 <context>

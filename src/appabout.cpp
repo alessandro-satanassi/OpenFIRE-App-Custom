@@ -20,13 +20,21 @@
 #include "appabout.h"
 #include "ui_appabout.h"
 
+#include <QDesktopServices>
+#include <QUrl>
+
 AppAbout::AppAbout(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AppAbout)
 {
     ui->setupUi(this);
 
-    this->setFixedSize(this->width(), this->height());
+    // Keep the designed width, but grow the height if the texts need it
+    // (longer translations, larger system fonts).
+    int h = this->height();
+    if(this->layout()->hasHeightForWidth())
+        h = qMax(h, this->layout()->totalHeightForWidth(this->width()));
+    this->setFixedSize(this->width(), h);
     this->setWindowFlags(Qt::MSWindowsFixedSizeDialogHint | Qt::WindowCloseButtonHint);
 
     ui->topText->setText(ui->topText->text() +
@@ -40,6 +48,10 @@ AppAbout::AppAbout(QWidget *parent)
 #endif
 #endif
                          );
+
+    connect(ui->kofiButton, &QPushButton::clicked, this, []() {
+        QDesktopServices::openUrl(QUrl("https://ko-fi.com/alessandrosatanassi"));
+    });
 }
 
 AppAbout::~AppAbout()

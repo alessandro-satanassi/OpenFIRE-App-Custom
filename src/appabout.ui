@@ -10,11 +10,11 @@
     <x>0</x>
     <y>0</y>
     <width>540</width>
-    <height>500</height>
+    <height>520</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>About OpenFIRE</string>
+   <string>About OpenFIRE ESP32</string>
   </property>
   <property name="windowIcon">
    <iconset resource="../img/vectors.qrc">
@@ -67,7 +67,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Made with blood, sweat, and Qt </string>
+      <string>OpenFIRE ESP32 Desktop App · Qt </string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -85,7 +85,28 @@
       </font>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Primary OpenFIRE Firmware maintainership and Desktop App developed by &lt;a href=&quot;https://github.com/SeongGino&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;That One Seong&lt;/span&gt;&lt;/a&gt;.&lt;br/&gt;If this software has given you any value,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This App was created by &lt;b&gt;Alessandro Satanassi&lt;/b&gt; from the original OpenFIRE App, and extended and modified for the OpenFIRE ESP32 firmware.&lt;/p&gt;&lt;p&gt;Heartfelt thanks to &lt;a href=&quot;https://github.com/SeongGino&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;That One Seong&lt;/span&gt;&lt;/a&gt;, author of the &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-App&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;original OpenFIRE App&lt;/span&gt;&lt;/a&gt; and lead developer of the &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-Firmware&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;OpenFIRE firmware&lt;/span&gt;&lt;/a&gt;: without his work this App would not exist.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="mainText">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This App is free and open-source software, distributed under the &lt;a href=&quot;https://www.gnu.org/licenses/gpl-3.0.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;GNU GPL v3&lt;/span&gt;&lt;/a&gt; license and without any warranty.&lt;/p&gt;&lt;p&gt;If this App and the &lt;a href=&quot;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;OpenFIRE ESP32 firmware&lt;/span&gt;&lt;/a&gt; have been useful to you, you can support Alessandro Satanassi's work:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -99,31 +120,23 @@
     </widget>
    </item>
    <item alignment="Qt::AlignHCenter">
-    <widget class="QLabel" name="kofiLink">
+    <widget class="QPushButton" name="kofiButton">
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="toolTip">
+      <string notr="true">https://ko-fi.com/alessandrosatanassi</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton { background-color: #ff5e5b; color: white; font-weight: bold; border: none; border-radius: 14px; padding: 7px 18px; }
+QPushButton:hover { background-color: #ff4642; }
+QPushButton:pressed { background-color: #e5524f; }</string>
+     </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://ko-fi.com/thatoneseong&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;/&gt;&lt;img src=&quot;:/icon/donate.svg&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>Support Alessandro Satanassi on Ko-fi</string>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="openExternalLinks">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="mainText">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Special Thanks:&lt;br/&gt;Samuel Ballantyne, for their work on the original &lt;a href=&quot;https://github.com/samuelballantyne/IR-Light-Gun&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;SAMCO lightgun system&lt;/span&gt;&lt;/a&gt;.&lt;br/&gt;Mike Lynch, AKA Prow7, for their enhanced fork and libraries.&lt;br/&gt;&lt;a href=&quot;https://forum.arcadecontrols.com/index.php/board,20.0.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;The ArcadeControls forums&lt;/span&gt;&lt;/a&gt; for their support.&lt;br/&gt;All the early GitHub testers for their feedback.&lt;br/&gt;And You, for enjoying this software!&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;OpenFIRE, as the name implies, is FREE SOFTWARE;&lt;br/&gt;if you have paid for the firmware or this utility, you have been scammed and should demand your money back!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignJustify|Qt::AlignVCenter</set>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-     <property name="openExternalLinks">
-      <bool>true</bool>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -142,21 +155,24 @@
    </item>
    <item>
     <widget class="QLabel" name="bottomText">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
-       <pointsize>11</pointsize>
+       <pointsize>9</pointsize>
       </font>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-Firmware&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Firmware&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/TeamOpenFIRE/OpenFIRE-App&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Desktop Source&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;discord.com/invite/dFw5z6PBQv&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#8ab4f8;&quot;&gt;Discord&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>© 2025 Team OpenFIRE (original OpenFIRE App) · © 2026 Alessandro Satanassi (OpenFIRE ESP32 App)</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
      </property>
      <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-     <property name="openExternalLinks">
       <bool>true</bool>
      </property>
     </widget>
