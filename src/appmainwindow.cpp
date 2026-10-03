@@ -441,11 +441,74 @@ void guiWindow::DiffUpdate()
         ui->confirmButton->setText(tr("Save and Send Settings"));
         ui->confirmButton->setEnabled(true);
         ui->confirmButton->setIcon(QIcon::fromTheme("document-save"));
+        SavePulseSet(true);
     } else {
         ui->confirmButton->setText(tr("[Nothing To Save]"));
         ui->confirmButton->setEnabled(false);
         ui->confirmButton->setIcon(QIcon());
+        SavePulseSet(false);
     }
+}
+
+void guiWindow::SavePulseSet(const bool &on)
+{
+    // Same pace as the web app: one breath every 1.6 s.
+    constexpr int SAVE_PULSE_PERIOD = 1600;  // ms
+    constexpr qreal SAVE_PULSE_TINT = 0.4;   // button colour at most 40% towards the highlight colour
+    constexpr qreal SAVE_PULSE_GLOW = 16;    // px, largest blur of the glow
+
+    if(!on) {
+        if(savePulse != nullptr)
+            savePulse->stop();
+        if(savePulseGlow != nullptr) {
+            ui->confirmButton->setGraphicsEffect(nullptr); // deletes the effect
+            savePulseGlow = nullptr;
+            ui->confirmButton->setPalette(QPalette());     // back to the application palette
+        }
+        return;
+    }
+
+    if(savePulse == nullptr) {
+        savePulse = new QVariantAnimation(this);
+        savePulse->setDuration(SAVE_PULSE_PERIOD);
+        savePulse->setStartValue(0.0);
+        savePulse->setKeyValueAt(0.5, 1.0);
+        savePulse->setEndValue(0.0);
+        savePulse->setEasingCurve(QEasingCurve::InOutSine);
+        savePulse->setLoopCount(-1);
+        connect(savePulse, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+            // Disabled elsewhere (test mode, saving, not connected): stop and restore the button.
+            if(!ui->confirmButton->isEnabled()) {
+                SavePulseSet(false);
+                return;
+            }
+            const QPalette appPalette = QApplication::palette(ui->confirmButton);
+            const QColor base = appPalette.color(QPalette::Button);
+            const QColor accent = appPalette.color(QPalette::Highlight);
+
+            // Breath: tint towards the highlight colour and back.
+            const qreal t = value.toReal() * SAVE_PULSE_TINT;
+            QPalette palette = appPalette;
+            palette.setColor(QPalette::Button, QColor::fromRgbF(base.redF()   + (accent.redF()   - base.redF())   * t,
+                                                                base.greenF() + (accent.greenF() - base.greenF()) * t,
+                                                                base.blueF()  + (accent.blueF()  - base.blueF())  * t));
+            ui->confirmButton->setPalette(palette);
+
+            // Glow: spreads out and fades over each breath, like the ring of the web app.
+            if(savePulseGlow == nullptr) {
+                savePulseGlow = new QGraphicsDropShadowEffect();
+                savePulseGlow->setOffset(0, 0);
+                ui->confirmButton->setGraphicsEffect(savePulseGlow);
+            }
+            const qreal ring = (qreal)savePulse->currentLoopTime() / SAVE_PULSE_PERIOD;
+            QColor glow = accent;
+            glow.setAlphaF((float)(0.8 * (1 - ring)));
+            savePulseGlow->setColor(glow);
+            savePulseGlow->setBlurRadius(2 + SAVE_PULSE_GLOW * ring);
+        });
+    }
+    if(savePulse->state() != QAbstractAnimation::Running)
+        savePulse->start();
 }
 
 

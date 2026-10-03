@@ -47,6 +47,8 @@
 #include <QRadioButton>
 #include <QSvgWidget>
 #include <QProgressBar>
+#include <QVariantAnimation>
+#include <QGraphicsDropShadowEffect>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -276,6 +278,14 @@ private:
     /// @brief      Checks for differences in current staging settings
     /// @details    Controls enablement of "send to board" button
     void DiffUpdate();
+
+    /// @brief      Save and Send Settings "breathes" while there are unsaved changes (like the web app):
+    ///             the button tints towards the highlight colour and back, and a glow spreads out from it.
+    ///             Stops by itself as soon as the button is disabled.
+    void SavePulseSet(const bool &);
+    QVariantAnimation *savePulse = nullptr;
+    QGraphicsDropShadowEffect *savePulseGlow = nullptr; // owned by confirmButton while set
+
     void CommitRecoveryUiUpdate();
     bool commitRecoveryUiActive = false;
 

@@ -8,7 +8,7 @@
  - **Cross-platform Qt application,** portable across Linux & Windows desktops & Raspberry Pi systems.
  - **Simple to use:** Plug in and select the gun from the dropdown, and configure away!
  - See and manage current pins layout, toggle on and off custom mappings, manage other tunable settings such as FFB and I2C peripherals and more, all on the fly.
- - Calibrate any of the loaded profiles using an intuitive interactive fullscreen interface for easy and accurate calibrations.
+ - Calibrate any of the loaded profiles using an intuitive interactive fullscreen interface for easy and accurate calibrations, which also shows whether the camera sees the IR emitters well.
  - View ideal alignment of emitters using the IR Emitter Alignment Assistant.
  - Preview all supported boards' layouts, including their capabilities (I2C type & channel, et al), to make building your OpenFIRE lightgun easier.
  - Also serves as a testing utility for digital and analog inputs, force feedback devices, camera, and more.
