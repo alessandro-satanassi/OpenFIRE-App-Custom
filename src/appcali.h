@@ -182,8 +182,10 @@ private:
 
     /// @brief      Generates input from text into a bitmap representation using the app's builtin "test" typeface
     /// @details    Optional color bit tints the pixmap into the provided color.
+    ///             Optional scale: the pixmap is drawn at the size it is shown with that item scale
+    ///             (device pixel ratio), so that characters not in the typeface are drawn smooth.
     /// @returns    Pixmap of the string list provided.
-    QPixmap GenerateText(const QStringList &, const QColor & = QColor());
+    QPixmap GenerateText(const QStringList &, const QColor & = QColor(), const int & = 1);
 
     /// @brief      Type of text scale appropriate for this window
     /// @details    Value is one of ScaleTypes_e

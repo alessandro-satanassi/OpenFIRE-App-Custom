@@ -25,6 +25,8 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QFile>
+#include <QHash>
+#include <QImage>
 #include <QtMath>
 
 namespace {
@@ -108,6 +110,76 @@ QStringList CaliIrWrapLines(const QStringList &lines, const int &maxChars)
 }
 
 QColor IrTestNotSeenColor() { return QColor(0xff, 0x30, 0x30); }
+
+/// Glyph (8x8) of the "test" typeface for a character, as in the web app: the 94 glyphs '!'..'~';
+/// typographic punctuation mapped to them; accented Latin letters composed from their letter and
+/// an accent drawn in the typeface style (rows 0-1, only where the letter leaves them free).
+/// Null image when the typeface has no glyph (other scripts).
+QImage TestFontGlyph(const QChar &ch)
+{
+    static QHash<ushort, QImage> cache;
+    const auto cached = cache.constFind(ch.unicode());
+    if(cached != cache.constEnd())
+        return cached.value();
+
+    // Accents over lowercase letters without ascenders (rows 0-1): '#' main, 's' shadow.
+    struct Accent_s { ushort mark; const char *rows[2]; };
+    static const Accent_s accents[] = {
+        {0x0300, {".##s", "..##s"}},    // grave
+        {0x0301, {"...##s", "..##s"}},  // acute
+        {0x0302, {"..##s", ".#s.#s"}},  // circumflex
+        {0x0308, {"", "##s##s"}},       // diaeresis
+        {0x0303, {".##s#s", "#s##s"}},  // tilde
+    };
+
+    QChar mapped = ch;
+    switch(ch.unicode()) {
+    case 0x2018: case 0x2019:                         mapped = '\''; break;
+    case 0x201C: case 0x201D: case 0x00AB: case 0x00BB: mapped = '"';  break;
+    case 0x2013: case 0x2014:                         mapped = '-';  break;
+    case 0x00B0:                                      mapped = 'o';  break;
+    default: break;
+    }
+
+    ushort code = mapped.unicode();
+    const Accent_s *accent = nullptr;
+    QImage glyph;
+    if(code > 126) {
+        const QString parts = QString(mapped).normalized(QString::NormalizationForm_D);
+        code = parts.at(0).unicode();
+        const ushort mark = parts.length() > 1 ? parts.at(1).unicode() : 0;
+        for(const Accent_s &known : accents)
+            if(known.mark == mark)
+                accent = &known;
+        // Cedilla/ogonek have no room below the letter: plain letter.
+        if(code < 33 || code > 126 || (mark && !accent && mark != 0x0327 && mark != 0x0328))
+            code = 0;
+    }
+    if(code >= 33 && code <= 126) {
+        glyph = QImage(QString(":/testFont/testFont/%1").arg(code), "PNG").convertToFormat(QImage::Format_ARGB32);
+        if(accent && !glyph.isNull()) {
+            const bool dotted = code == 'i' || code == 'j'; // the dot makes room for the accent
+            bool topUsed = false;
+            for(int y = 0; y < 2; ++y)
+                for(int x = 0; x < 8; ++x)
+                    topUsed = topUsed || qAlpha(glyph.pixel(x, y)) != 0;
+            // An ascender or a capital leaves no room: plain letter.
+            if(!topUsed || dotted) {
+                const int shift = dotted ? 1 : 0;
+                for(int y = 0; y < 2; ++y) {
+                    for(int x = 0; x < 8; ++x)
+                        glyph.setPixel(x, y, qRgba(0, 0, 0, 0));
+                    for(int x = 0; accent->rows[y][x] && x + shift < 8; ++x)
+                        if(accent->rows[y][x] != '.')
+                            glyph.setPixel(x + shift, y, accent->rows[y][x] == '#' ? qRgba(255, 255, 255, 255)
+                                                                                     : qRgba(115, 115, 115, 255));
+                }
+            }
+        }
+    }
+    cache.insert(ch.unicode(), glyph);
+    return glyph;
+}
 
 /// Brightness 0..255 -> 0..1 fill over the range of detected blobs.
 qreal IrTestBrightnessLevel(const int &value)
@@ -203,7 +275,7 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
 
             // IR view (caliFlagIrView): hint under the header, refusal message in place of
             // the tutorial. Hidden until the firmware sends the emitters.
-            caliIrHintBitmap = new QGraphicsPixmapItem(GenerateText({tr("Shoot when the crosshair is green.")}));
+            caliIrHintBitmap = new QGraphicsPixmapItem(GenerateText({tr("Shoot when the crosshair is green.")}, QColor(), GetTextScale(TextSub)));
             caliIrHintBitmap->setScale(GetTextScale(TextSub));
             caliIrHintBitmap->setVisible(false);
             scene.addItem(caliIrHintBitmap);
@@ -636,8 +708,21 @@ int AppCaliWindow::GetTextScale(const int &type)
     return 0;
 }
 
-QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &tintColor)
+QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &tintColor, const int &renderScale)
 {
+    // With renderScale > 1 the pixmap is drawn at the size it is shown (its item scale is
+    // renderScale): the typeface glyphs are enlarged pixel by pixel, so they look the same as
+    // before, and characters not in the typeface are drawn smooth with the system font, like
+    // the web app.
+    const int s = qMax(1, renderScale);
+    const int cell = 8 * s;
+    // Colours of the typeface (white with a grey shadow), or of the tint (shadow 140 units darker).
+    const QColor mainColor = tintColor.isValid() ? tintColor : QColor(255, 255, 255);
+    const QColor shadowColor = tintColor.isValid() ? QColor(tintColor.red()   > 140 ? tintColor.red()   - 140 : 0,
+                                                            tintColor.green() > 140 ? tintColor.green() - 140 : 0,
+                                                            tintColor.blue()  > 140 ? tintColor.blue()  - 140 : 0)
+                                                   : QColor(115, 115, 115);
+
     QVector<QPixmap> imageBuffer;
     int maxWidth = 0;
 
@@ -645,7 +730,7 @@ QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &ti
     QPainter painter;
 
     for(auto const &line : strings) {
-        imageBuffer << QPixmap(8*line.length(), 8);
+        imageBuffer << QPixmap(cell*line.length(), cell);
         // init with transparent color
         imageBuffer.last().fill(QColor(0,0,0,0));
         painter.begin(&imageBuffer.last());
@@ -654,31 +739,41 @@ QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &ti
 
         for(int i = 0; i < line.length(); i++)
             if(line.at(i) >= '!' && line.at(i) <= '~')
-                painter.drawPixmap(QPoint(8*i, 0), QPixmap(QString(":/testFont/testFont/%1").arg((int)line.at(i).unicode()), "PNG"));
-            else if(!line.at(i).isSpace()) {
-                // Not in the typeface (accented letters, other scripts): system font in the same
-                // cell, white with the grey shadow of the typeface, so that the tint below applies too.
-                QFont font("Monospace");
+                painter.drawPixmap(QRect(cell*i, 0, cell, cell), QPixmap(QString(":/testFont/testFont/%1").arg((int)line.at(i).unicode()), "PNG"));
+            else if(line.at(i).isSpace())
+                continue;
+            else if(const QImage glyph = TestFontGlyph(line.at(i)); !glyph.isNull())
+                painter.drawImage(QRect(cell*i, 0, cell, cell), glyph); // accented letters, punctuation
+            else {
+                // Not in the typeface (other scripts): system font in the same cell,
+                // in the text colours with the shadow one pixel (of the typeface) lower right.
+                // The fonts the browser uses for "monospace" (Windows, Linux, macOS), as in the web app.
+                QFont font;
+                font.setFamilies({"Consolas", "DejaVu Sans Mono", "Menlo", "Monospace"});
                 font.setStyleHint(QFont::Monospace);
-                font.setPixelSize(8);
                 font.setBold(true);
-                font.setStyleStrategy(QFont::NoAntialias);
+                if(s > 1)
+                    font.setPixelSize(qRound(cell * 0.95));
+                else {
+                    font.setPixelSize(8);
+                    font.setStyleStrategy(QFont::NoAntialias);
+                }
                 painter.setFont(font);
-                painter.setPen(QColor(115, 115, 115));
-                painter.drawText(QRect(8*i + 1, 1, 8, 8), Qt::AlignCenter, QString(line.at(i)));
-                painter.setPen(QColor(255, 255, 255));
-                painter.drawText(QRect(8*i, 0, 8, 8), Qt::AlignCenter, QString(line.at(i)));
+                painter.setPen(shadowColor);
+                painter.drawText(QRect(cell*i + s, s, cell, cell), Qt::AlignCenter, QString(line.at(i)));
+                painter.setPen(mainColor);
+                painter.drawText(QRect(cell*i, 0, cell, cell), Qt::AlignCenter, QString(line.at(i)));
             }
 
         painter.end();
     }
 
-    QPixmap combinedBuffer(maxWidth, 8*strings.count());
+    QPixmap combinedBuffer(maxWidth, cell*strings.count());
     combinedBuffer.fill(QColor(0,0,0,0));
 
     painter.begin(&combinedBuffer);
     for(int i = 0; i < imageBuffer.count(); i++)
-        painter.drawPixmap(QPoint(0,8*i), imageBuffer.at(i));
+        painter.drawPixmap(QPoint(0,cell*i), imageBuffer.at(i));
 
     if(tintColor.isValid()) {
         QBitmap mask1 = combinedBuffer.createMaskFromColor(QColor(255, 255, 255), Qt::MaskOutColor);
@@ -687,14 +782,13 @@ QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &ti
         painter.drawPixmap(combinedBuffer.rect(), mask1);
         // shadowed area gets tinted with a 140 units darker shade
         // need to be careful not to dip into negatives, as that invalidates the QColor
-        painter.setPen(QPen(QColor(tintColor.red()   > 140 ? tintColor.red()   - 140 : 0,
-                                   tintColor.green() > 140 ? tintColor.green() - 140 : 0,
-                                   tintColor.blue()  > 140 ? tintColor.blue()  - 140 : 0)));
+        painter.setPen(QPen(shadowColor));
         painter.drawPixmap(combinedBuffer.rect(), mask2);
     }
 
     painter.end();
 
+    combinedBuffer.setDevicePixelRatio(s);
     return combinedBuffer;
 }
 
@@ -1276,7 +1370,7 @@ void AppCaliWindow::CaliIrRefresh()
 
     if(caliIrWarningBits) {
         const QStringList lines = CaliIrWrapLines(CaliIrWarningLines(caliIrWarningBits), warningChars);
-        caliIrWarningBitmap->setPixmap(GenerateText(IrTestCentredLines(lines), QColor(255, 90, 90)));
+        caliIrWarningBitmap->setPixmap(GenerateText(IrTestCentredLines(lines), QColor(255, 90, 90), sub));
         const qreal width = caliIrWarningBitmap->boundingRect().width() * sub;
         const qreal height = caliIrWarningBitmap->boundingRect().height() * sub;
         const QPointF pos(rect.center().x() - width / 2, rect.top() + rect.height() * 0.8 - height / 2);
@@ -1415,11 +1509,11 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     painter.restore();
 
     // Title centred on the panel.
-    const QPixmap titlePixmap = GenerateText(IrTestCentredLines(title), tint);
-    const QRectF titleRect((panelW - titlePixmap.width() * titleScale) / 2, 2 * small,
-                           titlePixmap.width() * titleScale, titlePixmap.height() * titleScale);
+    // Drawn at its final size (titleScale), so its pixels map 1:1 into the panel.
+    const QPixmap titlePixmap = GenerateText(IrTestCentredLines(title), tint, titleScale);
+    const QRectF titleRect((panelW - titlePixmap.width()) / 2, 2 * small, titlePixmap.width(), titlePixmap.height());
     painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
-    painter.drawPixmap(titleRect, titlePixmap, QRectF(titlePixmap.rect()));
+    painter.drawPixmap(titleRect.toRect(), titlePixmap);
     painter.end();
 
     caliIrPanel->setPixmap(pixmap);
