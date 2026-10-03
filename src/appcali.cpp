@@ -321,6 +321,11 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
                 caliIrWarningBits = 0;
                 CaliIrRefresh();
             });
+            caliIrExpiryTimer.setSingleShot(true);
+            connect(&caliIrExpiryTimer, &QTimer::timeout, this, [this]() {
+                CaliIrRefresh();
+                CaliIrArmExpiry();
+            });
         }
 
         ui->graphicsView->setMouseTracking(false);
@@ -1107,6 +1112,7 @@ void AppCaliWindow::TestModeDraw(const int coordsList[12])
             caliIrSeenByCoords[i] = (coordsList[i * 2] % 2) == 0; // bit 0 of X: outside the FOV
         caliIrCoordsTimer.start();
         CaliIrRefresh();
+        CaliIrArmExpiry();
         return;
     }
     if(mode != modeIRTest)
@@ -1232,6 +1238,8 @@ void AppCaliWindow::TestModeBlobs(const uint8_t *payload, const int &length)
     }
 
     testBlobsTimer.start();
+    if(mode == modeCalibrate)
+        CaliIrArmExpiry();
 }
 
 bool AppCaliWindow::TestBlobsFresh() const
@@ -1318,6 +1326,22 @@ QStringList AppCaliWindow::CaliIrWarningLines(const uint8_t &bits)
     return {(bits & CALI_IR_MISSING) ? tr("Shot refused: the camera does not see all four IR emitters.")
                                      : tr("Shot refused: an IR emitter is too weak."),
             tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")};
+}
+
+void AppCaliWindow::CaliIrArmExpiry()
+{
+    caliIrExpiryTimer.stop();
+    if(mode != modeCalibrate)
+        return;
+    qint64 remaining = -1;
+    if(caliIrCoordsTimer.isValid() && caliIrCoordsTimer.elapsed() <= CALI_IR_MAX_AGE)
+        remaining = CALI_IR_MAX_AGE - caliIrCoordsTimer.elapsed();
+    if(TestBlobsFresh()) {
+        const qint64 blobsRemaining = IRTEST_BLOBS_MAX_AGE - testBlobsTimer.elapsed();
+        remaining = remaining < 0 ? blobsRemaining : qMin(remaining, blobsRemaining);
+    }
+    if(remaining >= 0)
+        caliIrExpiryTimer.start((int)remaining + 20);
 }
 
 void AppCaliWindow::CaliIrRefresh()

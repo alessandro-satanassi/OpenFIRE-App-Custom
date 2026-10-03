@@ -273,6 +273,7 @@ private:
     bool caliIrSeenByCoords[4] = {false, false, false, false}; // without blob data: outside-FOV bit
     uint8_t caliIrWarningBits = 0;              // last refused shot, shown for CALI_IR_WARNING_TIME
     QTimer caliIrWarningTimer;
+    QTimer caliIrExpiryTimer;                   // redraws when the IR data gets old
     QSvgRenderer caliCrosshairRenderer;         // crosshair, recoloured by CaliIrColor()
     QByteArray caliCrosshairSvg;                // original SVG
     QColor caliCrosshairColor;                  // colour loaded in caliCrosshairRenderer (invalid = original)
@@ -286,6 +287,10 @@ private:
 
     /// @brief      Calibration IR view: redraws crosshair colour, hint line, refusal message and panel
     void CaliIrRefresh();
+
+    /// @brief      Calibration IR view: arms caliIrExpiryTimer for the moment the IR data gets old
+    ///             (blobs first, then coordinates), so that a stopped link does not leave a green crosshair
+    void CaliIrArmExpiry();
 
     /// @brief      Calibration IR view: lines of the refusal message for the given sCaliIrWarning bits
     QStringList CaliIrWarningLines(const uint8_t &);
