@@ -438,6 +438,44 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
         <source>&lt;p align=&quot;center&quot;&gt;If the target accuracy isn&apos;t desirable,&lt;br&gt;press either &lt;i&gt;Button A&lt;/i&gt; or &lt;i&gt;Button B&lt;/i&gt;&lt;br&gt;to restart the calibration process.&lt;br&gt;&lt;br&gt;[You can also exit calibration without saving changes&lt;br&gt;by pressing &lt;i&gt;Button C (if available).&lt;/i&gt;]&lt;/p&gt;</source>
         <translation>&lt;p align=&quot;center&quot;&gt;Se la precisione non è quella desiderata,&lt;br&gt;premi il &lt;i&gt;Pulsante A&lt;/i&gt; o il &lt;i&gt;Pulsante B&lt;/i&gt;&lt;br&gt;per riavviare il processo di calibrazione.&lt;br&gt;&lt;br&gt;[Puoi anche uscire dalla calibrazione senza salvare le modifiche&lt;br&gt;premendo il &lt;i&gt;Pulsante C (se disponibile).&lt;/i&gt;]&lt;/p&gt;</translation>
     </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="205"/>
+        <source>Shoot when the crosshair is green.</source>
+        <translation>Spara quando il mirino è verde.</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1223"/>
+        <source>Shot refused: the camera does not see all four IR emitters.</source>
+        <translation>Tiro rifiutato: la camera non vede tutti e quattro gli emettitori IR.</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1224"/>
+        <source>Shot refused: an IR emitter is too weak.</source>
+        <translation>Tiro rifiutato: un emettitore IR è troppo debole.</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1225"/>
+        <source>Check the emitters, your distance and the IR sensitivity, then shoot again.</source>
+        <translation>Controlla gli emettitori, la distanza e la sensibilità IR, poi spara di nuovo.</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1319"/>
+        <location filename="../src/appcali.cpp" line="1323"/>
+        <source>IR emitters: %1/4</source>
+        <translation>Emettitori IR: %1/4</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1319"/>
+        <location filename="../src/appcali.cpp" line="1323"/>
+        <source>IR emitters</source>
+        <translation>Emettitori IR</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1321"/>
+        <location filename="../src/appcali.cpp" line="1323"/>
+        <source>weak signal</source>
+        <translation>segnale debole</translation>
+    </message>
 </context>
 <context>
     <name>AppDebugWindow</name>

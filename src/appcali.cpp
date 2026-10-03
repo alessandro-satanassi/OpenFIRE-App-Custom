@@ -22,7 +22,9 @@
 
 #include <QScreen>
 #include <QBitmap>
+#include <QPainter>
 #include <QPainterPath>
+#include <QFile>
 #include <QtMath>
 
 namespace {
@@ -32,7 +34,8 @@ namespace {
 // firmware already normalise the data, so every camera uses the same scale here.
 // Radius (1920x1080 test space) grows with sqrt(area): IRTEST_BLOB_RADIUS_MAX at
 // IRTEST_BLOB_AREA_MAX, the largest blob the PAJ7025 DSP reports. The firmware DFRobot
-// driver relies on these two values for its equivalent area (ReadDFRobotExtended).
+// driver relies on these two values for its equivalent area when it reads the camera's
+// Extended format (ReadDFRobotExtended); with the Full format it reports the box area.
 constexpr int IRTEST_BLOB_AREA_MAX = 300;
 constexpr qreal IRTEST_BLOB_RADIUS_MAX = 60;
 constexpr qreal IRTEST_BLOB_RADIUS_MIN = 6;
@@ -51,6 +54,58 @@ constexpr qreal IRTEST_SMOOTHING = 0.5;
 constexpr qint64 IRTEST_BLOBS_MAX_AGE = 250;
 constexpr uint8_t IRTEST_BLOBS_VERSION = 1;
 constexpr int IRTEST_BLOBS_LENGTH = 21;
+constexpr uint8_t IRTEST_BLOB_WEAK = 0x02; // flag: emitter seen but weak (firmware IR_WEAK_MAX_BRIGHTNESS)
+
+// ----- IR view in the calibration window -----------------------------------------------
+// Same values as the web app. Firmware that knows caliFlagIrView sends sTestBlobs + sTestCoords
+// during calibration too: the crosshair turns green when all four emitters are seen and none
+// is weak, a small panel in the bottom right corner shows each emitter, and the board refuses
+// every target shot (sCaliIrWarning) while one is missing or weak.
+constexpr qreal CALI_IR_PANEL_WIDTH = 0.14;     // of the window width (the panel is square)
+constexpr qreal CALI_IR_PANEL_MAX_WIDTH = 300;  // px
+constexpr qreal CALI_IR_PANEL_MIN_WIDTH = 140;  // px, also on small screens
+constexpr qint64 CALI_IR_MAX_AGE = 500;         // ms without coordinates: older firmware, no panel
+constexpr int CALI_IR_WARNING_TIME = 4000;      // ms the refusal message stays on screen
+constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bits
+constexpr uint8_t CALI_IR_WEAK = 0x02;
+// Crosshair colour from the worst emitter: missing = intense red; weak = red to light orange
+// as its brightness rises from the camera threshold (130) to the firmware limit
+// (IR_WEAK_MAX_BRIGHTNESS, 170); good = light green to full green up to CALI_IR_FULL_GREEN.
+constexpr int CALI_IR_BRIGHTNESS_MIN = 130;
+constexpr int CALI_IR_BRIGHTNESS_WEAK = 170;
+constexpr int CALI_IR_FULL_GREEN = 230;
+struct CaliIrRgb_s { qreal r, g, b; };
+constexpr CaliIrRgb_s CALI_IR_MISSING_RGB   = {255, 20, 20};
+constexpr CaliIrRgb_s CALI_IR_WEAK_LOW_RGB  = {255, 40, 40};
+constexpr CaliIrRgb_s CALI_IR_WEAK_HIGH_RGB = {255, 190, 90};
+constexpr CaliIrRgb_s CALI_IR_GOOD_LOW_RGB  = {170, 255, 140};
+constexpr CaliIrRgb_s CALI_IR_GOOD_HIGH_RGB = {0, 220, 0};
+
+QColor CaliIrWeakColor() { return QColor(0xff, 0xb0, 0x00); }
+
+/// Colour between a and b (t 0..1, clamped).
+QColor CaliIrMix(const CaliIrRgb_s &a, const CaliIrRgb_s &b, qreal t)
+{
+    t = qBound((qreal)0, t, (qreal)1);
+    return QColor(qRound(a.r + (b.r - a.r) * t), qRound(a.g + (b.g - a.g) * t), qRound(a.b + (b.b - a.b) * t));
+}
+
+/// Splits each line at the spaces so that no line is longer than maxChars (longer words stay whole).
+QStringList CaliIrWrapLines(const QStringList &lines, const int &maxChars)
+{
+    QStringList wrapped;
+    for(const QString &line : lines) {
+        QString current;
+        for(const QString &word : line.split(' ')) {
+            if(!current.isEmpty() && current.length() + 1 + word.length() > maxChars) {
+                wrapped << current;
+                current = word;
+            } else current = current.isEmpty() ? word : current + ' ' + word;
+        }
+        wrapped << current;
+    }
+    return wrapped;
+}
 
 QColor IrTestNotSeenColor() { return QColor(0xff, 0x30, 0x30); }
 
@@ -145,6 +200,22 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
             scene.addItem(headerBitmap);
             scene.addItem(caliStageBitmap);
             scene.addItem(tutorialBitmap);
+
+            // IR view (caliFlagIrView): hint under the header, refusal message in place of
+            // the tutorial. Hidden until the firmware sends the emitters.
+            caliIrHintBitmap = new QGraphicsPixmapItem(GenerateText({tr("Shoot when the crosshair is green.")}));
+            caliIrHintBitmap->setScale(GetTextScale(TextSub));
+            caliIrHintBitmap->setVisible(false);
+            scene.addItem(caliIrHintBitmap);
+            caliIrWarningBox = new QGraphicsRectItem();
+            caliIrWarningBox->setBrush(QBrush(QColor(0, 0, 0, 153)));
+            caliIrWarningBox->setPen(Qt::NoPen);
+            caliIrWarningBox->setVisible(false);
+            scene.addItem(caliIrWarningBox);
+            caliIrWarningBitmap = new QGraphicsPixmapItem();
+            caliIrWarningBitmap->setScale(GetTextScale(TextSub));
+            caliIrWarningBitmap->setVisible(false);
+            scene.addItem(caliIrWarningBitmap);
         } else {
             caliStageText = new QGraphicsTextItem();
             caliStageText->setFont(QFont("Monospace", GetTextScale(TextHeading)));
@@ -164,6 +235,21 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         crosshairItem->setVisible(false);
         crosshairItem->setScale(GetTextScale(Crosshair));
         scene.addItem(crosshairItem);
+
+        if(bitmapText) {
+            // IR view: emitters panel over the crosshair, crosshair recoloured from its SVG.
+            caliIrPanel = new QGraphicsPixmapItem();
+            caliIrPanel->setVisible(false);
+            scene.addItem(caliIrPanel);
+            QFile crosshairFile(":/cali/crosshair.svg");
+            if(crosshairFile.open(QIODevice::ReadOnly))
+                caliCrosshairSvg = crosshairFile.readAll();
+            caliIrWarningTimer.setSingleShot(true);
+            connect(&caliIrWarningTimer, &QTimer::timeout, this, [this]() {
+                caliIrWarningBits = 0;
+                CaliIrRefresh();
+            });
+        }
 
         ui->graphicsView->setMouseTracking(false);
 
@@ -569,6 +655,20 @@ QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &ti
         for(int i = 0; i < line.length(); i++)
             if(line.at(i) >= '!' && line.at(i) <= '~')
                 painter.drawPixmap(QPoint(8*i, 0), QPixmap(QString(":/testFont/testFont/%1").arg((int)line.at(i).unicode()), "PNG"));
+            else if(!line.at(i).isSpace()) {
+                // Not in the typeface (accented letters, other scripts): system font in the same
+                // cell, white with the grey shadow of the typeface, so that the tint below applies too.
+                QFont font("Monospace");
+                font.setStyleHint(QFont::Monospace);
+                font.setPixelSize(8);
+                font.setBold(true);
+                font.setStyleStrategy(QFont::NoAntialias);
+                painter.setFont(font);
+                painter.setPen(QColor(115, 115, 115));
+                painter.drawText(QRect(8*i + 1, 1, 8, 8), Qt::AlignCenter, QString(line.at(i)));
+                painter.setPen(QColor(255, 255, 255));
+                painter.drawText(QRect(8*i, 0, 8, 8), Qt::AlignCenter, QString(line.at(i)));
+            }
 
         painter.end();
     }
@@ -846,8 +946,14 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
         break;
     case Cali_End:
         emit WindowExiting(mode, topOffset, bottomOffset, leftOffset, rightOffset, topLeftLed, topRightLed);
-        break;
+        return;
     }
+
+    // IR view: a new stage, the refused shot is no longer current.
+    caliIrStage = caliStage;
+    caliIrWarningBits = 0;
+    caliIrWarningTimer.stop();
+    CaliIrRefresh();
 }
 
 void AppCaliWindow::CaliModeTextUpdate(const uint8_t &type, const char* data)
@@ -901,6 +1007,17 @@ void AppCaliWindow::CaliModeTextUpdate(const uint8_t &type, const char* data)
 
 void AppCaliWindow::TestModeDraw(const int coordsList[12])
 {
+    // Calibration IR view: the emitters are drawn in the panel, at their place in the layout.
+    if(mode == modeCalibrate) {
+        for(int i = 0; i < 4; ++i)
+            caliIrSeenByCoords[i] = (coordsList[i * 2] % 2) == 0; // bit 0 of X: outside the FOV
+        caliIrCoordsTimer.start();
+        CaliIrRefresh();
+        return;
+    }
+    if(mode != modeIRTest)
+        return;
+
     const int pointItems[4] = {
         testPointTL,
         testPointTR,
@@ -979,7 +1096,7 @@ void AppCaliWindow::TestModeDraw(const int coordsList[12])
 
 void AppCaliWindow::TestModeBlobs(const uint8_t *payload, const int &length)
 {
-    if(mode != modeIRTest || payload == nullptr ||
+    if((mode != modeIRTest && mode != modeCalibrate) || payload == nullptr ||
        length < IRTEST_BLOBS_LENGTH || payload[0] != IRTEST_BLOBS_VERSION)
         return;
 
@@ -992,6 +1109,7 @@ void AppCaliWindow::TestModeBlobs(const uint8_t *payload, const int &length)
         const uint8_t *entry = payload + 1 + i * 5;
         TestBlob_s &blob = testBlobs[i];
         blob.seen = (entry[0] & 0x01) != 0;
+        blob.weak = (entry[0] & IRTEST_BLOB_WEAK) != 0;
         blob.avg = entry[1];
         blob.max = entry[2];
         blob.area = (uint16_t)(entry[3] | (entry[4] << 8));
@@ -1067,4 +1185,244 @@ void AppCaliWindow::TestModeDrawEmitter(const int &index, const qreal &x, const 
         testNotSeenMarks[index]->setPath(cross);
         testNotSeenMarks[index]->setVisible(true);
     }
+}
+
+void AppCaliWindow::CaliIrWarning(const uint8_t &bits)
+{
+    if(mode != modeCalibrate || !bits)
+        return;
+    caliIrWarningBits = bits;
+    caliIrWarningTimer.start(CALI_IR_WARNING_TIME);
+    CaliIrRefresh();
+}
+
+QColor AppCaliWindow::CaliIrColor() const
+{
+    // Green exactly when the board accepts the shot: four emitters seen and none weak.
+    // Without recent IR data (older firmware) the crosshair keeps its colour.
+    if(mode != modeCalibrate || !caliIrCoordsTimer.isValid() ||
+       caliIrCoordsTimer.elapsed() > CALI_IR_MAX_AGE || !TestBlobsFresh())
+        return QColor();
+
+    int worst = 255;
+    bool weak = false;
+    for(const TestBlob_s &blob : testBlobs) {
+        if(!blob.seen)
+            return CaliIrMix(CALI_IR_MISSING_RGB, CALI_IR_MISSING_RGB, 0); // intense red
+        worst = qMin(worst, (int)blob.max);
+        weak = weak || blob.weak;
+    }
+    if(weak)
+        return CaliIrMix(CALI_IR_WEAK_LOW_RGB, CALI_IR_WEAK_HIGH_RGB,
+                         (qreal)(worst - CALI_IR_BRIGHTNESS_MIN) / (CALI_IR_BRIGHTNESS_WEAK - CALI_IR_BRIGHTNESS_MIN));
+    return CaliIrMix(CALI_IR_GOOD_LOW_RGB, CALI_IR_GOOD_HIGH_RGB,
+                     (qreal)(worst - CALI_IR_BRIGHTNESS_WEAK) / (CALI_IR_FULL_GREEN - CALI_IR_BRIGHTNESS_WEAK));
+}
+
+QStringList AppCaliWindow::CaliIrWarningLines(const uint8_t &bits)
+{
+    return {(bits & CALI_IR_MISSING) ? tr("Shot refused: the camera does not see all four IR emitters.")
+                                     : tr("Shot refused: an IR emitter is too weak."),
+            tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")};
+}
+
+void AppCaliWindow::CaliIrRefresh()
+{
+    if(mode != modeCalibrate || !bitmapText || caliIrPanel == nullptr)
+        return;
+
+    const QRectF rect = scene.sceneRect();
+    const int sub = GetTextScale(TextSub);
+    const QColor color = CaliIrColor();
+
+    // Crosshair in the colour of the worst emitter, in steps of 8 so that the SVG is not
+    // reloaded at every update; the original colour without IR data.
+    QColor crosshairColor;
+    if(color.isValid())
+        crosshairColor = QColor(qMin(255, qRound(color.red()   / 8.0) * 8),
+                                qMin(255, qRound(color.green() / 8.0) * 8),
+                                qMin(255, qRound(color.blue()  / 8.0) * 8));
+    if(crosshairColor != caliCrosshairColor && !caliCrosshairSvg.isEmpty()) {
+        QByteArray svg = caliCrosshairSvg;
+        if(crosshairColor.isValid())
+            svg.replace("#ff8758", crosshairColor.name().toLatin1());
+        if(caliCrosshairRenderer.load(svg)) {
+            crosshairItem->setSharedRenderer(&caliCrosshairRenderer);
+            crosshairItem->update();
+            caliCrosshairColor = crosshairColor;
+        }
+    }
+
+    // Every target shot is accepted only with the crosshair green.
+    const bool hint = color.isValid() && caliIrStage <= Cali_Center;
+    if(hint)
+        caliIrHintBitmap->setPos(rect.center().x() - (caliIrHintBitmap->boundingRect().width() * sub) / 2,
+                                 headerBitmap->pos().y() + headerBitmap->boundingRect().height() * headerBitmap->scale() + 8 * sub);
+    caliIrHintBitmap->setVisible(hint);
+
+    // A refused shot: the reason takes the place of the tutorial for a few seconds,
+    // at most 60% of the width, so that the panel at the bottom right stays clear.
+    const int warningChars = qMax(16, (int)((rect.width() * 0.6) / (8 * sub)));
+    auto warningWidth = [&](const uint8_t &bits) {
+        int chars = 0;
+        for(const QString &line : CaliIrWrapLines(CaliIrWarningLines(bits), warningChars))
+            chars = qMax(chars, (int)line.length());
+        return (qreal)chars * 8 * sub;
+    };
+    // The panel is sized for the widest of these texts, so it keeps its size when a warning appears.
+    qreal textRight = rect.center().x() + qMax(warningWidth(CALI_IR_MISSING), warningWidth(CALI_IR_WEAK)) / 2 + 8 * sub;
+    if(tutorialBitmap->boundingRect().width() > 0)
+        textRight = qMax(textRight, tutorialBitmap->pos().x() + tutorialBitmap->boundingRect().width() * tutorialBitmap->scale());
+
+    if(caliIrWarningBits) {
+        const QStringList lines = CaliIrWrapLines(CaliIrWarningLines(caliIrWarningBits), warningChars);
+        caliIrWarningBitmap->setPixmap(GenerateText(IrTestCentredLines(lines), QColor(255, 90, 90)));
+        const qreal width = caliIrWarningBitmap->boundingRect().width() * sub;
+        const qreal height = caliIrWarningBitmap->boundingRect().height() * sub;
+        const QPointF pos(rect.center().x() - width / 2, rect.top() + rect.height() * 0.8 - height / 2);
+        caliIrWarningBitmap->setPos(pos);
+        caliIrWarningBox->setRect(pos.x() - 8 * sub, pos.y() - 6 * sub, width + 16 * sub, height + 12 * sub);
+    }
+    caliIrWarningBitmap->setVisible(caliIrWarningBits != 0);
+    caliIrWarningBox->setVisible(caliIrWarningBits != 0);
+    tutorialBitmap->setVisible(caliIrWarningBits == 0);
+
+    CaliIrDrawPanel(textRight);
+}
+
+void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
+{
+    // Drawn only while the firmware sends the coordinates (caliFlagIrView).
+    if(!caliIrCoordsTimer.isValid() || caliIrCoordsTimer.elapsed() > CALI_IR_MAX_AGE) {
+        caliIrPanel->setVisible(false);
+        return;
+    }
+
+    const QRectF rect = scene.sceneRect();
+    const int small = GetTextScale(TextSmall);
+    const qreal margin = 12 * small;
+    // Right of the tutorial text (bottom centre), which it must not cover on small screens.
+    const qreal free = rect.right() - textRight - 2 * margin;
+    // The emitters are drawn in their layout on a square of this side, not where the camera sees them.
+    const qreal side = qMax(CALI_IR_PANEL_MIN_WIDTH, qMin(qMin(rect.width() * CALI_IR_PANEL_WIDTH, CALI_IR_PANEL_MAX_WIDTH), free));
+
+    const bool blobs = TestBlobsFresh();
+    int seen = 0;
+    bool weak = false;
+    for(int i = 0; i < 4; ++i) {
+        seen += (blobs ? testBlobs[i].seen : caliIrSeenByCoords[i]) ? 1 : 0;
+        weak = weak || (blobs && testBlobs[i].seen && testBlobs[i].weak);
+    }
+
+    // Title: number of emitters seen, and "weak signal" on a second line. The panel keeps its
+    // size whatever the title says: it is sized for the longest title and always reserves two
+    // lines. It widens for the title when the free room allows it, the square stays centred.
+    QStringList title = blobs ? QStringList{tr("IR emitters: %1/4").arg(seen)} : QStringList{tr("IR emitters")};
+    if(weak)
+        title << tr("weak signal");
+    int titleChars = 0;
+    for(const QString &line : {tr("IR emitters"), tr("IR emitters: %1/4").arg(4), tr("weak signal")})
+        titleChars = qMax(titleChars, (int)line.length());
+    auto titleWidth = [&](const int &textScale) { return (qreal)titleChars * 8 * textScale + 8 * small; };
+    int titleScale = small;
+    while(titleScale > 1 && titleWidth(titleScale) > qMax(side, free))
+        --titleScale;
+    const qreal panelW = qMax(side, titleWidth(titleScale));
+    const qreal titleH = 2 * 8 * titleScale + 4 * small;
+
+    // Title and border in the crosshair colour (grey without blob data).
+    const QColor color = CaliIrColor();
+    const QColor tint = color.isValid() ? color : QColor(160, 160, 164);
+
+    QPixmap pixmap(qCeil(panelW), qCeil(side + titleH));
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.fillRect(QRectF(0, 0, panelW, side + titleH), QColor(0, 0, 0, 77));
+    painter.setPen(QPen(tint, 2));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawRect(QRectF(1, 1, panelW - 2, side + titleH - 2));
+
+    // Each emitter at its place in the layout, on a virtual square: Square at the corners
+    // (sTestCoords order TL, TR, BL, BR), Diamond at the middle of the sides (Diamond slots:
+    // 0 top, 1 left, 2 bottom, 3 right on the screen). No lines between them.
+    painter.save();
+    painter.setClipRect(QRectF(0, titleH, panelW, side));
+    const qreal d = side * 0.25;
+    const qreal sx = (panelW - side) / 2; // square centred in a panel widened by its title
+    QPointF places[4];
+    if(caliIrDiamond) {
+        places[0] = QPointF(side / 2, d);
+        places[1] = QPointF(d, side / 2);
+        places[2] = QPointF(side / 2, side - d);
+        places[3] = QPointF(side - d, side / 2);
+    } else {
+        places[0] = QPointF(d, d);
+        places[1] = QPointF(side - d, d);
+        places[2] = QPointF(d, side - d);
+        places[3] = QPointF(side - d, side - d);
+    }
+    // Radius as in the IR test view, the largest blob filling 18% of the square (two Diamond
+    // neighbours do not touch); the dashed circle of an emitter not seen gets 9%, so its X stays readable.
+    const qreal seenScale = side * 0.18 / (IRTEST_BLOB_RADIUS_MAX * IRTEST_BLOB_RADIUS_SCALE);
+    const qreal notSeenScale = side * 0.09 / IRTEST_EMITTER_RADIUS;
+    const QColor colors[4] = {Qt::green, Qt::green, Qt::cyan, Qt::cyan};
+    for(int i = 0; i < 4; ++i) {
+        const QPointF center(sx + places[i].x(), titleH + places[i].y());
+        const bool emitterSeen = blobs ? testBlobs[i].seen : caliIrSeenByCoords[i];
+        const QColor emitterColor = (blobs && emitterSeen && testBlobs[i].weak) ? CaliIrWeakColor() : colors[i];
+        // Without blob data (older firmware) the classic circle size is used.
+        TestBlobLevel_s level = testBlobLevels[i];
+        if(!blobs) {
+            level.valid = true;
+            level.radius = IRTEST_EMITTER_RADIUS;
+            level.center = 1;
+            level.edge = 0.4;
+        }
+
+        if(emitterSeen && level.valid) {
+            // Seen: radius from the blob area, radial gradient from the max brightness
+            // (centre) to the average brightness (edge), outline in the emitter colour.
+            const qreal r = level.radius * seenScale;
+            QColor centerColor = emitterColor;
+            QColor edgeColor = emitterColor;
+            centerColor.setAlphaF((float)level.center);
+            edgeColor.setAlphaF((float)level.edge);
+            QRadialGradient gradient(center, r);
+            gradient.setColorAt(0, centerColor);
+            gradient.setColorAt(1, edgeColor);
+            painter.setBrush(QBrush(gradient));
+            painter.setPen(QPen(emitterColor, qMax((qreal)1, 2 * seenScale)));
+            painter.drawEllipse(center, r, r);
+        } else {
+            // Not seen: dashed circle in the emitter colour with a red X.
+            const qreal r = IRTEST_EMITTER_RADIUS * notSeenScale;
+            QPen pen(emitterColor, 3 * notSeenScale);
+            pen.setCapStyle(Qt::FlatCap);
+            pen.setDashPattern({6.0 / 3, 5.0 / 3}); // 6 and 5 units of the circle scale (pattern in pen widths)
+            painter.setPen(pen);
+            painter.setBrush(Qt::NoBrush);
+            painter.drawEllipse(center, r, r);
+
+            const qreal x = r * 0.62;
+            QPen markPen(IrTestNotSeenColor(), 3 * notSeenScale);
+            markPen.setCapStyle(Qt::RoundCap);
+            painter.setPen(markPen);
+            painter.drawLine(center + QPointF(-x, -x), center + QPointF(x, x));
+            painter.drawLine(center + QPointF(x, -x), center + QPointF(-x, x));
+        }
+    }
+    painter.restore();
+
+    // Title centred on the panel.
+    const QPixmap titlePixmap = GenerateText(IrTestCentredLines(title), tint);
+    const QRectF titleRect((panelW - titlePixmap.width() * titleScale) / 2, 2 * small,
+                           titlePixmap.width() * titleScale, titlePixmap.height() * titleScale);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
+    painter.drawPixmap(titleRect, titlePixmap, QRectF(titlePixmap.rect()));
+    painter.end();
+
+    caliIrPanel->setPixmap(pixmap);
+    caliIrPanel->setPos(rect.right() - margin - panelW, rect.bottom() - margin - side - titleH);
+    caliIrPanel->setVisible(true);
 }

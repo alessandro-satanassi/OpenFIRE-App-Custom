@@ -26,6 +26,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSvgItem>
 #include <QElapsedTimer>
+#include <QSvgRenderer>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -111,6 +113,15 @@ public:
     ///             area (uint16 LE). Unknown versions or short payloads are ignored.
     /// @param      Payload bytes and their count
     void TestModeBlobs(const uint8_t *, const int &);
+
+    /// @brief      Calibration IR view (caliFlagIrView): emitters of a Diamond layout are drawn
+    ///             at the middle of the sides of the panel, the others at its corners
+    void SetCaliIrDiamond(const bool &diamond) { caliIrDiamond = diamond; }
+
+    /// @brief      Calibration IR view: the board refused a target shot (sCaliIrWarning)
+    /// @param      uint8_t
+    ///             bit 0 an emitter is missing, bit 1 an emitter is weak
+    void CaliIrWarning(const uint8_t &);
 
     int GetWindowMode() { return mode; }
 
@@ -212,6 +223,7 @@ private:
     /// @brief      Test Mode blob data (sTestBlobs) of each emitter, as received
     struct TestBlob_s {
         bool seen = false;
+        bool weak = false;  // seen, but below the firmware brightness limit (flag bit 1)
         uint8_t avg = 0;
         uint8_t max = 0;
         uint16_t area = 0;
@@ -247,6 +259,37 @@ private:
     qreal testScale = 1;
     qreal testOffsetX = 0;
     qreal testOffsetY = 0;
+
+    /// @brief      Calibration IR view (caliFlagIrView): the firmware also sends sTestBlobs and
+    ///             sTestCoords during calibration. The crosshair turns green when all four emitters
+    ///             are seen and none is weak, a panel in the bottom right corner shows each emitter,
+    ///             and the board refuses every target shot (sCaliIrWarning) while one is missing or weak.
+    ///             Nothing changes with firmware that does not send them.
+    bool caliIrDiamond = false;
+    int caliIrStage = Cali_Init;                // stage shown (the hint line is only for the target shots)
+    QElapsedTimer caliIrCoordsTimer;            // last sTestCoords
+    bool caliIrSeenByCoords[4] = {false, false, false, false}; // without blob data: outside-FOV bit
+    uint8_t caliIrWarningBits = 0;              // last refused shot, shown for CALI_IR_WARNING_TIME
+    QTimer caliIrWarningTimer;
+    QSvgRenderer caliCrosshairRenderer;         // crosshair, recoloured by CaliIrColor()
+    QByteArray caliCrosshairSvg;                // original SVG
+    QColor caliCrosshairColor;                  // colour loaded in caliCrosshairRenderer (invalid = original)
+    QGraphicsPixmapItem *caliIrHintBitmap = nullptr;
+    QGraphicsRectItem *caliIrWarningBox = nullptr;
+    QGraphicsPixmapItem *caliIrWarningBitmap = nullptr;
+    QGraphicsPixmapItem *caliIrPanel = nullptr;
+
+    /// @brief      Calibration IR view: crosshair colour from the worst emitter, or invalid without recent data
+    QColor CaliIrColor() const;
+
+    /// @brief      Calibration IR view: redraws crosshair colour, hint line, refusal message and panel
+    void CaliIrRefresh();
+
+    /// @brief      Calibration IR view: lines of the refusal message for the given sCaliIrWarning bits
+    QStringList CaliIrWarningLines(const uint8_t &);
+
+    /// @brief      Calibration IR view: the emitters panel, at most textRight wide on the left (scene x)
+    void CaliIrDrawPanel(const qreal &textRight);
 
     /// @brief      Text bitmaps generated from test font files
     /// @details    Contents are generated at runtime from GenerateText

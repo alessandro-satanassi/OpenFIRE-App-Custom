@@ -549,9 +549,14 @@ void guiWindow::NewCaliWindow(const int &type) {
 
     switch(type) {
     case AppCaliWindow::modeCalibrate:
-        caliWindow->setProperty("profile", sender()->property("slot").toInt());
+    {
+        const int profile = sender()->property("slot").toInt();
+        caliWindow->setProperty("profile", profile);
+        // IR view: the emitters panel shows the layout of the profile being calibrated.
+        caliWindow->SetCaliIrDiamond((int)App_Common::profilesTable.at(profile).layoutType == OF_Const::layoutDiamond);
         connect(caliWindow, &AppCaliWindow::CaliRequestToExit,  this, &guiWindow::CaliWindowRequestedExit);
         break;
+    }
     case AppCaliWindow::modeIRTest:
         ui->buttonsTestArea->setEnabled(false);
         ui->confirmButton->setEnabled(false);
@@ -1972,7 +1977,8 @@ void guiWindow::caliBtns_clicked()
         (char)OF_Const::sCaliStart,   // Subcommand: start calibration
         (char)profile,
         (char)(App_Common::profilesTable.at(profile).irSensitivity +
-                (App_Common::profilesTable.at(profile).layoutType << 4))
+                (App_Common::profilesTable.at(profile).layoutType << 4)),
+        (char)OF_Const::caliFlagIrView // Optional: IR emitters during calibration (older firmware ignores it)
     };
 
     if(!serial.SendCommand(OF_Const::sCaliProfile, payload, sizeof(payload)))
@@ -2237,8 +2243,15 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
         break;
 
     case OF_Const::sTestBlobs:
-        if(caliWindow != nullptr && caliWindow->GetWindowMode() == AppCaliWindow::modeIRTest)
+        // IR test, and calibration with the IR view (caliFlagIrView)
+        if(caliWindow != nullptr && caliWindow->GetWindowMode() != AppCaliWindow::modeAlignment)
             caliWindow->TestModeBlobs((const uint8_t*)payload.constData(), (int)payload.size());
+        break;
+
+    case OF_Const::sCaliIrWarning:
+        if(payload.size() == 1 && caliWindow != nullptr &&
+           caliWindow->GetWindowMode() == AppCaliWindow::modeCalibrate)
+            caliWindow->CaliIrWarning((uint8_t)payload.at(0));
         break;
 
     case OF_Const::sTestCoords:
