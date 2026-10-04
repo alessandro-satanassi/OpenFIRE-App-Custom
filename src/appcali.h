@@ -120,7 +120,7 @@ public:
 
     /// @brief      Calibration IR view: the board refused a target shot (sCaliIrWarning)
     /// @param      uint8_t
-    ///             bit 0 an emitter is missing, bit 1 an emitter is weak
+    ///             bit 0 an emitter is missing
     void CaliIrWarning(const uint8_t &);
 
     int GetWindowMode() { return mode; }
@@ -186,6 +186,11 @@ private:
     ///             (device pixel ratio), so that characters not in the typeface are drawn smooth.
     /// @returns    Pixmap of the string list provided.
     QPixmap GenerateText(const QStringList &, const QColor & = QColor(), const int & = 1);
+
+    /// @brief      One line of text in pieces of their own colour (invalid QColor: white)
+    /// @details    Each piece is drawn with GenerateText at the given scale and placed after the previous one.
+    /// @returns    Pixmap of the line.
+    QPixmap GenerateTextSegments(const QList<QPair<QString, QColor>> &, const int & = 1);
 
     /// @brief      Type of text scale appropriate for this window
     /// @details    Value is one of ScaleTypes_e
@@ -265,7 +270,7 @@ private:
     /// @brief      Calibration IR view (caliFlagIrView): the firmware also sends sTestBlobs and
     ///             sTestCoords during calibration. The crosshair turns green when all four emitters
     ///             are seen and none is weak, a panel in the bottom right corner shows each emitter,
-    ///             and the board refuses every target shot (sCaliIrWarning) while one is missing or weak.
+    ///             and the board refuses every target shot (sCaliIrWarning) while one is missing.
     ///             Nothing changes with firmware that does not send them.
     bool caliIrDiamond = false;
     int caliIrStage = Cali_Init;                // stage shown (the hint line is only for the target shots)

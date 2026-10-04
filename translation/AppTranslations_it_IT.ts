@@ -440,18 +440,18 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="205"/>
-        <source>Shoot when the crosshair is green.</source>
-        <translation>Spara quando il mirino è verde.</translation>
+        <source>Preferably shoot when the crosshair is %1.</source>
+        <translation>Spara preferibilmente quando il mirino è %1.</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="286"/>
+        <source>green</source>
+        <translation>verde</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="1223"/>
         <source>Shot refused: the camera does not see all four IR emitters.</source>
         <translation>Tiro rifiutato: la camera non vede tutti e quattro gli emettitori IR.</translation>
-    </message>
-    <message>
-        <location filename="../src/appcali.cpp" line="1224"/>
-        <source>Shot refused: an IR emitter is too weak.</source>
-        <translation>Tiro rifiutato: un emettitore IR è troppo debole.</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="1225"/>
@@ -475,6 +475,11 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
         <location filename="../src/appcali.cpp" line="1323"/>
         <source>weak signal</source>
         <translation>segnale debole</translation>
+    </message>
+    <message>
+        <location filename="../src/appcali.cpp" line="1474"/>
+        <source>emitters missing</source>
+        <translation>emettitori assenti</translation>
     </message>
 </context>
 <context>

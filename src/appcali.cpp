@@ -60,36 +60,53 @@ constexpr uint8_t IRTEST_BLOB_WEAK = 0x02; // flag: emitter seen but weak (firmw
 
 // ----- IR view in the calibration window -----------------------------------------------
 // Same values as the web app. Firmware that knows caliFlagIrView sends sTestBlobs + sTestCoords
-// during calibration too: the crosshair turns green when all four emitters are seen and none
-// is weak, a small panel in the bottom right corner shows each emitter, and the board refuses
-// every target shot (sCaliIrWarning) while one is missing or weak.
+// during calibration too: the crosshair changes colour with the weakest emitter (red when one
+// is missing), a small panel in the bottom right corner shows each emitter, and the board refuses
+// every target shot (sCaliIrWarning) while one is missing. A weak emitter (orange crosshair)
+// is accepted.
 constexpr qreal CALI_IR_PANEL_WIDTH = 0.14;     // of the window width (the panel is square)
 constexpr qreal CALI_IR_PANEL_MAX_WIDTH = 300;  // px
 constexpr qreal CALI_IR_PANEL_MIN_WIDTH = 140;  // px, also on small screens
 constexpr qint64 CALI_IR_MAX_AGE = 500;         // ms without coordinates: older firmware, no panel
 constexpr int CALI_IR_WARNING_TIME = 4000;      // ms the refusal message stays on screen
-constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bits
-constexpr uint8_t CALI_IR_WEAK = 0x02;
-// Crosshair colour from the worst emitter: missing = intense red; weak = red to light orange
-// as its brightness rises from the camera threshold (130) to the firmware limit
-// (IR_WEAK_MAX_BRIGHTNESS, 170); good = light green to full green up to CALI_IR_FULL_GREEN.
+constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bit
+// Colour of each emitter seen in the panel, and of the crosshair from the emitter with the
+// lowest brightness; missing = intense red (the crosshair only; the panel keeps the dashed
+// circle). Continuous scale of the brightness, without jumps: red at the camera threshold
+// (130), light orange at CALI_IR_BRIGHTNESS_WEAK - CALI_IR_BLEND, then through yellow-green
+// to light green at CALI_IR_BRIGHTNESS_WEAK + CALI_IR_BLEND, full green at CALI_IR_FULL_GREEN.
+// CALI_IR_BRIGHTNESS_WEAK is the firmware limit (IR_WEAK_MAX_BRIGHTNESS); its weak flag, with
+// IR_WEAK_HYSTERESIS, only shows the "weak signal" line.
 constexpr int CALI_IR_BRIGHTNESS_MIN = 130;
 constexpr int CALI_IR_BRIGHTNESS_WEAK = 170;
+constexpr int CALI_IR_BLEND = 20;               // half width of the orange to green blend around the limit
 constexpr int CALI_IR_FULL_GREEN = 230;
 struct CaliIrRgb_s { qreal r, g, b; };
 constexpr CaliIrRgb_s CALI_IR_MISSING_RGB   = {255, 20, 20};
-constexpr CaliIrRgb_s CALI_IR_WEAK_LOW_RGB  = {255, 40, 40};
-constexpr CaliIrRgb_s CALI_IR_WEAK_HIGH_RGB = {255, 190, 90};
-constexpr CaliIrRgb_s CALI_IR_GOOD_LOW_RGB  = {170, 255, 140};
-constexpr CaliIrRgb_s CALI_IR_GOOD_HIGH_RGB = {0, 220, 0};
-
-QColor CaliIrWeakColor() { return QColor(0xff, 0xb0, 0x00); }
+constexpr CaliIrRgb_s CALI_IR_WEAK_LOW_RGB  = {255, 40, 40};    // 130
+constexpr CaliIrRgb_s CALI_IR_WEAK_HIGH_RGB = {255, 190, 90};   // limit - blend
+constexpr CaliIrRgb_s CALI_IR_GOOD_LOW_RGB  = {170, 255, 140};  // limit + blend
+constexpr CaliIrRgb_s CALI_IR_GOOD_HIGH_RGB = {0, 220, 0};      // full green
 
 /// Colour between a and b (t 0..1, clamped).
 QColor CaliIrMix(const CaliIrRgb_s &a, const CaliIrRgb_s &b, qreal t)
 {
     t = qBound((qreal)0, t, (qreal)1);
     return QColor(qRound(a.r + (b.r - a.r) * t), qRound(a.g + (b.g - a.g) * t), qRound(a.b + (b.b - a.b) * t));
+}
+
+/// Calibration IR view: colour of an emitter seen, from its brightness (continuous scale).
+QColor CaliIrEmitterColor(const int &brightness)
+{
+    constexpr int orange = CALI_IR_BRIGHTNESS_WEAK - CALI_IR_BLEND;
+    constexpr int green = CALI_IR_BRIGHTNESS_WEAK + CALI_IR_BLEND;
+    if(brightness < orange)
+        return CaliIrMix(CALI_IR_WEAK_LOW_RGB, CALI_IR_WEAK_HIGH_RGB,
+                         (qreal)(brightness - CALI_IR_BRIGHTNESS_MIN) / (orange - CALI_IR_BRIGHTNESS_MIN));
+    if(brightness < green)
+        return CaliIrMix(CALI_IR_WEAK_HIGH_RGB, CALI_IR_GOOD_LOW_RGB, (qreal)(brightness - orange) / (green - orange));
+    return CaliIrMix(CALI_IR_GOOD_LOW_RGB, CALI_IR_GOOD_HIGH_RGB,
+                     (qreal)(brightness - green) / (CALI_IR_FULL_GREEN - green));
 }
 
 /// Splits each line at the spaces so that no line is longer than maxChars (longer words stay whole).
@@ -275,7 +292,14 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
 
             // IR view (caliFlagIrView): hint under the header, refusal message in place of
             // the tutorial. Hidden until the firmware sends the emitters.
-            caliIrHintBitmap = new QGraphicsPixmapItem(GenerateText({tr("Shoot when the crosshair is green.")}, QColor(), GetTextScale(TextSub)));
+            // The colour word (%1) is drawn in the full green of the crosshair.
+            {
+                const QStringList hint = tr("Preferably shoot when the crosshair is %1.").split("%1");
+                const CaliIrRgb_s &green = CALI_IR_GOOD_HIGH_RGB;
+                caliIrHintBitmap = new QGraphicsPixmapItem(GenerateTextSegments(
+                    {{hint.value(0), QColor()}, {tr("green"), QColor(green.r, green.g, green.b)}, {hint.value(1), QColor()}},
+                    GetTextScale(TextSub)));
+            }
             caliIrHintBitmap->setScale(GetTextScale(TextSub));
             caliIrHintBitmap->setVisible(false);
             scene.addItem(caliIrHintBitmap);
@@ -711,6 +735,29 @@ int AppCaliWindow::GetTextScale(const int &type)
 
     // Shouldn't be possible to reach this, otherwise something horrible's gone wrong.
     return 0;
+}
+
+QPixmap AppCaliWindow::GenerateTextSegments(const QList<QPair<QString, QColor>> &segments, const int &renderScale)
+{
+    // One line made of GenerateText pieces side by side: 8 logical pixels per character.
+    const int s = qMax(1, renderScale);
+    int chars = 0;
+    for(const auto &segment : segments)
+        chars += segment.first.length();
+
+    QPixmap line(8 * s * chars, 8 * s);
+    line.fill(QColor(0,0,0,0));
+    line.setDevicePixelRatio(s);
+    QPainter painter(&line);
+    int x = 0;
+    for(const auto &segment : segments) {
+        if(segment.first.isEmpty())
+            continue;
+        painter.drawPixmap(QPoint(x, 0), GenerateText({segment.first}, segment.second, s));
+        x += 8 * segment.first.length();
+    }
+    painter.end();
+    return line;
 }
 
 QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &tintColor, const int &renderScale)
@@ -1300,31 +1347,28 @@ void AppCaliWindow::CaliIrWarning(const uint8_t &bits)
 
 QColor AppCaliWindow::CaliIrColor() const
 {
-    // Green exactly when the board accepts the shot: four emitters seen and none weak.
+    // Red when the board refuses the shot (an emitter missing), otherwise the continuous
+    // scale of the weakest emitter.
     // Without recent IR data (older firmware) the crosshair keeps its colour.
     if(mode != modeCalibrate || !caliIrCoordsTimer.isValid() ||
        caliIrCoordsTimer.elapsed() > CALI_IR_MAX_AGE || !TestBlobsFresh())
         return QColor();
 
+    // The emitter with the lowest brightness gives the colour, so the crosshair always has
+    // the colour of one of the four circles.
     int worst = 255;
-    bool weak = false;
     for(const TestBlob_s &blob : testBlobs) {
         if(!blob.seen)
             return CaliIrMix(CALI_IR_MISSING_RGB, CALI_IR_MISSING_RGB, 0); // intense red
         worst = qMin(worst, (int)blob.max);
-        weak = weak || blob.weak;
     }
-    if(weak)
-        return CaliIrMix(CALI_IR_WEAK_LOW_RGB, CALI_IR_WEAK_HIGH_RGB,
-                         (qreal)(worst - CALI_IR_BRIGHTNESS_MIN) / (CALI_IR_BRIGHTNESS_WEAK - CALI_IR_BRIGHTNESS_MIN));
-    return CaliIrMix(CALI_IR_GOOD_LOW_RGB, CALI_IR_GOOD_HIGH_RGB,
-                     (qreal)(worst - CALI_IR_BRIGHTNESS_WEAK) / (CALI_IR_FULL_GREEN - CALI_IR_BRIGHTNESS_WEAK));
+    return CaliIrEmitterColor(worst);
 }
 
 QStringList AppCaliWindow::CaliIrWarningLines(const uint8_t &bits)
 {
     return {(bits & CALI_IR_MISSING) ? tr("Shot refused: the camera does not see all four IR emitters.")
-                                     : tr("Shot refused: an IR emitter is too weak."),
+                                     : QString(),
             tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")};
 }
 
@@ -1371,7 +1415,7 @@ void AppCaliWindow::CaliIrRefresh()
         }
     }
 
-    // Every target shot is accepted only with the crosshair green.
+    // IR view: a target shot is refused only with the crosshair red (an emitter missing).
     const bool hint = color.isValid() && caliIrStage <= Cali_Center;
     if(hint)
         caliIrHintBitmap->setPos(rect.center().x() - (caliIrHintBitmap->boundingRect().width() * sub) / 2,
@@ -1387,8 +1431,8 @@ void AppCaliWindow::CaliIrRefresh()
             chars = qMax(chars, (int)line.length());
         return (qreal)chars * 8 * sub;
     };
-    // The panel is sized for the widest of these texts, so it keeps its size when a warning appears.
-    qreal textRight = rect.center().x() + qMax(warningWidth(CALI_IR_MISSING), warningWidth(CALI_IR_WEAK)) / 2 + 8 * sub;
+    // The panel is sized for this text too, so it keeps its size when a warning appears.
+    qreal textRight = rect.center().x() + warningWidth(CALI_IR_MISSING) / 2 + 8 * sub;
     if(tutorialBitmap->boundingRect().width() > 0)
         textRight = qMax(textRight, tutorialBitmap->pos().x() + tutorialBitmap->boundingRect().width() * tutorialBitmap->scale());
 
@@ -1432,14 +1476,17 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
         weak = weak || (blobs && testBlobs[i].seen && testBlobs[i].weak);
     }
 
-    // Title: number of emitters seen, and "weak signal" on a second line. The panel keeps its
-    // size whatever the title says: it is sized for the longest title and always reserves two
-    // lines. It widens for the title when the free room allows it, the square stays centred.
+    // Title: number of emitters seen and, on a second line, "emitters missing" while one is not
+    // seen (no hysteresis), otherwise "weak signal" while one is weak (firmware flag). The panel
+    // keeps its size whatever the title says: it is sized for the longest title and always reserves
+    // two lines. It widens for the title when the free room allows it, the square stays centred.
     QStringList title = blobs ? QStringList{tr("IR emitters: %1/4").arg(seen)} : QStringList{tr("IR emitters")};
-    if(weak)
+    if(blobs && seen < 4)
+        title << tr("emitters missing");
+    else if(weak)
         title << tr("weak signal");
     int titleChars = 0;
-    for(const QString &line : {tr("IR emitters"), tr("IR emitters: %1/4").arg(4), tr("weak signal")})
+    for(const QString &line : {tr("IR emitters"), tr("IR emitters: %1/4").arg(4), tr("weak signal"), tr("emitters missing")})
         titleChars = qMax(titleChars, (int)line.length());
     auto titleWidth = [&](const int &textScale) { return (qreal)titleChars * 8 * textScale + 8 * small; };
     int titleScale = small;
@@ -1488,7 +1535,10 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     for(int i = 0; i < 4; ++i) {
         const QPointF center(sx + places[i].x(), titleH + places[i].y());
         const bool emitterSeen = blobs ? testBlobs[i].seen : caliIrSeenByCoords[i];
-        const QColor emitterColor = (blobs && emitterSeen && testBlobs[i].weak) ? CaliIrWeakColor() : colors[i];
+        // Seen: the crosshair scale with its own brightness (older firmware: layout colour);
+        // not seen: red dashed circle with the red X (only here, the IR test view keeps its colours).
+        const QColor emitterColor = !emitterSeen ? IrTestNotSeenColor() :
+                                    blobs ? CaliIrEmitterColor(testBlobs[i].max) : colors[i];
         // Without blob data (older firmware) the classic circle size is used.
         TestBlobLevel_s level = testBlobLevels[i];
         if(!blobs) {
@@ -1513,7 +1563,7 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
             painter.setPen(QPen(emitterColor, qMax((qreal)1, 2 * seenScale)));
             painter.drawEllipse(center, r, r);
         } else {
-            // Not seen: dashed circle in the emitter colour with a red X.
+            // Not seen: red dashed circle with a red X.
             const qreal r = IRTEST_EMITTER_RADIUS * notSeenScale;
             QPen pen(emitterColor, 3 * notSeenScale);
             pen.setCapStyle(Qt::FlatCap);
