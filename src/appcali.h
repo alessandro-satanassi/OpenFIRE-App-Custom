@@ -340,6 +340,10 @@ private:
     /// @brief      Bottom text bitmap used for showing how to exit calibration (or other button related instructions) to the user
     QGraphicsPixmapItem *tutorialBitmap;
 
+    /// @brief      Posture reminder above the bottom instructions throughout calibration, including verification.
+    QGraphicsPixmapItem *caliPositionHintBitmap = nullptr;
+    QGraphicsTextItem *caliPositionHintText = nullptr;
+
     /// @brief      Side text used to present Alignment Mode information about the different IR emitter layouts
     QGraphicsPixmapItem *alignmentBitmapLeft;
     QGraphicsPixmapItem *alignmentBitmapRight;

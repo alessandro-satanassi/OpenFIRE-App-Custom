@@ -88,6 +88,14 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
 <context>
     <name>AppCaliWindow</name>
     <message>
+        <source>Stand in front of the centre of the screen,</source>
+        <translation>Posizionati centralmente di fronte allo schermo,</translation>
+    </message>
+    <message>
+        <source>without rotating the lightgun.</source>
+        <translation>senza ruotare la lightgun.</translation>
+    </message>
+    <message>
         <source>Top Offset: </source>
         <translation>Offset superiore: </translation>
     </message>

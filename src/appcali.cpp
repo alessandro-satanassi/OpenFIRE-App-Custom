@@ -314,6 +314,12 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
             scene.addItem(caliStageBitmap);
             scene.addItem(tutorialBitmap);
 
+            // A static reminder for every calibration stage, including final verification.
+            caliPositionHintBitmap = new QGraphicsPixmapItem(GenerateText(IrTestCentredLines(
+                {tr("Stand in front of the centre of the screen,"), tr("without rotating the lightgun.")})));
+            caliPositionHintBitmap->setScale(GetTextScale(TextSub));
+            scene.addItem(caliPositionHintBitmap);
+
             // IR view (caliFlagIrView): hint under the header, refusal message in place of
             // the tutorial. Hidden until the firmware sends the emitters.
             // The colour word (%1) is drawn in the full green of the crosshair.
@@ -350,6 +356,14 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
             scene.addItem(headerText);
             scene.addItem(caliStageText);
             scene.addItem(tutorialText);
+
+            caliPositionHintText = new QGraphicsTextItem();
+            caliPositionHintText->setFont(QFont("Monospace", GetTextScale(TextSub)));
+            caliPositionHintText->setDefaultTextColor(Qt::white);
+            caliPositionHintText->setHtml("<p align=\"center\">" +
+                tr("Stand in front of the centre of the screen,").toHtmlEscaped() + "<br>" +
+                tr("without rotating the lightgun.").toHtmlEscaped() + "</p>");
+            scene.addItem(caliPositionHintText);
         }
 
         crosshairItem->setVisible(false);
@@ -1172,6 +1186,10 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
         return;
     }
 
+    if(caliPositionHintText != nullptr)
+        caliPositionHintText->setPos(scene.sceneRect().center().x() - caliPositionHintText->boundingRect().center().x(),
+            tutorialText->pos().y() - caliPositionHintText->boundingRect().height() - GetTextScale(TextSub));
+
     // Only consecutive forward updates acknowledge a shot. Duplicates do not restart the ring.
     if(caliStage != caliIrStage) {
         caliShotRingTimer.stop();
@@ -1613,6 +1631,14 @@ void AppCaliWindow::CaliIrRefresh()
     caliIrWarningBitmap->setVisible(caliIrWarningBits != 0);
     caliIrWarningBox->setVisible(caliIrWarningBits != 0);
     tutorialBitmap->setVisible(caliIrWarningBits == 0);
+
+    // Leave a bitmap row between this reminder and the tutorial (or refusal box).
+    // Do not move the existing texts; a longer verification block only moves the reminder up.
+    qreal instructionsTop = rect.bottom() * 0.8 - qMax(qreal(24), tutorialBitmap->boundingRect().height()) * sub / 2;
+    if(caliIrWarningBits)
+        instructionsTop = qMin(instructionsTop, caliIrWarningBox->rect().top());
+    caliPositionHintBitmap->setPos(rect.center().x() - caliPositionHintBitmap->boundingRect().width() * sub / 2,
+        instructionsTop - caliPositionHintBitmap->boundingRect().height() * sub - 8 * sub);
 
     CaliIrDrawPanel(textRight);
 }
