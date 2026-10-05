@@ -88,6 +88,30 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
 <context>
     <name>AppCaliWindow</name>
     <message>
+        <source>Top Offset: </source>
+        <translation>Offset superiore: </translation>
+    </message>
+    <message>
+        <source>Bottom Offset: </source>
+        <translation>Offset inferiore: </translation>
+    </message>
+    <message>
+        <source>Left Offset: </source>
+        <translation>Offset sinistro: </translation>
+    </message>
+    <message>
+        <source>Right Offset: </source>
+        <translation>Offset destro: </translation>
+    </message>
+    <message>
+        <source>Top Left LED: </source>
+        <translation>LED alto sinistro: </translation>
+    </message>
+    <message>
+        <source>Top Right LED: </source>
+        <translation>LED alto destro: </translation>
+    </message>
+    <message>
         <location filename="../src/appcali.cpp" line="119"/>
         <source>Alignment Assistant</source>
         <translation>Assistente di allineamento</translation>
@@ -265,8 +289,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="521"/>
         <location filename="../src/appcali.cpp" line="538"/>
-        <source>Cali Step 1:</source>
-        <translation>Step 1 Cali:</translation>
+        <source>Step 1:</source>
+        <translation>Passo 1:</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="525"/>
@@ -277,12 +301,12 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="529"/>
         <source>The calibration process can be reset by pressing</source>
-        <translation>La calibrazione puo&apos; essere reimpostata premendo</translation>
+        <translation>La calibrazione può essere reimpostata premendo</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="530"/>
         <source>either Button A or Button B, and can be canceled</source>
-        <translation>   il Pulsante A o B, e puo&apos; essere annullata   </translation>
+        <translation>   il Pulsante A o B, e può essere annullata   </translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="531"/>
@@ -297,8 +321,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="559"/>
         <location filename="../src/appcali.cpp" line="565"/>
-        <source>Cali Step 2:</source>
-        <translation>Step 2 Cali:</translation>
+        <source>Step 2:</source>
+        <translation>Passo 2:</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="561"/>
@@ -309,8 +333,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="578"/>
         <location filename="../src/appcali.cpp" line="584"/>
-        <source>Cali Step 3:</source>
-        <translation>Step 3 Cali:</translation>
+        <source>Step 3:</source>
+        <translation>Passo 3:</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="580"/>
@@ -321,8 +345,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="597"/>
         <location filename="../src/appcali.cpp" line="603"/>
-        <source>Cali Step 4:</source>
-        <translation>Step 4 Cali:</translation>
+        <source>Step 4:</source>
+        <translation>Passo 4:</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="599"/>
@@ -333,8 +357,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="616"/>
         <location filename="../src/appcali.cpp" line="622"/>
-        <source>Cali Step 5:</source>
-        <translation>Step 5 Cali:</translation>
+        <source>Step 5:</source>
+        <translation>Passo 5:</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="618"/>
@@ -346,8 +370,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
         <location filename="../src/appcali.cpp" line="642"/>
         <location filename="../src/appcali.cpp" line="662"/>
         <location filename="../src/appcali.cpp" line="688"/>
-        <source>Verify New Calibration:</source>
-        <translation> Verifica calibrazione:</translation>
+        <source>Verify aiming:</source>
+        <translation>Verifica del puntamento:</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="646"/>
@@ -362,7 +386,7 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="648"/>
         <source>If this calibration is acceptable,</source>
-        <translation>Se la calibrazione e&apos; accettabile,</translation>
+        <translation>Se la calibrazione è accettabile,</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="649"/>
@@ -372,7 +396,7 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message>
         <location filename="../src/appcali.cpp" line="653"/>
         <source>       If this target accuracy isn&apos;t desirable,      </source>
-        <translation> Se la precisione del bersaglio non e&apos; soddisfacente,</translation>
+        <translation> Se la precisione del bersaglio non è soddisfacente,</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="654"/>

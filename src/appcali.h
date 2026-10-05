@@ -164,13 +164,13 @@ private:
         Crosshair
     } TextScaleTypes_e;
 
-    const QStringList caliTypesPrefixes = {
-        "   Top Offset: ",
-        "Bottom Offset: ",
-        "  Left Offset: ",
-        " Right Offset: ",
-        " Top Left LED: ",
-        "Top Right LED: "
+    QStringList caliTypesPrefixes = {
+        tr("Top Offset: "),
+        tr("Bottom Offset: "),
+        tr("Left Offset: "),
+        tr("Right Offset: "),
+        tr("Top Left LED: "),
+        tr("Top Right LED: ")
     };
 
     Ui::AppCaliWindow *ui;
@@ -297,16 +297,25 @@ private:
     ///             (blobs first, then coordinates), so that a stopped link does not leave a green crosshair
     void CaliIrArmExpiry();
 
-    /// @brief      Calibration: highlight behind the crosshair of every target, as in the web app
-    ///             (not while verifying): two rings spread from it when it reaches a new target,
-    ///             then a disc in the crosshair colour pulses in intensity only, so the crosshair
-    ///             keeps its size. Redrawn by caliHaloTimer while it is shown.
-    void CaliHaloUpdate();
-    QGraphicsEllipseItem *caliHalo = nullptr;
-    QGraphicsEllipseItem *caliRipples[2] = {nullptr, nullptr};
-    QTimer caliHaloTimer;
+    /// @brief      Calibration: only an outer dashed ring rotates, in the crosshair colour.
+    ///             Original crosshair size/position are unchanged; no coloured ring while verifying.
+    void CaliTargetRingUpdate();
+    QGraphicsPathItem *caliTargetRing = nullptr;
+    QTimer caliTargetRingTimer;
     QElapsedTimer caliTargetTimer;              // since the crosshair reached its target
-    int caliHaloStage = -1;                     // stage of caliTargetTimer
+    int caliTargetStage = -1;                   // stage of caliTargetTimer
+
+    /// @brief Six target dots, without shot animation.
+    void CaliProgressUpdate();
+    QGraphicsEllipseItem *caliProgressDots[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+
+    /// @brief Solid white flash; keep the crosshair still until it ends, without delaying data handling.
+    void CaliShotRingUpdate();
+    QGraphicsPathItem *caliShotRing = nullptr;
+    QTimer caliShotRingTimer;
+    QElapsedTimer caliShotTimer;
+    QPointF caliNextTargetPos;                // latest position to display when the flash ends
+    int caliShotStage = -1;                    // latest target acquired, not a save to flash
 
     /// @brief      Calibration IR view: lines of the refusal message for the given sCaliIrWarning bits
     QStringList CaliIrWarningLines(const uint8_t &);
@@ -365,9 +374,13 @@ private slots:
     /// @details    Crosshair image is offset (adjusted by crosshair scale) to center it to the mouse's hotspot,
     ///             as otherwise it wouldn't be accurate at all.
     void sceneEventReceiver(const QPointF &currentPos) {
-        if(mouseCanBeTracked) crosshairItem->setPos(
-                                    currentPos.x()-(crosshairItem->boundingRect().center().x()*crosshairItem->scale()),
-                                    currentPos.y()-(crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
+        if(mouseCanBeTracked) {
+            const QPointF position = currentPos - crosshairItem->boundingRect().center() * crosshairItem->scale();
+            if(caliShotStage >= 0)
+                caliNextTargetPos = position; // preserve the latest verification cursor, but keep the flash still
+            else
+                crosshairItem->setPos(position);
+        }
     }
 
     /// @brief      Key listener, which only listens for ESC keypresses and exits when pressed in not Cali mode

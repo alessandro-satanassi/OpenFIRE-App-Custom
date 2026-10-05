@@ -77,8 +77,8 @@ constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bit
 // circle). Continuous scale of the brightness, without jumps: red at the camera threshold
 // (130), light orange at CALI_IR_BRIGHTNESS_WEAK - CALI_IR_BLEND, then through yellow-green
 // to light green at CALI_IR_BRIGHTNESS_WEAK + CALI_IR_BLEND, full green at CALI_IR_FULL_GREEN.
-// CALI_IR_BRIGHTNESS_WEAK is the firmware limit (IR_WEAK_MAX_BRIGHTNESS); its weak flag, with
-// IR_WEAK_HYSTERESIS, only shows the "weak signal" line.
+// CALI_IR_BRIGHTNESS_WEAK is the firmware limit (IR_WEAK_MAX_BRIGHTNESS). The colours
+// follow brightness continuously, independently of the firmware weak flag/hysteresis.
 constexpr int CALI_IR_BRIGHTNESS_MIN = 130;
 constexpr int CALI_IR_BRIGHTNESS_WEAK = 170;
 constexpr int CALI_IR_BLEND = 20;               // half width of the orange to green blend around the limit
@@ -90,20 +90,18 @@ constexpr CaliIrRgb_s CALI_IR_WEAK_HIGH_RGB = {255, 190, 90};   // limit - blend
 constexpr CaliIrRgb_s CALI_IR_GOOD_LOW_RGB  = {170, 255, 140};  // limit + blend
 constexpr CaliIrRgb_s CALI_IR_GOOD_HIGH_RGB = {0, 220, 0};      // full green
 
-// ----- Crosshair highlight in calibration (same values as the web app) -------------------
-// Behind the crosshair of every target (not while verifying, where it follows the gun):
-// two rings spread from it when it reaches a new target, then a soft disc in the crosshair
-// colour pulses in intensity only. The crosshair keeps its size, so aiming is not disturbed.
+// ----- Rotating target ring in calibration (same values as the web app) ------------------
+// Only the outer dashed ring rotates. The original crosshair stays still and unchanged;
+// both use the same colour. Acquisition holds the crosshair during a solid white flash.
 constexpr qreal CROSSHAIR_RING = 24.42 / 61.44;  // ring radius / crosshair size (crosshair.svg)
-constexpr qreal CALI_HALO_RADIUS = 1.35;         // of the crosshair ring radius
-constexpr qreal CALI_HALO_ALPHA_MIN = 0.15;
-constexpr qreal CALI_HALO_ALPHA_MAX = 0.55;
-constexpr qint64 CALI_HALO_PERIOD = 1000;        // ms of one pulse
-constexpr qint64 CALI_HALO_START = 1000;         // ms after reaching the target: the pulse starts
-constexpr qint64 CALI_RIPPLE_DELAYS[2] = {0, 450}; // ms after reaching the target, one per ring
-constexpr qint64 CALI_RIPPLE_TIME = 1100;        // ms of each ring
-constexpr qreal CALI_RIPPLE_GROWTH = 2.2;        // a ring ends at the crosshair ring radius * (1 + growth)
-constexpr int CALI_HALO_FRAME_TIME = 33;         // ms between animation frames (about 30 per second)
+constexpr qreal CALI_TARGET_RING_RADIUS = 48.0 / 39; // outer / original ring radius, as in the preview
+constexpr qint64 CALI_TARGET_RING_PERIOD = 8000; // ms of one full clockwise turn
+constexpr int CALI_TARGET_RING_DASH = 21;       // degrees; ten identical segments, 15-degree gaps
+constexpr int CALI_TARGET_RING_STEP = 36;
+constexpr qreal CALI_TARGET_RING_WIDTH = 2.1;  // slightly thinner than the original crosshair's 2.4 stroke
+constexpr int CALI_ANIMATION_FRAME_TIME = 33;   // ms, about 30 animation frames per second
+constexpr int CALI_SHOT_TIME = 120;             // ms: confirms a target acquired, not a save to flash
+constexpr int CALI_SHOT_HOLD = 40;              // ms fully white, followed by a quick fade
 
 /// Colour between a and b (t 0..1, clamped).
 QColor CaliIrMix(const CaliIrRgb_s &a, const CaliIrRgb_s &b, qreal t)
@@ -270,6 +268,15 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         this->setWindowTitle("Calibration Window");
         ui->graphicsView->setBackgroundBrush(QBrush(QColor("dimgray")));
 
+        // Right-align translated labels, so the numeric values keep a common column.
+        {
+            int width = 0;
+            for(const QString &prefix : caliTypesPrefixes)
+                width = qMax(width, (int)prefix.length());
+            for(QString &prefix : caliTypesPrefixes)
+                prefix = prefix.rightJustified(width);
+        }
+
         crosshairItem = new QGraphicsSvgItem(":/cali/crosshair.svg");
         // this is supposed to work, but doesn't, so we just offset every setPos command by the center point of the SVG, mult'd by scale
         //crosshairItem->setTransformOriginPoint(crosshairItem->boundingRect().center());
@@ -349,20 +356,42 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         crosshairItem->setScale(GetTextScale(Crosshair));
         scene.addItem(crosshairItem);
 
-        // Highlight behind the crosshair, under every other item (see CaliHaloUpdate).
-        caliHalo = new QGraphicsEllipseItem();
-        caliHalo->setPen(Qt::NoPen);
-        caliHalo->setZValue(-1);
-        caliHalo->setVisible(false);
-        scene.addItem(caliHalo);
-        for(QGraphicsEllipseItem *&ripple : caliRipples) {
-            ripple = new QGraphicsEllipseItem();
-            ripple->setBrush(Qt::NoBrush);
-            ripple->setZValue(-1);
-            ripple->setVisible(false);
-            scene.addItem(ripple);
+        // Build the ten arcs once; animation only changes the item's rotation/colour.
+        {
+            const qreal radius = crosshairItem->boundingRect().width() * CROSSHAIR_RING * CALI_TARGET_RING_RADIUS;
+            const QRectF ringRect(-radius, -radius, 2 * radius, 2 * radius);
+            QPainterPath ringPath;
+            for(int angle = 0; angle < 360; angle += CALI_TARGET_RING_STEP) {
+                ringPath.arcMoveTo(ringRect, -angle);
+                ringPath.arcTo(ringRect, -angle, -CALI_TARGET_RING_DASH);
+            }
+            caliTargetRing = new QGraphicsPathItem(ringPath);
+            caliTargetRing->setBrush(Qt::NoBrush);
+            caliTargetRing->setScale(crosshairItem->scale());
+            caliTargetRing->setZValue(-1);
+            caliTargetRing->setVisible(false);
+            scene.addItem(caliTargetRing);
+            connect(&caliTargetRingTimer, &QTimer::timeout, this, &AppCaliWindow::CaliTargetRingUpdate);
         }
-        connect(&caliHaloTimer, &QTimer::timeout, this, &AppCaliWindow::CaliHaloUpdate);
+
+        for(QGraphicsEllipseItem *&dot : caliProgressDots) {
+            dot = new QGraphicsEllipseItem();
+            dot->setZValue(1);
+            scene.addItem(dot);
+        }
+        {
+            QPainterPath shotPath;
+            shotPath.addEllipse(caliTargetRing->path().boundingRect());
+            caliShotRing = new QGraphicsPathItem(shotPath);
+        }
+        caliShotRing->setBrush(Qt::NoBrush);
+        caliShotRing->setScale(crosshairItem->scale());
+        caliShotRing->setPen(QPen(Qt::white, CALI_TARGET_RING_WIDTH, Qt::SolidLine, Qt::RoundCap));
+        caliShotRing->setZValue(-1);
+        caliShotRing->setVisible(false);
+        scene.addItem(caliShotRing);
+        caliShotRingTimer.setSingleShot(true);
+        connect(&caliShotRingTimer, &QTimer::timeout, this, &AppCaliWindow::CaliShotRingUpdate);
 
         if(bitmapText) {
             // IR view: emitters panel over the crosshair, crosshair recoloured from its SVG.
@@ -878,6 +907,14 @@ QPixmap AppCaliWindow::GenerateText(const QStringList &strings, const QColor &ti
 
 void AppCaliWindow::CaliModeSet(const int &caliStage)
 {
+    if(caliStage < Cali_Init || caliStage > Cali_End)
+        return;
+    if(caliShotStage >= 0 && caliShotTimer.elapsed() >= CALI_SHOT_TIME)
+        CaliShotRingUpdate();
+    // Keep data/stage handling immediate; only defer the crosshair's new position.
+    const QPointF previousPosition = caliTargetRing != nullptr ? crosshairItem->pos() : QPointF();
+    if(caliShotStage >= 0)
+        crosshairItem->setPos(caliNextTargetPos); // the switch must work from the latest logical position
     switch(caliStage) {
     case Cali_Init:
         ui->graphicsView->setMouseTracking(false);
@@ -935,7 +972,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().top() - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Cali Step 1:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Step 1:")}));
             caliStageBitmap->setPos(scene.sceneRect().center().x()      - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
                                     (scene.sceneRect().height() * 0.25) - (caliStageBitmap->boundingRect().center().y() * caliStageBitmap->scale()));
 
@@ -952,7 +989,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
             for(int i = 0; i < 6; i++)
                 profileBitmaps[i]->setVisible(true);
         } else {
-            caliStageText->setPlainText(tr("Cali Step 1:"));
+            caliStageText->setPlainText(tr("Step 1:"));
             caliStageText->setPos(scene.sceneRect().center().x()      - caliStageText->boundingRect().center().x(),
                                   (scene.sceneRect().bottom() * 0.25) - caliStageText->boundingRect().center().y());
 
@@ -973,13 +1010,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().bottom()     - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Cali Step 2:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Step 2:")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the bottom edge of the screen.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Cali Step 2:"));
+            caliStageText->setPlainText(tr("Step 2:"));
 
             headerText->setPlainText(tr("Shoot at the bottom edge of the screen."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -992,13 +1029,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().center().y() - (crosshairItem->boundingRect().center().y() * crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Cali Step 3:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Step 3:")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the left edge of the screen.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Cali Step 3:"));
+            caliStageText->setPlainText(tr("Step 3:"));
 
             headerText->setPlainText(tr("Shoot at the left edge of the screen."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -1011,13 +1048,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().center().y() - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Cali Step 4:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Step 4:")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the right edge of the screen.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Cali Step 4:"));
+            caliStageText->setPlainText(tr("Step 4:"));
 
             headerText->setPlainText(tr("Shoot at the right edge of the screen."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -1030,13 +1067,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().center().y() - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Cali Step 5:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Step 5:")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the final target in the center.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Cali Step 5:"));
+            caliStageText->setPlainText(tr("Step 5:"));
 
             headerText->setPlainText(tr("Shoot at the final target in the center."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -1056,7 +1093,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                 topLeftLed   >= -32768  &&  topLeftLed   <= 32768    &&
                 topRightLed  >= -32768  &&  topRightLed  <= 32768) {
 
-                caliStageBitmap->setPixmap( GenerateText({tr("Verify New Calibration:")}));
+                caliStageBitmap->setPixmap( GenerateText({tr("Verify aiming:")}));
                 caliStageBitmap->setPos(scene.sceneRect().center().x()      - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
                                         scene.sceneRect().height() * 0.15   - (caliStageBitmap->boundingRect().center().y() * caliStageBitmap->scale()));
 
@@ -1076,7 +1113,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                 tutorialBitmap->setPos(scene.sceneRect().center().x()       - (tutorialBitmap->boundingRect().center().x() * tutorialBitmap->scale()),
                                        (scene.sceneRect().bottom() * 0.8)   - (tutorialBitmap->boundingRect().center().y() * tutorialBitmap->scale()));
             } else if(topLeftLed == -1 || topRightLed == -1) {
-                caliStageBitmap->setPixmap( GenerateText({tr("Verify New Calibration:")}));
+                caliStageBitmap->setPixmap( GenerateText({tr("Verify aiming:")}));
                 caliStageBitmap->setPos(scene.sceneRect().center().x()      - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
                                         scene.sceneRect().height() * 0.15   - (caliStageBitmap->boundingRect().center().y() * caliStageBitmap->scale()));
 
@@ -1102,7 +1139,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                                        (scene.sceneRect().bottom() * 0.8)   - (tutorialBitmap->boundingRect().center().y() * tutorialBitmap->scale()));
             }
         } else {
-            caliStageText->setPlainText(tr("Verify New Calibration:"));
+            caliStageText->setPlainText(tr("Verify aiming:"));
             caliStageText->setPos(scene.sceneRect().center().x()        - caliStageText->boundingRect().center().x(),
                                   (scene.sceneRect().bottom() * 0.25)   - caliStageText->boundingRect().center().y());
 
@@ -1123,9 +1160,30 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
 
         break;
     case Cali_End:
+        caliTargetStage = Cali_End;
+        caliTargetRingTimer.stop();
+        if(caliTargetRing != nullptr)
+            caliTargetRing->setVisible(false);
+        caliShotRingTimer.stop();
+        caliShotStage = -1;
+        if(caliShotRing != nullptr)
+            caliShotRing->setVisible(false);
         emit WindowExiting(mode, topOffset, bottomOffset, leftOffset, rightOffset, topLeftLed, topRightLed);
         return;
     }
+
+    // Only consecutive forward updates acknowledge a shot. Duplicates do not restart the ring.
+    if(caliStage != caliIrStage) {
+        caliShotRingTimer.stop();
+        caliShotStage = caliStage == caliIrStage + 1 && caliStage <= Cali_Verify ? caliIrStage : -1;
+        if(caliShotStage >= 0) {
+            caliNextTargetPos = crosshairItem->pos();
+            caliShotRing->setPos(previousPosition + crosshairItem->boundingRect().center() * crosshairItem->scale());
+            caliShotTimer.start();
+        }
+    }
+    if(caliShotStage >= 0)
+        crosshairItem->setPos(caliShotRing->pos() - crosshairItem->boundingRect().center() * crosshairItem->scale());
 
     // IR view: a new stage, the refused shot is no longer current.
     caliIrStage = caliStage;
@@ -1133,66 +1191,78 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
     caliIrWarningTimer.stop();
     CaliIrRefresh();
 
-    // Highlight: a new target starts the rings again; none while verifying.
-    if(caliStage != caliHaloStage) {
-        caliHaloStage = caliStage;
+    // A new target restarts only the outer ring's rotation; none while verifying.
+    if(caliStage != caliTargetStage) {
+        caliTargetStage = caliStage;
         caliTargetTimer.start();
     }
-    CaliHaloUpdate();
+    CaliTargetRingUpdate();
+    CaliProgressUpdate();
+    CaliShotRingUpdate();
 }
 
-void AppCaliWindow::CaliHaloUpdate()
+void AppCaliWindow::CaliProgressUpdate()
 {
-    if(caliHalo == nullptr)
+    if(caliProgressDots[0] == nullptr)
+        return; // alignment and IR-test windows have no calibration progress
+
+    const qreal scale = bitmapText ? (qreal)GetTextScale(TextSub) / 2 :
+                        scene.sceneRect().height() >= 1440 ? 2 : scene.sceneRect().height() >= 1080 ? 1.5 : 1;
+    const qreal top = bitmapText ? caliStageBitmap->pos().y() : caliStageText->pos().y();
+    const qreal y = top - 22 * scale;
+    const qreal x = scene.sceneRect().center().x() - 2.5 * 22 * scale;
+    const QColor grey(160, 160, 164);
+    for(int i = 0; i < 6; ++i) {
+        const bool current = i == caliIrStage;
+        const bool done = i < caliIrStage;
+        const qreal radius = (current ? 8 : 6) * scale;
+        caliProgressDots[i]->setRect(x + i * 22 * scale - radius, y - radius, 2 * radius, 2 * radius);
+        caliProgressDots[i]->setPen(current || done ? QPen(Qt::NoPen) : QPen(grey, 2 * scale));
+        caliProgressDots[i]->setBrush(current ? QBrush(QColor(0, 220, 0)) : done ? QBrush(grey) : QBrush(Qt::NoBrush));
+    }
+}
+
+void AppCaliWindow::CaliShotRingUpdate()
+{
+    if(caliShotRing == nullptr)
         return;
-    if(caliHaloStage > Cali_Center || !crosshairItem->isVisible()) {
-        caliHalo->setVisible(false);
-        for(QGraphicsEllipseItem *ripple : caliRipples)
-            ripple->setVisible(false);
-        caliHaloTimer.stop();
+    const qint64 elapsed = caliShotStage >= 0 ? caliShotTimer.elapsed() : CALI_SHOT_TIME;
+    if(caliShotStage < 0 || elapsed >= CALI_SHOT_TIME) {
+        if(caliShotStage >= 0) {
+            crosshairItem->setPos(caliNextTargetPos);
+            caliTargetTimer.start();
+        }
+        caliShotStage = -1;
+        caliShotRing->setVisible(false);
+        caliShotRingTimer.stop();
+        CaliTargetRingUpdate();
+        return;
+    }
+    caliShotRing->setOpacity(qMin((qreal)1, (qreal)(CALI_SHOT_TIME - elapsed) / (CALI_SHOT_TIME - CALI_SHOT_HOLD)));
+    caliShotRing->setVisible(true);
+    if(!caliShotRingTimer.isActive())
+        caliShotRingTimer.start(qMin(CALI_ANIMATION_FRAME_TIME, (int)(CALI_SHOT_TIME - elapsed)));
+}
+
+void AppCaliWindow::CaliTargetRingUpdate()
+{
+    if(caliTargetRing == nullptr)
+        return;
+    if(caliShotStage >= 0 || caliTargetStage > Cali_Center || !crosshairItem->isVisible()) {
+        caliTargetRing->setVisible(false);
+        caliTargetRingTimer.stop();
         return;
     }
 
     const qreal scale = crosshairItem->scale();
     const QPointF center = crosshairItem->pos() + crosshairItem->boundingRect().center() * scale;
-    const qreal ring = crosshairItem->boundingRect().width() * scale * CROSSHAIR_RING;
-    QColor color = CaliIrColor();
-    if(!color.isValid())
-        color = QColor(0xff, 0x87, 0x58); // crosshair without IR data
-    const qint64 elapsed = caliTargetTimer.elapsed();
-
-    for(int i = 0; i < 2; ++i) {
-        const qreal k = (qreal)(elapsed - CALI_RIPPLE_DELAYS[i]) / CALI_RIPPLE_TIME;
-        if(k < 0 || k > 1) {
-            caliRipples[i]->setVisible(false);
-            continue;
-        }
-        QColor ringColor = color;
-        ringColor.setAlphaF((float)(0.85 * (1 - k)));
-        const qreal r = ring * (1 + k * CALI_RIPPLE_GROWTH);
-        caliRipples[i]->setPen(QPen(ringColor, 6 * (1 - k) + 1.5));
-        caliRipples[i]->setRect(center.x() - r, center.y() - r, 2 * r, 2 * r);
-        caliRipples[i]->setVisible(true);
-    }
-
-    const qreal phase = (qreal)qMax((qint64)0, elapsed - CALI_HALO_START) / CALI_HALO_PERIOD;
-    const qreal alpha = CALI_HALO_ALPHA_MIN +
-                        (CALI_HALO_ALPHA_MAX - CALI_HALO_ALPHA_MIN) * (0.5 - 0.5 * qCos(2 * M_PI * phase));
-    const qreal radius = ring * CALI_HALO_RADIUS;
-    QColor inner = color, middle = color, outer = color;
-    inner.setAlphaF((float)alpha);
-    middle.setAlphaF((float)(alpha * 0.6));
-    outer.setAlphaF(0);
-    QRadialGradient gradient(center, radius);
-    gradient.setColorAt(0, inner);
-    gradient.setColorAt(0.55, middle);
-    gradient.setColorAt(1, outer);
-    caliHalo->setBrush(gradient);
-    caliHalo->setRect(center.x() - radius, center.y() - radius, 2 * radius, 2 * radius);
-    caliHalo->setVisible(true);
-
-    if(!caliHaloTimer.isActive())
-        caliHaloTimer.start(CALI_HALO_FRAME_TIME);
+    const QColor color = caliCrosshairColor.isValid() ? caliCrosshairColor : QColor(0xff, 0x87, 0x58);
+    caliTargetRing->setPen(QPen(color, CALI_TARGET_RING_WIDTH, Qt::SolidLine, Qt::RoundCap));
+    caliTargetRing->setPos(center);
+    caliTargetRing->setRotation((qreal)(caliTargetTimer.elapsed() % CALI_TARGET_RING_PERIOD) * 360 / CALI_TARGET_RING_PERIOD);
+    caliTargetRing->setVisible(true);
+    if(!caliTargetRingTimer.isActive())
+        caliTargetRingTimer.start(CALI_ANIMATION_FRAME_TIME);
 }
 
 void AppCaliWindow::CaliModeTextUpdate(const uint8_t &type, const char* data)
@@ -1507,6 +1577,8 @@ void AppCaliWindow::CaliIrRefresh()
             caliCrosshairColor = crosshairColor;
         }
     }
+    // Recolour the outer ring in the same update, not at the next animation tick.
+    CaliTargetRingUpdate();
 
     // IR view: a target shot is refused only with the crosshair red (an emitter missing).
     const bool hint = color.isValid() && caliIrStage <= Cali_Center;
@@ -1562,51 +1634,22 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     const qreal side = qMax(CALI_IR_PANEL_MIN_WIDTH, qMin(qMin(rect.width() * CALI_IR_PANEL_WIDTH, CALI_IR_PANEL_MAX_WIDTH), free));
 
     const bool blobs = TestBlobsFresh();
-    int seen = 0;
-    bool weak = false;
-    for(int i = 0; i < 4; ++i) {
-        seen += (blobs ? testBlobs[i].seen : caliIrSeenByCoords[i]) ? 1 : 0;
-        weak = weak || (blobs && testBlobs[i].seen && testBlobs[i].weak);
-    }
-
-    // Title: number of emitters seen and, on a second line, "emitters missing" while one is not
-    // seen (no hysteresis), otherwise "weak signal" while one is weak (firmware flag). The panel
-    // keeps its size whatever the title says: it is sized for the longest title and always reserves
-    // two lines. It widens for the title when the free room allows it, the square stays centred.
-    QStringList title = blobs ? QStringList{tr("IR emitters: %1/4").arg(seen)} : QStringList{tr("IR emitters")};
-    if(blobs && seen < 4)
-        title << tr("emitters missing");
-    else if(weak)
-        title << tr("weak signal");
-    int titleChars = 0;
-    for(const QString &line : {tr("IR emitters"), tr("IR emitters: %1/4").arg(4), tr("weak signal"), tr("emitters missing")})
-        titleChars = qMax(titleChars, (int)line.length());
-    auto titleWidth = [&](const int &textScale) { return (qreal)titleChars * 8 * textScale + 8 * small; };
-    int titleScale = small;
-    while(titleScale > 1 && titleWidth(titleScale) > qMax(side, free))
-        --titleScale;
-    const qreal panelW = qMax(side, titleWidth(titleScale));
-    const qreal titleH = 2 * 8 * titleScale + 4 * small;
-
-    // Title and border always light grey: the state is shown by the crosshair and the circles.
-    const QColor tint(160, 160, 164);
-
-    QPixmap pixmap(qCeil(panelW), qCeil(side + titleH));
+    QPixmap pixmap(qCeil(side), qCeil(side));
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(QRectF(0, 0, panelW, side + titleH), QColor(0, 0, 0, 77));
-    painter.setPen(QPen(tint, 2));
-    painter.setBrush(Qt::NoBrush);
-    painter.drawRect(QRectF(1, 1, panelW - 2, side + titleH - 2));
+    QPainterPath panelPath;
+    panelPath.addRoundedRect(QRectF(1, 1, side - 2, side - 2), side * 0.075, side * 0.075);
+    painter.setPen(QPen(QColor(160, 160, 164), 2));
+    painter.setBrush(QColor(0, 0, 0, 77));
+    painter.drawPath(panelPath);
 
     // Each emitter at its place in the layout, on a virtual square: Square at the corners
     // (sTestCoords order TL, TR, BL, BR), Diamond at the middle of the sides (Diamond slots:
     // 0 top, 1 left, 2 bottom, 3 right on the screen). No lines between them.
     painter.save();
-    painter.setClipRect(QRectF(0, titleH, panelW, side));
+    painter.setClipPath(panelPath);
     const qreal d = side * 0.25;
-    const qreal sx = (panelW - side) / 2; // square centred in a panel widened by its title
     QPointF places[4];
     if(caliIrDiamond) {
         places[0] = QPointF(side / 2, d);
@@ -1619,13 +1662,12 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
         places[2] = QPointF(d, side - d);
         places[3] = QPointF(side - d, side - d);
     }
-    // Radius as in the IR test view, the largest blob filling 18% of the square (two Diamond
-    // neighbours do not touch); the dashed circle of an emitter not seen gets 9%, so its X stays readable.
+    // Same radii as before: the largest seen blob gets 18% of the side; missing gets 9%.
     const qreal seenScale = side * 0.18 / (IRTEST_BLOB_RADIUS_MAX * IRTEST_BLOB_RADIUS_SCALE);
     const qreal notSeenScale = side * 0.09 / IRTEST_EMITTER_RADIUS;
     const QColor colors[4] = {Qt::green, Qt::green, Qt::cyan, Qt::cyan};
     for(int i = 0; i < 4; ++i) {
-        const QPointF center(sx + places[i].x(), titleH + places[i].y());
+        const QPointF center = places[i];
         const bool emitterSeen = blobs ? testBlobs[i].seen : caliIrSeenByCoords[i];
         // Seen: the crosshair scale with its own brightness (older firmware: layout colour);
         // not seen: red dashed circle with the red X (only here, the IR test view keeps its colours).
@@ -1674,15 +1716,9 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     }
     painter.restore();
 
-    // Title centred on the panel.
-    // Drawn at its final size (titleScale), so its pixels map 1:1 into the panel.
-    const QPixmap titlePixmap = GenerateText(IrTestCentredLines(title), tint, titleScale);
-    const QRectF titleRect((panelW - titlePixmap.width()) / 2, 2 * small, titlePixmap.width(), titlePixmap.height());
-    painter.setRenderHint(QPainter::SmoothPixmapTransform, false);
-    painter.drawPixmap(titleRect.toRect(), titlePixmap);
     painter.end();
 
     caliIrPanel->setPixmap(pixmap);
-    caliIrPanel->setPos(rect.right() - margin - panelW, rect.bottom() - margin - side - titleH);
+    caliIrPanel->setPos(rect.right() - margin - side, rect.bottom() - margin - side);
     caliIrPanel->setVisible(true);
 }
