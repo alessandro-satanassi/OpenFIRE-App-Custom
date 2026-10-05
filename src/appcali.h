@@ -297,6 +297,17 @@ private:
     ///             (blobs first, then coordinates), so that a stopped link does not leave a green crosshair
     void CaliIrArmExpiry();
 
+    /// @brief      Calibration: highlight behind the crosshair of every target, as in the web app
+    ///             (not while verifying): two rings spread from it when it reaches a new target,
+    ///             then a disc in the crosshair colour pulses in intensity only, so the crosshair
+    ///             keeps its size. Redrawn by caliHaloTimer while it is shown.
+    void CaliHaloUpdate();
+    QGraphicsEllipseItem *caliHalo = nullptr;
+    QGraphicsEllipseItem *caliRipples[2] = {nullptr, nullptr};
+    QTimer caliHaloTimer;
+    QElapsedTimer caliTargetTimer;              // since the crosshair reached its target
+    int caliHaloStage = -1;                     // stage of caliTargetTimer
+
     /// @brief      Calibration IR view: lines of the refusal message for the given sCaliIrWarning bits
     QStringList CaliIrWarningLines(const uint8_t &);
 

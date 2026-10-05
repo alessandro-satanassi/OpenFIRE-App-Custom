@@ -28,6 +28,8 @@
 #include <QHash>
 #include <QImage>
 #include <QtMath>
+#include <QGraphicsEllipseItem>
+#include <QRadialGradient>
 
 namespace {
 
@@ -87,6 +89,21 @@ constexpr CaliIrRgb_s CALI_IR_WEAK_LOW_RGB  = {255, 40, 40};    // 130
 constexpr CaliIrRgb_s CALI_IR_WEAK_HIGH_RGB = {255, 190, 90};   // limit - blend
 constexpr CaliIrRgb_s CALI_IR_GOOD_LOW_RGB  = {170, 255, 140};  // limit + blend
 constexpr CaliIrRgb_s CALI_IR_GOOD_HIGH_RGB = {0, 220, 0};      // full green
+
+// ----- Crosshair highlight in calibration (same values as the web app) -------------------
+// Behind the crosshair of every target (not while verifying, where it follows the gun):
+// two rings spread from it when it reaches a new target, then a soft disc in the crosshair
+// colour pulses in intensity only. The crosshair keeps its size, so aiming is not disturbed.
+constexpr qreal CROSSHAIR_RING = 24.42 / 61.44;  // ring radius / crosshair size (crosshair.svg)
+constexpr qreal CALI_HALO_RADIUS = 1.35;         // of the crosshair ring radius
+constexpr qreal CALI_HALO_ALPHA_MIN = 0.15;
+constexpr qreal CALI_HALO_ALPHA_MAX = 0.55;
+constexpr qint64 CALI_HALO_PERIOD = 1000;        // ms of one pulse
+constexpr qint64 CALI_HALO_START = 1000;         // ms after reaching the target: the pulse starts
+constexpr qint64 CALI_RIPPLE_DELAYS[2] = {0, 450}; // ms after reaching the target, one per ring
+constexpr qint64 CALI_RIPPLE_TIME = 1100;        // ms of each ring
+constexpr qreal CALI_RIPPLE_GROWTH = 2.2;        // a ring ends at the crosshair ring radius * (1 + growth)
+constexpr int CALI_HALO_FRAME_TIME = 33;         // ms between animation frames (about 30 per second)
 
 /// Colour between a and b (t 0..1, clamped).
 QColor CaliIrMix(const CaliIrRgb_s &a, const CaliIrRgb_s &b, qreal t)
@@ -331,6 +348,21 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         crosshairItem->setVisible(false);
         crosshairItem->setScale(GetTextScale(Crosshair));
         scene.addItem(crosshairItem);
+
+        // Highlight behind the crosshair, under every other item (see CaliHaloUpdate).
+        caliHalo = new QGraphicsEllipseItem();
+        caliHalo->setPen(Qt::NoPen);
+        caliHalo->setZValue(-1);
+        caliHalo->setVisible(false);
+        scene.addItem(caliHalo);
+        for(QGraphicsEllipseItem *&ripple : caliRipples) {
+            ripple = new QGraphicsEllipseItem();
+            ripple->setBrush(Qt::NoBrush);
+            ripple->setZValue(-1);
+            ripple->setVisible(false);
+            scene.addItem(ripple);
+        }
+        connect(&caliHaloTimer, &QTimer::timeout, this, &AppCaliWindow::CaliHaloUpdate);
 
         if(bitmapText) {
             // IR view: emitters panel over the crosshair, crosshair recoloured from its SVG.
@@ -1100,6 +1132,67 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
     caliIrWarningBits = 0;
     caliIrWarningTimer.stop();
     CaliIrRefresh();
+
+    // Highlight: a new target starts the rings again; none while verifying.
+    if(caliStage != caliHaloStage) {
+        caliHaloStage = caliStage;
+        caliTargetTimer.start();
+    }
+    CaliHaloUpdate();
+}
+
+void AppCaliWindow::CaliHaloUpdate()
+{
+    if(caliHalo == nullptr)
+        return;
+    if(caliHaloStage > Cali_Center || !crosshairItem->isVisible()) {
+        caliHalo->setVisible(false);
+        for(QGraphicsEllipseItem *ripple : caliRipples)
+            ripple->setVisible(false);
+        caliHaloTimer.stop();
+        return;
+    }
+
+    const qreal scale = crosshairItem->scale();
+    const QPointF center = crosshairItem->pos() + crosshairItem->boundingRect().center() * scale;
+    const qreal ring = crosshairItem->boundingRect().width() * scale * CROSSHAIR_RING;
+    QColor color = CaliIrColor();
+    if(!color.isValid())
+        color = QColor(0xff, 0x87, 0x58); // crosshair without IR data
+    const qint64 elapsed = caliTargetTimer.elapsed();
+
+    for(int i = 0; i < 2; ++i) {
+        const qreal k = (qreal)(elapsed - CALI_RIPPLE_DELAYS[i]) / CALI_RIPPLE_TIME;
+        if(k < 0 || k > 1) {
+            caliRipples[i]->setVisible(false);
+            continue;
+        }
+        QColor ringColor = color;
+        ringColor.setAlphaF((float)(0.85 * (1 - k)));
+        const qreal r = ring * (1 + k * CALI_RIPPLE_GROWTH);
+        caliRipples[i]->setPen(QPen(ringColor, 6 * (1 - k) + 1.5));
+        caliRipples[i]->setRect(center.x() - r, center.y() - r, 2 * r, 2 * r);
+        caliRipples[i]->setVisible(true);
+    }
+
+    const qreal phase = (qreal)qMax((qint64)0, elapsed - CALI_HALO_START) / CALI_HALO_PERIOD;
+    const qreal alpha = CALI_HALO_ALPHA_MIN +
+                        (CALI_HALO_ALPHA_MAX - CALI_HALO_ALPHA_MIN) * (0.5 - 0.5 * qCos(2 * M_PI * phase));
+    const qreal radius = ring * CALI_HALO_RADIUS;
+    QColor inner = color, middle = color, outer = color;
+    inner.setAlphaF((float)alpha);
+    middle.setAlphaF((float)(alpha * 0.6));
+    outer.setAlphaF(0);
+    QRadialGradient gradient(center, radius);
+    gradient.setColorAt(0, inner);
+    gradient.setColorAt(0.55, middle);
+    gradient.setColorAt(1, outer);
+    caliHalo->setBrush(gradient);
+    caliHalo->setRect(center.x() - radius, center.y() - radius, 2 * radius, 2 * radius);
+    caliHalo->setVisible(true);
+
+    if(!caliHaloTimer.isActive())
+        caliHaloTimer.start(CALI_HALO_FRAME_TIME);
 }
 
 void AppCaliWindow::CaliModeTextUpdate(const uint8_t &type, const char* data)
@@ -1495,9 +1588,8 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     const qreal panelW = qMax(side, titleWidth(titleScale));
     const qreal titleH = 2 * 8 * titleScale + 4 * small;
 
-    // Title and border in the crosshair colour (grey without blob data).
-    const QColor color = CaliIrColor();
-    const QColor tint = color.isValid() ? color : QColor(160, 160, 164);
+    // Title and border always light grey: the state is shown by the crosshair and the circles.
+    const QColor tint(160, 160, 164);
 
     QPixmap pixmap(qCeil(panelW), qCeil(side + titleH));
     pixmap.fill(Qt::transparent);
