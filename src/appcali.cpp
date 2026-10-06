@@ -994,9 +994,9 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
 
-            tutorialBitmap->setPixmap(GenerateText({tr("The calibration process can be reset by pressing"),
-                                                    tr("either Button A or Button B, and can be canceled"),
-                                                    tr("      by pressing Button C (if available).      ")}));
+            tutorialBitmap->setPixmap(GenerateText({tr("Calibration can be exited without changes"),
+                                                    tr("  by pressing either Button A, Button B, "),
+                                                    tr("       or Button C (if available).       ")}));
             tutorialBitmap->setPos(scene.sceneRect().center().x()     - (tutorialBitmap->boundingRect().center().x() * tutorialBitmap->scale()),
                                    (scene.sceneRect().bottom() * 0.8) - (tutorialBitmap->boundingRect().center().y() * tutorialBitmap->scale()));
 
@@ -1011,9 +1011,9 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
                                caliStageText->pos().y()       + caliStageText->boundingRect().height());
 
-            tutorialText->setHtml(tr("<p align=\"center\">The calibration process can be reset by pressing<br>"
-                                     "either <i>Button A</i> or <i>Button B,</i><br>"
-                                     "and can be canceled by pressing <i>Button C (if available).</i></p>"));
+            tutorialText->setHtml(tr("<p align=\"center\">Calibration can be exited without changes<br>"
+                                     "by pressing either <i>Button A,</i> <i>Button B,</i><br>"
+                                     "or <i>Button C (if available).</i></p>"));
             tutorialText->setPos(scene.sceneRect().center().x()     - tutorialText->boundingRect().center().x(),
                                  (scene.sceneRect().bottom() * 0.8) - tutorialText->boundingRect().center().y());
         }
