@@ -3,6 +3,14 @@
 <TS version="2.1" language="en_US">
 <context>
     <name>AppCaliWindow</name>
+    <message><source>IR Camera Test Legend</source><translation>IR Camera Test Legend</translation></message>
+    <message><source>Emitter not detected</source><translation>Emitter not detected</translation></message>
+    <message><source>Reconstructed position</source><translation>Reconstructed position</translation></message>
+    <message><source>Lightgun aim</source><translation>Lightgun aim</translation></message>
+    <message><source>Emitter centre</source><translation>Emitter centre</translation></message>
+    <message><source>Lines joining IR points</source><translation>Lines joining IR points</translation></message>
+    <message><source>Green and cyan identify emitter positions, not signal quality.</source><translation>Green and cyan identify emitter positions, not signal quality.</translation></message>
+    <message><source>    your aim, and the gray crosshair should be  </source><translation>    your aim, and the gray crosshair should be  </translation></message>
     <message><source>Calibration: step 1 of 6</source><translation>Calibration: step 1 of 6</translation></message>
     <message><source>Calibration: step 2 of 6</source><translation>Calibration: step 2 of 6</translation></message>
     <message><source>Calibration: step 3 of 6</source><translation>Calibration: step 3 of 6</translation></message>

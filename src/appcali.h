@@ -118,6 +118,9 @@ public:
     ///             at the middle of the sides of the panel, the others at its corners
     void SetCaliIrDiamond(const bool &diamond) { caliIrDiamond = diamond; }
 
+    /// @brief      IR test: underline the layout applied on the active board profile.
+    void SetIrTestDiamond(const bool &diamond);
+
     /// @brief      Calibration IR view: the board refused a target shot (sCaliIrWarning)
     /// @param      uint8_t
     ///             bit 0 an emitter is missing
@@ -226,6 +229,10 @@ private:
 
     /// @brief      Test Mode polygon that connects across the test points
     QGraphicsPolygonItem *testBox;
+    QGraphicsPathItem *testAimTicks = nullptr; // child of the existing aim circle: same coordinates/scale
+    QGraphicsPixmapItem *testLegend = nullptr;
+    bool testLegendDiamond = false;
+    void IrTestDrawLegend();                 // static pixmap, not regenerated on IR frames
 
     /// @brief      Test Mode blob data (sTestBlobs) of each emitter, as received
     struct TestBlob_s {

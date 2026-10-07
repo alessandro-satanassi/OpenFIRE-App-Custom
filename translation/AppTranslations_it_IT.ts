@@ -87,6 +87,13 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
 </context>
 <context>
     <name>AppCaliWindow</name>
+    <message><source>IR Camera Test Legend</source><translation>Legenda Test CAM IR</translation></message>
+    <message><source>Emitter not detected</source><translation>Emettitore non rilevato</translation></message>
+    <message><source>Reconstructed position</source><translation>Posizione ricostruita</translation></message>
+    <message><source>Lightgun aim</source><translation>Puntamento della lightgun</translation></message>
+    <message><source>Emitter centre</source><translation>Centro degli emettitori</translation></message>
+    <message><source>Lines joining IR points</source><translation>Linee che collegano i punti IR</translation></message>
+    <message><source>Green and cyan identify emitter positions, not signal quality.</source><translation>I colori verde e ciano degli emettitori indicano la posizione, non la qualità del segnale.</translation></message>
     <message><source>Calibration: step 1 of 6</source><translation>Calibrazione: passo 1 di 6</translation></message>
     <message><source>Calibration: step 2 of 6</source><translation>Calibrazione: passo 2 di 6</translation></message>
     <message><source>Calibration: step 3 of 6</source><translation>Calibrazione: passo 3 di 6</translation></message>
@@ -260,8 +267,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="286"/>
-        <source>     your aim, and the gray circle should be    </source>
-        <translation>    della tua mira, e il cerchio grigio deve    </translation>
+        <source>    your aim, and the gray crosshair should be  </source>
+        <translation>    della tua mira, e il mirino grigio deve     </translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="287"/>
@@ -276,8 +283,8 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="298"/>
-        <source>&lt;p align=justify&gt;The array of shapes onscreen&lt;br&gt;represents the emitters that the camera can see.&lt;br&gt;The points should move opposite to your aim,&lt;br&gt;and the gray circle should be lining up with your gun sight.&lt;/p&gt;</source>
-        <translation>&lt;p align=justify&gt;L&apos;insieme di forme sullo schermo&lt;br&gt;rappresenta gli emettitori che la telecamera riesce a vedere.&lt;br&gt;I punti dovrebbero muoversi in direzione opposta alla tua mira,&lt;br&gt;e il cerchio grigio dovrebbe essere allineato con il mirino della tua pistola.&lt;/p&gt;</translation>
+        <source>&lt;p align=justify&gt;The array of shapes onscreen&lt;br&gt;represents the emitters that the camera can see.&lt;br&gt;The points should move opposite to your aim,&lt;br&gt;and the gray crosshair should be lining up with your gun sight.&lt;/p&gt;</source>
+        <translation>&lt;p align=justify&gt;L&apos;insieme di forme sullo schermo&lt;br&gt;rappresenta gli emettitori che la telecamera riesce a vedere.&lt;br&gt;I punti dovrebbero muoversi in direzione opposta alla tua mira,&lt;br&gt;e il mirino grigio dovrebbe essere allineato con il mirino della tua pistola.&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="../src/appcali.cpp" line="479"/>

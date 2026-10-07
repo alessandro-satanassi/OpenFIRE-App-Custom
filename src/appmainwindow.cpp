@@ -621,6 +621,7 @@ void guiWindow::NewCaliWindow(const int &type) {
         break;
     }
     case AppCaliWindow::modeIRTest:
+        caliWindow->SetIrTestDiamond(App_Common::profilesTable_orig.at(App_Common::board.selectedProfile).layoutType == OF_Const::layoutDiamond);
         ui->buttonsTestArea->setEnabled(false);
         ui->confirmButton->setEnabled(false);
         ui->confirmButton->setText(tr("[Disabled while in Test Mode]"));
@@ -2232,6 +2233,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
                 App_Common::board.selectedProfile = selection;
                 selectedProfile[selection]->setChecked(true);
             }
+            if(caliWindow != nullptr && caliWindow->GetWindowMode() == AppCaliWindow::modeIRTest)
+                caliWindow->SetIrTestDiamond(App_Common::profilesTable_orig.at(App_Common::board.selectedProfile).layoutType == OF_Const::layoutDiamond);
             DiffUpdate();
         }
         break;

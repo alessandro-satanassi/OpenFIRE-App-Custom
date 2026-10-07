@@ -61,6 +61,20 @@ constexpr qint64 IRTEST_BLOBS_MAX_AGE = 250;
 constexpr uint8_t IRTEST_BLOBS_VERSION = 1;
 constexpr int IRTEST_BLOBS_LENGTH = 21;
 constexpr uint8_t IRTEST_BLOB_WEAK = 0x02; // flag: emitter seen but weak (firmware IR_WEAK_MAX_BRIGHTNESS)
+constexpr qreal IRTEST_LEGEND_SIZE = 380;
+constexpr qreal IRTEST_AIM_SCALE = 25 / 24.42; // same geometry as crosshair.svg, with a 50 px circle
+
+QPainterPath IrTestAimTicks()
+{
+    QPainterPath path;
+    const qreal lines[6][4] = {{-30, 0, -18.84, 0}, {0, -29.99, 0, -18.83},
+        {29.99, 0, 18.83, 0}, {0, 29.99, 0, 18.83}, {-3.78, 0, 3.8, 0}, {0, -3.78, 0, 3.8}};
+    for(uint8_t i = 0; i < 6; ++i) {
+        path.moveTo(lines[i][0] * IRTEST_AIM_SCALE, lines[i][1] * IRTEST_AIM_SCALE);
+        path.lineTo(lines[i][2] * IRTEST_AIM_SCALE, lines[i][3] * IRTEST_AIM_SCALE);
+    }
+    return path;
+}
 
 // ----- IR view in the calibration window -----------------------------------------------
 // Same values as the web app. Firmware that knows caliFlagIrView sends sTestBlobs + sTestCoords
@@ -393,7 +407,7 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
 
         for(QGraphicsEllipseItem *&dot : caliProgressDots) {
             dot = new QGraphicsEllipseItem();
-            dot->setZValue(1);
+            dot->setZValue(-2); // progress stays below the crosshair and its rings
             scene.addItem(dot);
         }
         {
@@ -411,12 +425,14 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         connect(&caliShotRingTimer, &QTimer::timeout, this, &AppCaliWindow::CaliShotRingUpdate);
 
         if(bitmapText) {
-            // IR view: emitters panel over the crosshair, crosshair recoloured from its SVG.
+            // IR panels below the crosshair/rings, including free aiming during verification.
             caliIrPanel = new QGraphicsPixmapItem();
+            caliIrPanel->setZValue(-2);
             caliIrPanel->setVisible(false);
             scene.addItem(caliIrPanel);
             // Static help only; it does not depend on a live sample or consume mouse input.
             caliIrLegend = new QGraphicsPixmapItem();
+            caliIrLegend->setZValue(-2);
             caliIrLegend->setAcceptedMouseButtons(Qt::NoButton);
             scene.addItem(caliIrLegend);
             QFile crosshairFile(":/cali/crosshair.svg");
@@ -652,7 +668,7 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
             headerBitmap->setPixmap(GenerateText({tr("     The array of shapes displayed onscreen     "),
                                                   tr("represents the emitters that the camera can see."),
                                                   tr("   The colored points should move opposite to   "),
-                                                  tr("     your aim, and the gray circle should be    "),
+                                                  tr("    your aim, and the gray crosshair should be  "),
                                                   tr("          lining up with your gun sight.        ")}));
             headerBitmap->setPos(scene.sceneRect().center().x()     - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  (scene.sceneRect().bottom() * 0.1) - (headerBitmap->boundingRect().center().y() * headerBitmap->scale()));
@@ -667,7 +683,7 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
             headerText->setHtml(tr("<p align=justify>The array of shapes onscreen<br>"
                                    "represents the emitters that the camera can see.<br>"
                                    "The points should move opposite to your aim,<br>"
-                                   "and the gray circle should be lining up with your gun sight.</p>"));
+                                   "and the gray crosshair should be lining up with your gun sight.</p>"));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
                                (scene.sceneRect().bottom() * 0.1) - headerText->boundingRect().center().y());
             scene.addItem(headerText);
@@ -689,6 +705,14 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         // Mouse position must still cover the entire monitor area.
         testPoints[testPointMed]->setTransform(QTransform::fromScale(scaleX, scaleY));
         testPoints[testPointMed]->setPos(scene.sceneRect().left(), scene.sceneRect().top());
+        // A child inherits the circle's existing per-axis screen transform and stacking.
+        // Its path is built once; only its centre moves when new coordinates arrive.
+        testAimTicks = new QGraphicsPathItem(testPoints[testPointMed]);
+        testAimTicks->setPath(IrTestAimTicks());
+        QPen aimPen(Qt::gray, 1.44 * IRTEST_AIM_SCALE);
+        aimPen.setCapStyle(Qt::SquareCap);
+        testAimTicks->setPen(aimPen);
+        testAimTicks->setVisible(false);
 
         testScale = scale;
         testOffsetX = offsetX;
@@ -727,7 +751,7 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         testPoints[testPointTR] ->setPen(QPen(Qt::green, 3));
         testPoints[testPointBL] ->setPen(QPen(Qt::cyan,  3));
         testPoints[testPointBR] ->setPen(QPen(Qt::cyan,  3));
-        testPoints[testPointMed]->setPen(QPen(Qt::gray,  3));
+        testPoints[testPointMed]->setPen(QPen(Qt::gray, 2.4 * IRTEST_AIM_SCALE));
         testPoints[testPointD]  ->setPen(QPen(Qt::red,   3));
 
         // IR vertices inside the camera FOV are normally shown as hollow circles.
@@ -735,6 +759,11 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
         testPoints[testPointTR] ->setBrush(QBrush(Qt::NoBrush));
         testPoints[testPointBL] ->setBrush(QBrush(Qt::NoBrush));
         testPoints[testPointBR] ->setBrush(QBrush(Qt::NoBrush));
+        testLegend = new QGraphicsPixmapItem();
+        testLegend->setAcceptedMouseButtons(Qt::NoButton);
+        testLegend->setZValue(-1); // below live IR points, aim and reconstruction lines
+        scene.addItem(testLegend);
+        IrTestDrawLegend();
         break;
     }
 }
@@ -1339,6 +1368,135 @@ void AppCaliWindow::CaliModeTextUpdate(const uint8_t &type, const char* data)
     }
 }
 
+void AppCaliWindow::SetIrTestDiamond(const bool &diamond)
+{
+    if(mode != modeIRTest || testLegend == nullptr || testLegendDiamond == diamond)
+        return;
+    testLegendDiamond = diamond;
+    testLegend->setPixmap(QPixmap()); // rebuild only when the applied layout changes
+    IrTestDrawLegend();
+}
+
+void AppCaliWindow::IrTestDrawLegend()
+{
+    if(testLegend == nullptr)
+        return;
+    if(testLegend->pixmap().isNull()) {
+        const qreal ratio = devicePixelRatioF();
+        QPixmap pixmap(qCeil(IRTEST_LEGEND_SIZE * ratio), qCeil(IRTEST_LEGEND_SIZE * ratio));
+        pixmap.setDevicePixelRatio(ratio);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::TextAntialiasing);
+        painter.setBrush(QColor(72, 72, 72));
+        painter.setPen(QPen(Qt::gray, 2));
+        painter.drawRoundedRect(QRectF(1, 1, 378, 378), 17, 17);
+        QFont font("Segoe UI");
+        auto text = [&](const QString &value, const QRectF &rect, const int32_t pixels,
+                        const int32_t alignment, const bool medium = false) {
+            font.setPixelSize(pixels);
+            font.setWeight(medium ? QFont::Medium : QFont::Normal);
+            font.setUnderline(false);
+            painter.setFont(font);
+            painter.setPen(QColor(247, 247, 247));
+            painter.drawText(rect, alignment, value);
+        };
+        text(tr("IR Camera Test Legend"), QRectF(18, 14, 344, 21), 16, Qt::AlignCenter, true);
+        const QColor colours[4] = {Qt::green, Qt::green, Qt::cyan, Qt::cyan};
+        for(uint8_t layout = 0; layout < 2; ++layout) {
+            const qreal x = layout ? 202.5 : 83.5;
+            font.setPixelSize(13);
+            font.setWeight(QFont::Normal);
+            font.setUnderline(testLegendDiamond == bool(layout));
+            painter.setFont(font);
+            painter.setPen(QColor(247, 247, 247));
+            painter.drawText(QRectF(x, 45, 94, 17), Qt::AlignCenter, layout ? "Diamond" : "Square");
+            const QPointF square[4] = {{23.5, 10.32}, {70.5, 10.32}, {23.5, 32.68}, {70.5, 32.68}};
+            const QPointF diamond[4] = {{47, 6.02}, {18.8, 21.5}, {47, 36.98}, {75.2, 21.5}};
+            for(uint8_t i = 0; i < 4; ++i) {
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(colours[i]);
+                painter.drawEllipse(QPointF(x, 66) + (layout ? diamond[i] : square[i]), 5, 5);
+            }
+        }
+        text(tr("IR signal intensity"), QRectF(18, 116, 164.5, 17), 13, Qt::AlignCenter, true);
+        text(tr("IR point size"), QRectF(197.5, 125, 164.5, 17), 13, Qt::AlignCenter, true);
+        const qreal light[5] = {.15, .35, .55, .8, 1};
+        const qreal edge[5] = {.07, .15, .25, .4, .7};
+        for(uint8_t row = 0; row < 2; ++row) {
+            const QColor colour = row ? QColor(Qt::cyan) : QColor(Qt::green);
+            for(uint8_t i = 0; i < 5; ++i) {
+                const QPointF point(32 + 34.125 * i, 147 + 22 * row);
+                QColor centerColor = colour, edgeColor = colour, transparent = colour;
+                centerColor.setAlphaF(light[i]); edgeColor.setAlphaF(edge[i]); transparent.setAlpha(0);
+                QRadialGradient gradient(point, 9);
+                gradient.setColorAt(0, centerColor); gradient.setColorAt(.75, edgeColor); gradient.setColorAt(1, transparent);
+                painter.setBrush(gradient); painter.setPen(QPen(colour, 1));
+                painter.drawEllipse(point, 9, 9);
+            }
+        }
+        const qreal diameters[5] = {3, 7, 11, 16, 22};
+        qreal blobX = 201.5;
+        for(uint8_t i = 0; i < 5; ++i) {
+            painter.setBrush(Qt::NoBrush); painter.setPen(QPen(QColor(238, 238, 238), 1));
+            painter.drawEllipse(QPointF(blobX + diameters[i] / 2, 158), diameters[i] / 2, diameters[i] / 2);
+            blobX += diameters[i] + 24.375;
+        }
+        text(tr("Weak"), QRectF(18, 180, 164.5, 16), 12, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Strong"), QRectF(18, 180, 164.5, 16), 12, Qt::AlignRight | Qt::AlignTop);
+        text(tr("Small"), QRectF(197.5, 171, 164.5, 16), 12, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Large"), QRectF(197.5, 171, 164.5, 16), 12, Qt::AlignRight | Qt::AlignTop);
+        font.setPixelSize(13); font.setUnderline(false); font.setWeight(QFont::Medium);
+        const qreal missingWidth = QFontMetricsF(font).horizontalAdvance(tr("Emitter not detected"));
+        const qreal start = (380 - 62 - missingWidth) / 2;
+        for(uint8_t i = 0; i < 2; ++i) {
+            const QPointF center(start + 12 + 28 * i, 218);
+            QPen outline(i ? QColor(Qt::cyan) : QColor(Qt::green), 1.5);
+            outline.setDashPattern({2, 2});
+            painter.setPen(outline); painter.setBrush(Qt::NoBrush);
+            painter.drawEllipse(center, 12, 12);
+            painter.setPen(QPen(IrTestNotSeenColor(), 2));
+            painter.drawLine(center + QPointF(-8, -8), center + QPointF(8, 8));
+            painter.drawLine(center + QPointF(8, -8), center + QPointF(-8, 8));
+        }
+        text(tr("Emitter not detected"), QRectF(start + 62, 201, missingWidth, 18), 13, Qt::AlignLeft | Qt::AlignTop, true);
+        text(tr("Reconstructed position"), QRectF(start + 62, 219, 190, 16), 12, Qt::AlignLeft | Qt::AlignTop);
+        painter.setPen(QPen(QColor(119, 119, 119), 1));
+        painter.drawLine(QPointF(18, 240), QPointF(362, 240));
+        painter.drawLine(QPointF(18, 333), QPointF(362, 333));
+        painter.save();
+        painter.translate(38, 261);
+        painter.scale(24 / (61.44 * IRTEST_AIM_SCALE), 24 / (61.44 * IRTEST_AIM_SCALE));
+        painter.setBrush(Qt::NoBrush); painter.setPen(QPen(Qt::gray, 2.4 * IRTEST_AIM_SCALE));
+        painter.drawEllipse(QPointF(0, 0), 25, 25);
+        QPen aimPen(Qt::gray, 1.44 * IRTEST_AIM_SCALE); aimPen.setCapStyle(Qt::SquareCap);
+        painter.setPen(aimPen); painter.drawPath(IrTestAimTicks());
+        painter.restore();
+        painter.setBrush(Qt::NoBrush); painter.setPen(QPen(Qt::red, 2));
+        painter.drawEllipse(QPointF(38, 289), 9, 9);
+        painter.setPen(QPen(Qt::gray, 1.5));
+        painter.drawPolygon(QPolygonF() << QPointF(29, 309) << QPointF(51, 309) << QPointF(47, 323) << QPointF(25, 323));
+        text(tr("Lightgun aim"), QRectF(70, 249, 292, 24), 13, Qt::AlignLeft | Qt::AlignVCenter);
+        text(tr("Emitter centre"), QRectF(70, 278, 292, 22), 13, Qt::AlignLeft | Qt::AlignVCenter);
+        text(tr("Lines joining IR points"), QRectF(70, 305, 292, 22), 13, Qt::AlignLeft | Qt::AlignVCenter);
+        text(tr("Green and cyan identify emitter positions, not signal quality."), QRectF(18, 342, 344, 32),
+             12, Qt::AlignCenter | Qt::TextWordWrap);
+        painter.end();
+        testLegend->setPixmap(pixmap);
+    }
+    const QRectF rect = scene.sceneRect();
+    const qreal side = qMin(IRTEST_LEGEND_SIZE, qMin(rect.width() * .26, rect.height() * .45));
+    const qreal margin = qMin(qreal(24), rect.width() / 80);
+    testLegend->setScale(side / IRTEST_LEGEND_SIZE);
+    qreal top = rect.bottom() - margin - side;
+    // Only on narrow windows, keep the panel above the existing ESC instruction.
+    const QGraphicsItem *instructions = bitmapText ? static_cast<QGraphicsItem *>(tutorialBitmap) : tutorialText;
+    if(instructions && QRectF(rect.left() + margin, top, side, side).intersects(instructions->sceneBoundingRect().adjusted(-8, -8, 8, 8)))
+        top = instructions->sceneBoundingRect().top() - 8 - side;
+    testLegend->setPos(rect.left() + margin, top);
+}
+
 void AppCaliWindow::TestModeDraw(const int coordsList[12])
 {
     // Calibration IR view: the emitters are drawn in the panel, at their place in the layout.
@@ -1400,6 +1558,8 @@ void AppCaliWindow::TestModeDraw(const int coordsList[12])
     }
 
     testPoints[testPointMed]->setRect(coordsList[8]  - 25, coordsList[9]  - 25, 50, 50);
+    testAimTicks->setPos(coordsList[8], coordsList[9]);
+    testAimTicks->setVisible(true);
     testPoints[testPointD]  ->setRect(coordsList[10] - 25, coordsList[11] - 25, 50, 50);
 
     // Reconstruct the complete IR rectangle using the real decoded coordinates,
