@@ -86,6 +86,10 @@ private slots:
 
     void on_aStickModeBox_currentIndexChanged(int index);
 
+    void on_aStickInvertXToggle_stateChanged(int arg1);
+
+    void on_aStickInvertYToggle_stateChanged(int arg1);
+
     /// gun settings
     void on_rumbleToggle_stateChanged(int arg1);
 

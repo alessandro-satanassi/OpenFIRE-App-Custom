@@ -465,54 +465,133 @@
               <property name="title">
                <string>Analog Stick</string>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <layout class="QVBoxLayout" name="aStickFuncLayout">
                <item>
-                <spacer name="horizontalSpacer_6">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
+                <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <item>
+                  <spacer name="horizontalSpacer_6">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_10">
+                   <property name="text">
+                    <string>Send Analog Stick As:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="aStickModeBox">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If an analog stick is enabled in the current &lt;span style=&quot; font-style:italic;&quot;&gt;Board Layout,&lt;/span&gt; this determines which type of Button Output it uses.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Gamepad Analog Stick&lt;/span&gt; will use either the Left or Right analog stick of the Gamepad device, depending on the circumstances and/or whether &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad Output Mode&lt;/span&gt; is set via Serial. The other two settings will translate the stick's analog movements into either digital &lt;span style=&quot; font-weight:700;&quot;&gt;Gamepad D-Pad&lt;/span&gt; or &lt;span style=&quot; font-weight:700;&quot;&gt;Keyboard Arrow Key&lt;/span&gt; presses.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Gamepad Analog Stick&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Analog Stick Output Mode</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>3</number>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Gamepad Analog Stick (Left/Right)</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Gamepad D-Pad</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Keyboard Arrows</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="aStickModeSpacerRight">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
                </item>
                <item>
-                <widget class="QLabel" name="label_10">
-                 <property name="text">
-                  <string>Send Analog Stick As:</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="aStickModeBox">
-                 <property name="whatsThis">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If an analog stick is enabled in the current &lt;span style=&quot; font-style:italic;&quot;&gt;Board Layout,&lt;/span&gt; this determines which type of Button Output it uses.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Gamepad Analog Stick&lt;/span&gt; will use either the Left or Right analog stick of the Gamepad device, depending on the circumstances and/or whether &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad Output Mode&lt;/span&gt; is set via Serial. The other two settings will translate the stick's analog movements into either digital &lt;span style=&quot; font-weight:700;&quot;&gt;Gamepad D-Pad&lt;/span&gt; or &lt;span style=&quot; font-weight:700;&quot;&gt;Keyboard Arrow Key&lt;/span&gt; presses.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Gamepad Analog Stick&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="accessibleName">
-                  <string>Analog Stick Output Mode</string>
-                 </property>
-                 <property name="trackable" stdset="0">
-                  <number>3</number>
-                 </property>
+                <layout class="QHBoxLayout" name="aStickInvertLayout">
                  <item>
-                  <property name="text">
-                   <string>Gamepad Analog Stick (Left/Right)</string>
-                  </property>
+                  <spacer name="aStickInvertSpacerLeft">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                  <item>
-                  <property name="text">
-                   <string>Gamepad D-Pad</string>
-                  </property>
+                  <widget class="QCheckBox" name="aStickInvertXToggle">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the &lt;span style=&quot; font-weight:700;&quot;&gt;left/right&lt;/span&gt; direction of the analog stick.&lt;/p&gt;&lt;p&gt;Enable it if pushing the stick to the left gives a movement to the right. It applies to all three &lt;span style=&quot; font-style:italic;&quot;&gt;Send Analog Stick As&lt;/span&gt; options, and the stick shown in the &lt;span style=&quot; font-style:italic;&quot;&gt;Gun Tests&lt;/span&gt; tab follows it.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Invert X Axis</string>
+                   </property>
+                   <property name="text">
+                    <string>Invert X Axis</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>3</number>
+                   </property>
+                  </widget>
                  </item>
                  <item>
-                  <property name="text">
-                   <string>Keyboard Arrows</string>
-                  </property>
+                  <widget class="QCheckBox" name="aStickInvertYToggle">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the &lt;span style=&quot; font-weight:700;&quot;&gt;up/down&lt;/span&gt; direction of the analog stick.&lt;/p&gt;&lt;p&gt;Enable it if pushing the stick up gives a downward movement. It applies to all three &lt;span style=&quot; font-style:italic;&quot;&gt;Send Analog Stick As&lt;/span&gt; options, and the stick shown in the &lt;span style=&quot; font-style:italic;&quot;&gt;Gun Tests&lt;/span&gt; tab follows it.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Invert Y Axis</string>
+                   </property>
+                   <property name="text">
+                    <string>Invert Y Axis</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>3</number>
+                   </property>
+                  </widget>
                  </item>
-                </widget>
+                 <item>
+                  <spacer name="aStickInvertSpacerRight">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
                </item>
               </layout>
              </widget>

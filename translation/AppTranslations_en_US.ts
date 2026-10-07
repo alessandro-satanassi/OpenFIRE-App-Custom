@@ -983,5 +983,21 @@
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;What the lightgun is to the computer &lt;span style=&quot; font-weight:700;&quot;&gt;the moment you switch it on.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Absolute Mouse&lt;/span&gt; is the default and what the lightgun has always done: aiming moves the mouse pointer.&lt;/p&gt;&lt;p&gt;The two &lt;span style=&quot; font-style:italic;&quot;&gt;Gamepad&lt;/span&gt; settings turn it into a controller instead, with the aim riding one of the two analog sticks. That is what MiSTer FPGA, several frontends and two-player setups on Windows expect. If the aim ends up on the wrong stick, pick the other one.&lt;/p&gt;&lt;p&gt;A game can still switch the lightgun over while it runs, and it stays switched until something changes it again: this only decides where it starts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Invert X Axis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invert Y Axis</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the &lt;span style=&quot; font-weight:700;&quot;&gt;left/right&lt;/span&gt; direction of the analog stick.&lt;/p&gt;&lt;p&gt;Enable it if pushing the stick to the left gives a movement to the right. It applies to all three &lt;span style=&quot; font-style:italic;&quot;&gt;Send Analog Stick As&lt;/span&gt; options, and the stick shown in the &lt;span style=&quot; font-style:italic;&quot;&gt;Gun Tests&lt;/span&gt; tab follows it.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the &lt;span style=&quot; font-weight:700;&quot;&gt;up/down&lt;/span&gt; direction of the analog stick.&lt;/p&gt;&lt;p&gt;Enable it if pushing the stick up gives a downward movement. It applies to all three &lt;span style=&quot; font-style:italic;&quot;&gt;Send Analog Stick As&lt;/span&gt; options, and the stick shown in the &lt;span style=&quot; font-style:italic;&quot;&gt;Gun Tests&lt;/span&gt; tab follows it.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>

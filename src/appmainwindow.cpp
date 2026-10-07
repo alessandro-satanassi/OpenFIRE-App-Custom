@@ -1084,6 +1084,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->customPinsEnabled->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::customPins]);
 
             ui->aStickModeBox->setCurrentIndex(App_Common::settingsTable[App_Common::dataOrig][OF_Const::analogMode]);
+            ui->aStickInvertXToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::analogInvertX]);
+            ui->aStickInvertYToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::analogInvertY]);
 
             ui->rumbleToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumble]);
             ui->rumbleSettingsBox->setEnabled(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumble]);
@@ -1419,6 +1421,22 @@ void guiWindow::on_aStickModeBox_currentIndexChanged(int index)
 {
     App_Common::settingsTable[App_Common::dataCurrent][OF_Const::analogMode] = index;
 
+    DiffUpdate();
+}
+
+
+// For analog sticks wired or mounted the other way round: the firmware reverses the axis
+// before every stick output (gamepad stick, D-pad, arrow keys) and in the test view.
+void guiWindow::on_aStickInvertXToggle_stateChanged(int arg1)
+{
+    App_Common::boolSettings[App_Common::dataCurrent][OF_Const::analogInvertX] = arg1;
+    DiffUpdate();
+}
+
+
+void guiWindow::on_aStickInvertYToggle_stateChanged(int arg1)
+{
+    App_Common::boolSettings[App_Common::dataCurrent][OF_Const::analogInvertY] = arg1;
     DiffUpdate();
 }
 
