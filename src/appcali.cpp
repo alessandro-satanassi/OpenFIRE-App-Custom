@@ -61,7 +61,8 @@ constexpr qint64 IRTEST_BLOBS_MAX_AGE = 250;
 constexpr uint8_t IRTEST_BLOBS_VERSION = 1;
 constexpr int IRTEST_BLOBS_LENGTH = 21;
 constexpr uint8_t IRTEST_BLOB_WEAK = 0x02; // flag: emitter seen but weak (firmware IR_WEAK_MAX_BRIGHTNESS)
-constexpr qreal IRTEST_LEGEND_SIZE = 380;
+constexpr qreal IRTEST_LEGEND_WIDTH = 250;
+constexpr qreal IRTEST_LEGEND_HEIGHT = 540; // vertical panel; room for either language
 constexpr qreal IRTEST_AIM_SCALE = 25 / 24.42; // same geometry as crosshair.svg, with a 50 px circle
 
 QPainterPath IrTestAimTicks()
@@ -1383,7 +1384,7 @@ void AppCaliWindow::IrTestDrawLegend()
         return;
     if(testLegend->pixmap().isNull()) {
         const qreal ratio = devicePixelRatioF();
-        QPixmap pixmap(qCeil(IRTEST_LEGEND_SIZE * ratio), qCeil(IRTEST_LEGEND_SIZE * ratio));
+        QPixmap pixmap(qCeil(IRTEST_LEGEND_WIDTH * ratio), qCeil(IRTEST_LEGEND_HEIGHT * ratio));
         pixmap.setDevicePixelRatio(ratio);
         pixmap.fill(Qt::transparent);
         QPainter painter(&pixmap);
@@ -1391,7 +1392,7 @@ void AppCaliWindow::IrTestDrawLegend()
         painter.setRenderHint(QPainter::TextAntialiasing);
         painter.setBrush(QColor(72, 72, 72));
         painter.setPen(QPen(Qt::gray, 2));
-        painter.drawRoundedRect(QRectF(1, 1, 378, 378), 17, 17);
+        painter.drawRoundedRect(QRectF(1, 1, IRTEST_LEGEND_WIDTH - 2, IRTEST_LEGEND_HEIGHT - 2), 17, 17);
         QFont font("Segoe UI");
         auto text = [&](const QString &value, const QRectF &rect, const int32_t pixels,
                         const int32_t alignment, const bool medium = false) {
@@ -1402,32 +1403,34 @@ void AppCaliWindow::IrTestDrawLegend()
             painter.setPen(QColor(247, 247, 247));
             painter.drawText(rect, alignment, value);
         };
-        text(tr("IR Camera Test Legend"), QRectF(18, 14, 344, 21), 16, Qt::AlignCenter, true);
+        text(tr("IR Camera Test Legend"), QRectF(18, 14, 214, 21), 16, Qt::AlignCenter, true);
         const QColor colours[4] = {Qt::green, Qt::green, Qt::cyan, Qt::cyan};
         for(uint8_t layout = 0; layout < 2; ++layout) {
-            const qreal x = layout ? 202.5 : 83.5;
+            const qreal x = layout ? 137.5 : 18.5;
             font.setPixelSize(13);
             font.setWeight(QFont::Normal);
             font.setUnderline(testLegendDiamond == bool(layout));
             painter.setFont(font);
             painter.setPen(QColor(247, 247, 247));
-            painter.drawText(QRectF(x, 45, 94, 17), Qt::AlignCenter, layout ? "Diamond" : "Square");
+            painter.drawText(QRectF(x, 47, 94, 17), Qt::AlignCenter, layout ? "Diamond" : "Square");
             const QPointF square[4] = {{23.5, 10.32}, {70.5, 10.32}, {23.5, 32.68}, {70.5, 32.68}};
             const QPointF diamond[4] = {{47, 6.02}, {18.8, 21.5}, {47, 36.98}, {75.2, 21.5}};
             for(uint8_t i = 0; i < 4; ++i) {
                 painter.setPen(Qt::NoPen);
                 painter.setBrush(colours[i]);
-                painter.drawEllipse(QPointF(x, 66) + (layout ? diamond[i] : square[i]), 5, 5);
+                painter.drawEllipse(QPointF(x, 68) + (layout ? diamond[i] : square[i]), 5, 5);
             }
         }
-        text(tr("IR signal intensity"), QRectF(18, 116, 164.5, 17), 13, Qt::AlignCenter, true);
-        text(tr("IR point size"), QRectF(197.5, 125, 164.5, 17), 13, Qt::AlignCenter, true);
+        // Keep the original sample spacing, centred in two stacked sections.
+        const qreal sampleLeft = (IRTEST_LEGEND_WIDTH - 164.5) / 2;
+        text(tr("IR signal intensity"), QRectF(18, 123, 214, 17), 13, Qt::AlignCenter, true);
+        text(tr("IR point size"), QRectF(18, 216, 214, 17), 13, Qt::AlignCenter, true);
         const qreal light[5] = {.15, .35, .55, .8, 1};
         const qreal edge[5] = {.07, .15, .25, .4, .7};
         for(uint8_t row = 0; row < 2; ++row) {
             const QColor colour = row ? QColor(Qt::cyan) : QColor(Qt::green);
             for(uint8_t i = 0; i < 5; ++i) {
-                const QPointF point(32 + 34.125 * i, 147 + 22 * row);
+                const QPointF point(sampleLeft + 14 + 34.125 * i, 156 + 22 * row);
                 QColor centerColor = colour, edgeColor = colour, transparent = colour;
                 centerColor.setAlphaF(light[i]); edgeColor.setAlphaF(edge[i]); transparent.setAlpha(0);
                 QRadialGradient gradient(point, 9);
@@ -1437,21 +1440,23 @@ void AppCaliWindow::IrTestDrawLegend()
             }
         }
         const qreal diameters[5] = {3, 7, 11, 16, 22};
-        qreal blobX = 201.5;
+        qreal blobX = sampleLeft + 4;
         for(uint8_t i = 0; i < 5; ++i) {
             painter.setBrush(Qt::NoBrush); painter.setPen(QPen(QColor(238, 238, 238), 1));
-            painter.drawEllipse(QPointF(blobX + diameters[i] / 2, 158), diameters[i] / 2, diameters[i] / 2);
+            painter.drawEllipse(QPointF(blobX + diameters[i] / 2, 251), diameters[i] / 2, diameters[i] / 2);
             blobX += diameters[i] + 24.375;
         }
-        text(tr("Weak"), QRectF(18, 180, 164.5, 16), 12, Qt::AlignLeft | Qt::AlignTop);
-        text(tr("Strong"), QRectF(18, 180, 164.5, 16), 12, Qt::AlignRight | Qt::AlignTop);
-        text(tr("Small"), QRectF(197.5, 171, 164.5, 16), 12, Qt::AlignLeft | Qt::AlignTop);
-        text(tr("Large"), QRectF(197.5, 171, 164.5, 16), 12, Qt::AlignRight | Qt::AlignTop);
+        text(tr("Weak"), QRectF(sampleLeft, 189, 164.5, 16), 12, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Strong"), QRectF(sampleLeft, 189, 164.5, 16), 12, Qt::AlignRight | Qt::AlignTop);
+        text(tr("Small"), QRectF(sampleLeft, 266, 164.5, 16), 12, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Large"), QRectF(sampleLeft, 266, 164.5, 16), 12, Qt::AlignRight | Qt::AlignTop);
         font.setPixelSize(13); font.setUnderline(false); font.setWeight(QFont::Medium);
         const qreal missingWidth = QFontMetricsF(font).horizontalAdvance(tr("Emitter not detected"));
-        const qreal start = (380 - 62 - missingWidth) / 2;
+        font.setPixelSize(12); font.setWeight(QFont::Normal);
+        const qreal labelWidth = qMax(missingWidth, QFontMetricsF(font).horizontalAdvance(tr("Reconstructed position")));
+        const qreal start = (IRTEST_LEGEND_WIDTH - 62 - labelWidth) / 2;
         for(uint8_t i = 0; i < 2; ++i) {
-            const QPointF center(start + 12 + 28 * i, 218);
+            const QPointF center(start + 12 + 28 * i, 313);
             QPen outline(i ? QColor(Qt::cyan) : QColor(Qt::green), 1.5);
             outline.setDashPattern({2, 2});
             painter.setPen(outline); painter.setBrush(Qt::NoBrush);
@@ -1460,13 +1465,13 @@ void AppCaliWindow::IrTestDrawLegend()
             painter.drawLine(center + QPointF(-8, -8), center + QPointF(8, 8));
             painter.drawLine(center + QPointF(8, -8), center + QPointF(-8, 8));
         }
-        text(tr("Emitter not detected"), QRectF(start + 62, 201, missingWidth, 18), 13, Qt::AlignLeft | Qt::AlignTop, true);
-        text(tr("Reconstructed position"), QRectF(start + 62, 219, 190, 16), 12, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Emitter not detected"), QRectF(start + 62, 296, labelWidth, 18), 13, Qt::AlignLeft | Qt::AlignTop, true);
+        text(tr("Reconstructed position"), QRectF(start + 62, 314, labelWidth, 16), 12, Qt::AlignLeft | Qt::AlignTop);
         painter.setPen(QPen(QColor(119, 119, 119), 1));
-        painter.drawLine(QPointF(18, 240), QPointF(362, 240));
-        painter.drawLine(QPointF(18, 333), QPointF(362, 333));
+        painter.drawLine(QPointF(18, 344), QPointF(232, 344));
+        painter.drawLine(QPointF(18, 450), QPointF(232, 450));
         painter.save();
-        painter.translate(38, 261);
+        painter.translate(38, 370);
         painter.scale(24 / (61.44 * IRTEST_AIM_SCALE), 24 / (61.44 * IRTEST_AIM_SCALE));
         painter.setBrush(Qt::NoBrush); painter.setPen(QPen(Qt::gray, 2.4 * IRTEST_AIM_SCALE));
         painter.drawEllipse(QPointF(0, 0), 25, 25);
@@ -1474,26 +1479,29 @@ void AppCaliWindow::IrTestDrawLegend()
         painter.setPen(aimPen); painter.drawPath(IrTestAimTicks());
         painter.restore();
         painter.setBrush(Qt::NoBrush); painter.setPen(QPen(Qt::red, 2));
-        painter.drawEllipse(QPointF(38, 289), 9, 9);
+        painter.drawEllipse(QPointF(38, 400), 9, 9);
         painter.setPen(QPen(Qt::gray, 1.5));
-        painter.drawPolygon(QPolygonF() << QPointF(29, 309) << QPointF(51, 309) << QPointF(47, 323) << QPointF(25, 323));
-        text(tr("Lightgun aim"), QRectF(70, 249, 292, 24), 13, Qt::AlignLeft | Qt::AlignVCenter);
-        text(tr("Emitter centre"), QRectF(70, 278, 292, 22), 13, Qt::AlignLeft | Qt::AlignVCenter);
-        text(tr("Lines joining IR points"), QRectF(70, 305, 292, 22), 13, Qt::AlignLeft | Qt::AlignVCenter);
-        text(tr("Green and cyan identify emitter positions, not signal quality."), QRectF(18, 342, 344, 32),
+        painter.drawPolygon(QPolygonF() << QPointF(29, 423) << QPointF(51, 423) << QPointF(47, 437) << QPointF(25, 437));
+        text(tr("Lightgun aim"), QRectF(70, 358, 162, 24), 13, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap);
+        text(tr("Emitter centre"), QRectF(70, 389, 162, 22), 13, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap);
+        text(tr("Lines joining IR points"), QRectF(70, 413, 162, 34), 13, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap);
+        text(tr("Green and cyan identify emitter positions, not signal quality."), QRectF(18, 460, 214, 64),
              12, Qt::AlignCenter | Qt::TextWordWrap);
         painter.end();
         testLegend->setPixmap(pixmap);
     }
     const QRectF rect = scene.sceneRect();
-    const qreal side = qMin(IRTEST_LEGEND_SIZE, qMin(rect.width() * .26, rect.height() * .45));
+    const qreal scale = qMin(qreal(1), qMin(rect.width() * .26 / IRTEST_LEGEND_WIDTH,
+                                         rect.height() * .54 / IRTEST_LEGEND_HEIGHT));
+    const qreal width = IRTEST_LEGEND_WIDTH * scale;
+    const qreal height = IRTEST_LEGEND_HEIGHT * scale;
     const qreal margin = qMin(qreal(24), rect.width() / 80);
-    testLegend->setScale(side / IRTEST_LEGEND_SIZE);
-    qreal top = rect.bottom() - margin - side;
+    testLegend->setScale(scale);
+    qreal top = rect.bottom() - margin - height;
     // Only on narrow windows, keep the panel above the existing ESC instruction.
     const QGraphicsItem *instructions = bitmapText ? static_cast<QGraphicsItem *>(tutorialBitmap) : tutorialText;
-    if(instructions && QRectF(rect.left() + margin, top, side, side).intersects(instructions->sceneBoundingRect().adjusted(-8, -8, 8, 8)))
-        top = instructions->sceneBoundingRect().top() - 8 - side;
+    if(instructions && QRectF(rect.left() + margin, top, width, height).intersects(instructions->sceneBoundingRect().adjusted(-8, -8, 8, 8)))
+        top = instructions->sceneBoundingRect().top() - 8 - height;
     testLegend->setPos(rect.left() + margin, top);
 }
 
