@@ -87,6 +87,12 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
 </context>
 <context>
     <name>AppCaliWindow</name>
+    <message><source>Calibration: step 1 of 6</source><translation>Calibrazione: passo 1 di 6</translation></message>
+    <message><source>Calibration: step 2 of 6</source><translation>Calibrazione: passo 2 di 6</translation></message>
+    <message><source>Calibration: step 3 of 6</source><translation>Calibrazione: passo 3 di 6</translation></message>
+    <message><source>Calibration: step 4 of 6</source><translation>Calibrazione: passo 4 di 6</translation></message>
+    <message><source>Calibration: step 5 of 6</source><translation>Calibrazione: passo 5 di 6</translation></message>
+    <message><source>Calibration: step 6 of 6</source><translation>Calibrazione: passo 6 di 6</translation></message>
     <message><source>IR LEDs</source><translation>LED IR</translation></message>
     <message><source>Legend</source><translation>Legenda</translation></message>
     <message><source>IR signal intensity</source><translation>Intensità segnale IR</translation></message>

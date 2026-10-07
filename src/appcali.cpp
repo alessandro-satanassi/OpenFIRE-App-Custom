@@ -951,7 +951,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
         topOffset = -1, bottomOffset = -1, leftOffset = -1, rightOffset = -1, topLeftLed = -1, topRightLed = -1;
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap( GenerateText({tr("Initialize Calibration:")}));
+            caliStageBitmap->setPixmap( GenerateText({tr("Calibration: step 1 of 6")}));
             caliStageBitmap->setPos(scene.sceneRect().center().x()      - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
                                     (scene.sceneRect().height() * 0.25) - (caliStageBitmap->boundingRect().center().y() * caliStageBitmap->scale()));
 
@@ -970,7 +970,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                 profileBitmaps[i]->setPixmap(GenerateText({caliTypesPrefixes.at(i)}));
             }
         } else {
-            caliStageText->setPlainText(tr("Initialize Calibration:"));
+            caliStageText->setPlainText(tr("Calibration: step 1 of 6"));
             caliStageText->setPos(scene.sceneRect().center().x()      - caliStageText->boundingRect().center().x(),
                                   (scene.sceneRect().bottom() * 0.25) - caliStageText->boundingRect().center().y());
 
@@ -993,7 +993,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().top() - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Step 1:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Calibration: step 2 of 6")}));
             caliStageBitmap->setPos(scene.sceneRect().center().x()      - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
                                     (scene.sceneRect().height() * 0.25) - (caliStageBitmap->boundingRect().center().y() * caliStageBitmap->scale()));
 
@@ -1010,7 +1010,7 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
             for(int i = 0; i < 6; i++)
                 profileBitmaps[i]->setVisible(true);
         } else {
-            caliStageText->setPlainText(tr("Step 1:"));
+            caliStageText->setPlainText(tr("Calibration: step 2 of 6"));
             caliStageText->setPos(scene.sceneRect().center().x()      - caliStageText->boundingRect().center().x(),
                                   (scene.sceneRect().bottom() * 0.25) - caliStageText->boundingRect().center().y());
 
@@ -1031,13 +1031,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().bottom()     - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Step 2:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Calibration: step 3 of 6")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the bottom edge of the screen.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Step 2:"));
+            caliStageText->setPlainText(tr("Calibration: step 3 of 6"));
 
             headerText->setPlainText(tr("Shoot at the bottom edge of the screen."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -1050,13 +1050,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().center().y() - (crosshairItem->boundingRect().center().y() * crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Step 3:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Calibration: step 4 of 6")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the left edge of the screen.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Step 3:"));
+            caliStageText->setPlainText(tr("Calibration: step 4 of 6"));
 
             headerText->setPlainText(tr("Shoot at the left edge of the screen."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -1069,13 +1069,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().center().y() - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Step 4:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Calibration: step 5 of 6")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the right edge of the screen.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Step 4:"));
+            caliStageText->setPlainText(tr("Calibration: step 5 of 6"));
 
             headerText->setPlainText(tr("Shoot at the right edge of the screen."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),
@@ -1088,13 +1088,13 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
                               scene.sceneRect().center().y() - (crosshairItem->boundingRect().center().y()*crosshairItem->scale()));
 
         if(bitmapText) {
-            caliStageBitmap->setPixmap(GenerateText({tr("Step 5:")}));
+            caliStageBitmap->setPixmap(GenerateText({tr("Calibration: step 6 of 6")}));
 
             headerBitmap->setPixmap(GenerateText({tr("Shoot at the final target in the center.")}));
             headerBitmap->setPos(scene.sceneRect().center().x() - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
                                  caliStageBitmap->pos().y()     + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
         } else {
-            caliStageText->setPlainText(tr("Step 5:"));
+            caliStageText->setPlainText(tr("Calibration: step 6 of 6"));
 
             headerText->setPlainText(tr("Shoot at the final target in the center."));
             headerText->setPos(scene.sceneRect().center().x() - headerText->boundingRect().center().x(),

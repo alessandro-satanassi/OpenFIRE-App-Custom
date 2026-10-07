@@ -3,6 +3,12 @@
 <TS version="2.1" language="en_US">
 <context>
     <name>AppCaliWindow</name>
+    <message><source>Calibration: step 1 of 6</source><translation>Calibration: step 1 of 6</translation></message>
+    <message><source>Calibration: step 2 of 6</source><translation>Calibration: step 2 of 6</translation></message>
+    <message><source>Calibration: step 3 of 6</source><translation>Calibration: step 3 of 6</translation></message>
+    <message><source>Calibration: step 4 of 6</source><translation>Calibration: step 4 of 6</translation></message>
+    <message><source>Calibration: step 5 of 6</source><translation>Calibration: step 5 of 6</translation></message>
+    <message><source>Calibration: step 6 of 6</source><translation>Calibration: step 6 of 6</translation></message>
     <message><source>IR LEDs</source><translation>IR LEDs</translation></message>
     <message><source>Legend</source><translation>Legend</translation></message>
     <message><source>IR signal intensity</source><translation>IR signal intensity</translation></message>
