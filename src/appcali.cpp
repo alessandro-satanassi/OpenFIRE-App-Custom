@@ -1234,7 +1234,7 @@ void AppCaliWindow::CaliProgressUpdate()
     const qreal scale = bitmapText ? (qreal)GetTextScale(TextSub) / 2 :
                         scene.sceneRect().height() >= 1440 ? 2 : scene.sceneRect().height() >= 1080 ? 1.5 : 1;
     const qreal top = bitmapText ? caliStageBitmap->pos().y() : caliStageText->pos().y();
-    const qreal y = top - 22 * scale;
+    const qreal y = top - 52 * scale; // 45 px higher at 1080p; clear of the upper target
     const qreal x = scene.sceneRect().center().x() - 2.5 * 22 * scale;
     const QColor grey(160, 160, 164);
     for(int i = 0; i < 6; ++i) {
@@ -1797,6 +1797,25 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     // 0 top, 1 left, 2 bottom, 3 right on the screen). No lines between them.
     painter.save();
     painter.setClipPath(panelPath);
+    // Match the WebApp: two short lines fit between even the largest Diamond blobs.
+    // Draw before the emitters, keeping their shapes, colours and sizes unchanged.
+    painter.save();
+    const qreal labelScale = side / CALI_LEGEND_SIZE;
+    QFont labelFont("Segoe UI");
+    labelFont.setPixelSize(qRound(14 * labelScale));
+    labelFont.setWeight(QFont::Medium);
+    painter.setFont(labelFont);
+    painter.setPen(QColor(222, 222, 222));
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    const QFontMetricsF labelMetrics(labelFont);
+    const qreal baselineOffset = (labelMetrics.ascent() - labelMetrics.descent()) / 2;
+    const QStringList labelRows = tr("IR LEDs").split(' ');
+    for(uint8_t i = 0; i < 2; ++i) {
+        const QString line = labelRows.value(i);
+        painter.drawText(QPointF((side - labelMetrics.horizontalAdvance(line)) / 2,
+            side / 2 + (i * 16 - 8) * labelScale + baselineOffset), line);
+    }
+    painter.restore();
     const qreal d = side * 0.25;
     QPointF places[4];
     if(caliIrDiamond) {

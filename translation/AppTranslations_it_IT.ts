@@ -87,6 +87,7 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
 </context>
 <context>
     <name>AppCaliWindow</name>
+    <message><source>IR LEDs</source><translation>LED IR</translation></message>
     <message><source>Legend</source><translation>Legenda</translation></message>
     <message><source>IR signal intensity</source><translation>Intensità segnale IR</translation></message>
     <message><source>Weak</source><translation>Debole</translation></message>

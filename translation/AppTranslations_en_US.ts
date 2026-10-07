@@ -3,6 +3,7 @@
 <TS version="2.1" language="en_US">
 <context>
     <name>AppCaliWindow</name>
+    <message><source>IR LEDs</source><translation>IR LEDs</translation></message>
     <message><source>Legend</source><translation>Legend</translation></message>
     <message><source>IR signal intensity</source><translation>IR signal intensity</translation></message>
     <message><source>Weak</source><translation>Weak</translation></message>
