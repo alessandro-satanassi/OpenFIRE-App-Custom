@@ -2,6 +2,19 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US">
 <context>
+    <name>AppCaliWindow</name>
+    <message><source>Legend</source><translation>Legend</translation></message>
+    <message><source>IR signal intensity</source><translation>IR signal intensity</translation></message>
+    <message><source>Weak</source><translation>Weak</translation></message>
+    <message><source>Strong</source><translation>Strong</translation></message>
+    <message><source>IR point size</source><translation>IR point size</translation></message>
+    <message><source>Small</source><translation>Small</translation></message>
+    <message><source>Large</source><translation>Large</translation></message>
+    <message><source>IR not detected</source><translation>IR not detected</translation></message>
+    <message><source>The crosshair colour indicates the emitter with the weakest signal.</source><translation>The crosshair colour indicates the emitter with the weakest signal.</translation></message>
+    <message><source>All 4 emitters must be detected to proceed.</source><translation>All 4 emitters must be detected to proceed.</translation></message>
+</context>
+<context>
     <name>AppAbout</name>
     <message>
         <location filename="../src/appabout.ui" line="17"/>

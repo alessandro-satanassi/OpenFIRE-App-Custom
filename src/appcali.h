@@ -286,6 +286,7 @@ private:
     QGraphicsRectItem *caliIrWarningBox = nullptr;
     QGraphicsPixmapItem *caliIrWarningBitmap = nullptr;
     QGraphicsPixmapItem *caliIrPanel = nullptr;
+    QGraphicsPixmapItem *caliIrLegend = nullptr; // static normal-font help, visible through verification
 
     /// @brief      Calibration IR view: crosshair colour from the worst emitter, or invalid without recent data
     QColor CaliIrColor() const;
@@ -322,6 +323,8 @@ private:
 
     /// @brief      Calibration IR view: the emitters panel, at most textRight wide on the left (scene x)
     void CaliIrDrawPanel(const qreal &textRight);
+    qreal CaliIrPanelSide(const qreal &textRight);
+    void CaliIrDrawLegend(const qreal &side, const qreal &margin);
 
     /// @brief      Text bitmaps generated from test font files
     /// @details    Contents are generated at runtime from GenerateText

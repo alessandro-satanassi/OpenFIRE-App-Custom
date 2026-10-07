@@ -30,6 +30,8 @@
 #include <QtMath>
 #include <QGraphicsEllipseItem>
 #include <QRadialGradient>
+#include <QFontMetricsF>
+#include <QLinearGradient>
 
 namespace {
 
@@ -69,6 +71,7 @@ constexpr uint8_t IRTEST_BLOB_WEAK = 0x02; // flag: emitter seen but weak (firmw
 constexpr qreal CALI_IR_PANEL_WIDTH = 0.14;     // of the window width (the panel is square)
 constexpr qreal CALI_IR_PANEL_MAX_WIDTH = 300;  // px
 constexpr qreal CALI_IR_PANEL_MIN_WIDTH = 140;  // px, also on small screens
+constexpr qreal CALI_LEGEND_SIZE = 268.8;       // same square as the IR panel at 1920x1080
 constexpr qint64 CALI_IR_MAX_AGE = 500;         // ms without coordinates: older firmware, no panel
 constexpr int CALI_IR_WARNING_TIME = 4000;      // ms the refusal message stays on screen
 constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bit
@@ -412,6 +415,10 @@ AppCaliWindow::AppCaliWindow(QWidget *parent, const int &windowMode)
             caliIrPanel = new QGraphicsPixmapItem();
             caliIrPanel->setVisible(false);
             scene.addItem(caliIrPanel);
+            // Static help only; it does not depend on a live sample or consume mouse input.
+            caliIrLegend = new QGraphicsPixmapItem();
+            caliIrLegend->setAcceptedMouseButtons(Qt::NoButton);
+            scene.addItem(caliIrLegend);
             QFile crosshairFile(":/cali/crosshair.svg");
             if(crosshairFile.open(QIODevice::ReadOnly))
                 caliCrosshairSvg = crosshairFile.readAll();
@@ -1640,7 +1647,123 @@ void AppCaliWindow::CaliIrRefresh()
     caliPositionHintBitmap->setPos(rect.center().x() - caliPositionHintBitmap->boundingRect().width() * sub / 2,
         instructionsTop - caliPositionHintBitmap->boundingRect().height() * sub - 8 * sub);
 
+    CaliIrDrawLegend(CaliIrPanelSide(textRight), 12 * GetTextScale(TextSmall));
     CaliIrDrawPanel(textRight);
+}
+
+qreal AppCaliWindow::CaliIrPanelSide(const qreal &textRight)
+{
+    const QRectF rect = scene.sceneRect();
+    const qreal margin = 12 * GetTextScale(TextSmall);
+    const qreal free = rect.right() - textRight - 2 * margin;
+    return qMax(CALI_IR_PANEL_MIN_WIDTH, qMin(qMin(rect.width() * CALI_IR_PANEL_WIDTH, CALI_IR_PANEL_MAX_WIDTH), free));
+}
+
+void AppCaliWindow::CaliIrDrawLegend(const qreal &side, const qreal &margin)
+{
+    if(caliIrLegend == nullptr)
+        return;
+    // Build once, not on the 20 Hz IR updates or on the target animation timer.
+    if(caliIrLegend->pixmap().isNull()) {
+        const qreal ratio = devicePixelRatioF();
+        QPixmap pixmap(qCeil(CALI_LEGEND_SIZE * ratio), qCeil(CALI_LEGEND_SIZE * ratio));
+        pixmap.setDevicePixelRatio(ratio);
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::TextAntialiasing);
+        QPainterPath panel;
+        panel.addRoundedRect(QRectF(1, 1, CALI_LEGEND_SIZE - 2, CALI_LEGEND_SIZE - 2),
+                             CALI_LEGEND_SIZE * 0.075, CALI_LEGEND_SIZE * 0.075);
+        painter.setPen(QPen(QColor(160, 160, 164), 2));
+        painter.setBrush(QColor(74, 74, 74));
+        painter.drawPath(panel);
+        QFont font("Segoe UI");
+        font.setPixelSize(12);
+        painter.setFont(font);
+        const qreal padding = 12;
+        const qreal width = CALI_LEGEND_SIZE - 2 * padding;
+        auto text = [&](const QString &value, const qreal y, const qreal height,
+                        const int32_t pixels, const int32_t alignment) {
+            font.setPixelSize(pixels);
+            font.setWeight(pixels == 15 ? QFont::Medium : QFont::Normal);
+            painter.setFont(font);
+            painter.setPen(QColor(247, 247, 247));
+            painter.drawText(QRectF(padding, y, width, height), alignment, value);
+        };
+        text(tr("Legend"), 12, 18, 15, Qt::AlignCenter);
+        text(tr("IR signal intensity"), 34, 14, 12, Qt::AlignCenter);
+        QLinearGradient gradient(padding, 0, padding + width, 0);
+        gradient.setColorAt(0, CaliIrEmitterColor(CALI_IR_BRIGHTNESS_MIN));
+        gradient.setColorAt(0.2, CaliIrEmitterColor(CALI_IR_BRIGHTNESS_WEAK - CALI_IR_BLEND));
+        gradient.setColorAt(0.6, CaliIrEmitterColor(CALI_IR_BRIGHTNESS_WEAK + CALI_IR_BLEND));
+        gradient.setColorAt(1, CaliIrEmitterColor(CALI_IR_FULL_GREEN));
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(gradient);
+        painter.drawRoundedRect(QRectF(padding, 51, width, 5), 2.5, 2.5);
+        const qreal diameters[7] = {3, 5, 8, 11, 15, 19, 23};
+        for(uint8_t i = 0; i < 7; ++i) {
+            const qreal x = padding + 12.5 + (width - 25) * i / 6;
+            const QColor color = CaliIrEmitterColor(CALI_IR_BRIGHTNESS_MIN +
+                qRound((CALI_IR_FULL_GREEN - CALI_IR_BRIGHTNESS_MIN) * i / 6.0));
+            // The same SVG as the main crosshair, without the separately drawn rotating ring.
+            QByteArray svg = caliCrosshairSvg;
+            svg.replace("#ff8758", color.name().toLatin1());
+            QSvgRenderer renderer(svg);
+            renderer.render(&painter, QRectF(x - 12.5, 59, 25, 25));
+            painter.setPen(QPen(QColor(247, 247, 247), 1));
+            painter.setBrush(Qt::NoBrush);
+            painter.drawEllipse(QPointF(x, 133), diameters[i] / 2, diameters[i] / 2);
+        }
+        text(tr("Weak"), 85, 13, 11, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Strong"), 85, 13, 11, Qt::AlignRight | Qt::AlignTop);
+        text(tr("IR point size"), 104, 14, 12, Qt::AlignCenter);
+        text(tr("Small"), 146, 13, 11, Qt::AlignLeft | Qt::AlignTop);
+        text(tr("Large"), 146, 13, 11, Qt::AlignRight | Qt::AlignTop);
+        font.setPixelSize(12);
+        painter.setFont(font);
+        const QString missing = tr("IR not detected");
+        const qreal textWidth = QFontMetricsF(font).horizontalAdvance(missing);
+        const qreal x = (CALI_LEGEND_SIZE - 20 - 8 - textWidth) / 2;
+        QPen missingPen(IrTestNotSeenColor(), 1.5, Qt::DashLine);
+        missingPen.setDashPattern({2, 2});
+        painter.setPen(missingPen);
+        painter.drawEllipse(QRectF(x, 166, 20, 20));
+        painter.setPen(QPen(IrTestNotSeenColor(), 1.5));
+        painter.drawLine(QPointF(x + 4, 170), QPointF(x + 16, 182));
+        painter.drawLine(QPointF(x + 16, 170), QPointF(x + 4, 182));
+        painter.setPen(QColor(247, 247, 247));
+        painter.drawText(QRectF(x + 28, 166, textWidth + 1, 20), Qt::AlignLeft | Qt::AlignVCenter, missing);
+        painter.setPen(QPen(QColor(119, 119, 119), 1));
+        painter.drawLine(QPointF(padding, 195), QPointF(padding + width, 195));
+        // Explicit 13 px line spacing, like the WebApp: Qt's default paragraph
+        // spacing would clip the longer Italian second line in this compact square.
+        font.setPixelSize(11);
+        font.setWeight(QFont::Normal);
+        painter.setFont(font);
+        painter.setPen(QColor(222, 222, 222));
+        const QFontMetricsF metrics(font);
+        auto note = [&](const QString &value, qreal y) {
+            QString line;
+            for(const QString &word : value.split(' ')) {
+                const QString next = line.isEmpty() ? word : line + ' ' + word;
+                if(!line.isEmpty() && metrics.horizontalAdvance(next) > width) {
+                    painter.drawText(QPointF(padding, y + metrics.ascent()), line);
+                    y += 13;
+                    line = word;
+                } else line = next;
+            }
+            painter.drawText(QPointF(padding, y + metrics.ascent()), line);
+        };
+        note(tr("The crosshair colour indicates the emitter with the weakest signal."), 201);
+        note(tr("All 4 emitters must be detected to proceed."), 234);
+        painter.end();
+        caliIrLegend->setPixmap(pixmap);
+    }
+    const QRectF rect = scene.sceneRect();
+    caliIrLegend->setScale(side / CALI_LEGEND_SIZE);
+    caliIrLegend->setPos(rect.left() + margin, rect.bottom() - margin - side);
+    caliIrLegend->setVisible(true);
 }
 
 void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
@@ -1655,9 +1778,8 @@ void AppCaliWindow::CaliIrDrawPanel(const qreal &textRight)
     const int small = GetTextScale(TextSmall);
     const qreal margin = 12 * small;
     // Right of the tutorial text (bottom centre), which it must not cover on small screens.
-    const qreal free = rect.right() - textRight - 2 * margin;
     // The emitters are drawn in their layout on a square of this side, not where the camera sees them.
-    const qreal side = qMax(CALI_IR_PANEL_MIN_WIDTH, qMin(qMin(rect.width() * CALI_IR_PANEL_WIDTH, CALI_IR_PANEL_MAX_WIDTH), free));
+    const qreal side = CaliIrPanelSide(textRight);
 
     const bool blobs = TestBlobsFresh();
     QPixmap pixmap(qCeil(side), qCeil(side));

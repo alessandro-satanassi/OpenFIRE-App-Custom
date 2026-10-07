@@ -87,6 +87,16 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
 </context>
 <context>
     <name>AppCaliWindow</name>
+    <message><source>Legend</source><translation>Legenda</translation></message>
+    <message><source>IR signal intensity</source><translation>Intensità segnale IR</translation></message>
+    <message><source>Weak</source><translation>Debole</translation></message>
+    <message><source>Strong</source><translation>Forte</translation></message>
+    <message><source>IR point size</source><translation>Dimensione del punto IR</translation></message>
+    <message><source>Small</source><translation>Piccolo</translation></message>
+    <message><source>Large</source><translation>Grande</translation></message>
+    <message><source>IR not detected</source><translation>IR non rilevato</translation></message>
+    <message><source>The crosshair colour indicates the emitter with the weakest signal.</source><translation>Il colore del mirino indica l’emettitore con il segnale più debole.</translation></message>
+    <message><source>All 4 emitters must be detected to proceed.</source><translation>Per proseguire devono essere rilevati tutti e 4 gli emettitori.</translation></message>
     <message>
         <source>Stand in front of the centre of the screen,</source>
         <translation>Posizionati centralmente di fronte allo schermo,</translation>
