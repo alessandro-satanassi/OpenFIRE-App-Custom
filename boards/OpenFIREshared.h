@@ -157,6 +157,19 @@ public:
         {"Camera SPI CS",       cam_SPI_CS      },
     };
 
+    // Digital inputs whose logic can be inverted (normally closed contacts, e.g. NC switches),
+    // only in custom pins mode: bit N of settings[inputInvertMask] inverts input function N.
+    // Apps show the inversion checkbox only for these functions.
+    // /
+    // Ingressi digitali la cui logica puo' essere invertita (contatti normalmente chiusi, NC),
+    // solo con i pin custom: il bit N di settings[inputInvertMask] inverte la funzione N.
+    // Le App mostrano la spunta di inversione solo per queste funzioni.
+    static constexpr int8_t invertibleInputs[] = {
+        btnTrigger, btnGunA, btnGunB, btnStart, btnSelect, btnGunC,
+        btnGunUp, btnGunDown, btnGunLeft, btnGunRight,
+        btnPedal, btnPedal2, btnPump, btnHome,
+        rumbleSwitch, solenoidSwitch, autofireSwitch };
+
     // For Apps to use for lists of pin functions
     char* boardInputs_sortedStr[boardInputsCount+1];
 
@@ -225,6 +238,7 @@ public:
         analogMode,
         cameraModel, // inserita per CAM
         bootOutputMode,
+        inputInvertMask,    // bit N = invert input function N (see invertibleInputs)
         // Add here
         settingsTypesCount
     } settingsTypes_e;
@@ -246,6 +260,7 @@ public:
         {"AnalogMode",          analogMode          },
         {"CameraModel",         cameraModel         },  // inserira per CAM
         {"BootOutputMode",      bootOutputMode      },
+        {"InputInvertMask",     inputInvertMask     },
     };
 
     enum {

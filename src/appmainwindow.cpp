@@ -38,6 +38,8 @@
 #include <QDesktopServices>
 #include <QFontDatabase>
 #include <QUrl>
+#include <algorithm>
+#include <iterator>
 
 guiWindow::guiWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -107,6 +109,16 @@ guiWindow::guiWindow(QWidget *parent)
 
     // Connect boards view "custom layouts" actions to the button
     ui->customLayoutToolBtn->addActions({ui->actionImport_Custom_Layout, ui->actionExport_Custom_Layout});
+
+    // NC inputs: the box unlocking the pins' NC checkboxes sits next to "Use Custom Pins", shown with custom pins only
+    invertEditToggle = new QCheckBox(tr("Edit NC Inputs"));
+    invertEditToggle->setToolTip(tr("Enable to change the NC (normally closed) checkboxes of the pins. "
+                                    "This box is not saved: it only protects the inversions from changes made by mistake."));
+    invertEditToggle->setSizePolicy(ui->customPinsEnabled->sizePolicy());
+    invertEditToggle->setMaximumHeight(ui->customPinsEnabled->maximumHeight());
+    invertEditToggle->setHidden(true);
+    ui->PinsBottomHalf->insertWidget(ui->PinsBottomHalf->indexOf(ui->customPinsEnabled)+1, invertEditToggle, 0, Qt::AlignBottom);
+    connect(invertEditToggle, &QCheckBox::toggled, this, [this](bool) { InvertsUpdate(); });
 
     // Add center board pic above the Sub Pins layout
     ui->PinsCenter->insertWidget(0, &boardPic, 1);
@@ -412,6 +424,7 @@ void guiWindow::BoxesUpdate()
 void guiWindow::DiffUpdate()
 {
     CommitRecoveryUiUpdate();
+    InvertsUpdate();
     size_t settingsDiff = 0;
 
     if(memcmp(App_Common::boolSettings[App_Common::dataCurrent], App_Common::boolSettings[App_Common::dataOrig], sizeof(App_Common::boolSettings[App_Common::dataCurrent])))
@@ -927,9 +940,12 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                     delete pinBoxes.at(i);
                 for(int i = 0; i < pinLabel.count(); ++i)
                     delete pinLabel.at(i);
+                for(int i = 0; i < pinInverts.count(); ++i)
+                    delete pinInverts.at(i);
 
                 pinBoxes.clear();
                 pinLabel.clear();
+                pinInverts.clear();
             }
 
             // check for recognized board; else, refer to generic maps
@@ -1037,15 +1053,36 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             resource.open(QIODevice::ReadOnly);
             origBoardPicFile = resource.readAll();
 
+            // NC checkbox of each shown pin, on the outer side of its box (below it for the middle pins);
+            // hidden, keeping its space, for the functions that can't be inverted (see InvertsUpdate)
+            pinInverts.fill(nullptr, pinBoxes.count());
+            // margin: some space from the border on its side (below for the middle pins)
+            auto newInvert = [this](const int &slot, const char *margin) {
+                QCheckBox *invert = new QCheckBox(tr("NC"));
+                invert->setStyleSheet(QString("QCheckBox { %1: 8px; }").arg(margin));
+                invert->setToolTip(tr("Inverted logic: tick it for a normally closed (NC) contact, read as released while closed."));
+                invert->setProperty("slot", slot);
+                QSizePolicy policy = invert->sizePolicy();
+                policy.setRetainSizeWhenHidden(true);
+                invert->setSizePolicy(policy);
+                invert->setHidden(true);
+                connect(invert, &QCheckBox::clicked, this, &guiWindow::pinInverts_clicked);
+                pinInverts[slot] = invert;
+                return invert;
+            };
+
             for(int i = 0; i < pinBoxes.count(); ++i) {
                 switch(layoutMap->second.at(i) & OF_Const::posCheck) {
                 case OF_Const::posLeft:
-                    ui->PinsLeft->addWidget(pinBoxes.at(i),
+                    ui->PinsLeft->addWidget(newInvert(i, "margin-left"),
                                             layoutMap->second.at(i) ^ OF_Const::posLeft,
                                             0);
-                    ui->PinsLeft->addWidget(pinLabel.at(i),
+                    ui->PinsLeft->addWidget(pinBoxes.at(i),
                                             layoutMap->second.at(i) ^ OF_Const::posLeft,
                                             1);
+                    ui->PinsLeft->addWidget(pinLabel.at(i),
+                                            layoutMap->second.at(i) ^ OF_Const::posLeft,
+                                            2);
                     break;
                 case OF_Const::posRight:
                     ui->PinsRight->addWidget(pinBoxes.at(i),
@@ -1054,6 +1091,9 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                     ui->PinsRight->addWidget(pinLabel.at(i),
                                              layoutMap->second.at(i) ^ OF_Const::posRight,
                                              0);
+                    ui->PinsRight->addWidget(newInvert(i, "margin-right"),
+                                             layoutMap->second.at(i) ^ OF_Const::posRight,
+                                             2);
                     break;
                 case OF_Const::posMiddle:
                     ui->PinsCenterSub->addWidget(pinBoxes.at(i),
@@ -1062,6 +1102,10 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                     ui->PinsCenterSub->addWidget(pinLabel.at(i),
                                                  0,
                                                  layoutMap->second.at(i) ^ OF_Const::posMiddle);
+                    ui->PinsCenterSub->addWidget(newInvert(i, "margin-bottom"),
+                                                 2,
+                                                 layoutMap->second.at(i) ^ OF_Const::posMiddle,
+                                                 Qt::AlignHCenter);
                     break;
                 case OF_Const::posNothing:
                     break;
@@ -1082,6 +1126,9 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
 
             ui->tabWidget->setEnabled(true);
             ui->customPinsEnabled->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::customPins]);
+            // the NC checkboxes are locked again at every load
+            invertEditToggle->setChecked(false);
+            InvertsUpdate();
 
             ui->aStickModeBox->setCurrentIndex(App_Common::settingsTable[App_Common::dataOrig][OF_Const::analogMode]);
             ui->aStickInvertXToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::analogInvertX]);
@@ -1442,6 +1489,60 @@ void guiWindow::on_aStickInvertYToggle_stateChanged(int arg1)
 
 
 /// settings
+void guiWindow::pinInverts_clicked(bool checked)
+{
+    const int slot = sender()->property("slot").toInt();
+    const int input = pinBoxes.at(slot)->currentIndex()-1;
+    if(Invertible(input))
+        SetInverted(input, checked);
+
+    DiffUpdate();
+}
+
+
+bool guiWindow::Invertible(const int &input)
+{
+    return App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins] &&
+           std::find(std::begin(OF_Const::invertibleInputs), std::end(OF_Const::invertibleInputs), input) != std::end(OF_Const::invertibleInputs);
+}
+
+
+bool guiWindow::Inverted(const int &input)
+{
+    return input >= 0 && input < 32 &&
+           ((App_Common::settingsTable[App_Common::dataCurrent][OF_Const::inputInvertMask] >> input) & 1);
+}
+
+
+void guiWindow::SetInverted(const int &input, const bool &on)
+{
+    if(input < 0 || input >= 32) return;
+    uint32_t &mask = App_Common::settingsTable[App_Common::dataCurrent][OF_Const::inputInvertMask];
+    if(on) mask |= (1u << input);
+    else mask &= ~(1u << input);
+}
+
+
+void guiWindow::InvertsUpdate()
+{
+    const bool customOn = App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins];
+    if(!customOn && invertEditToggle->isChecked())
+        invertEditToggle->setChecked(false);   // calls InvertsUpdate() again
+    invertEditToggle->setHidden(!customOn);
+
+    for(int i = 0; i < pinInverts.count() && i < pinBoxes.count(); ++i) {
+        QCheckBox *invert = pinInverts.at(i);
+        if(invert == nullptr) continue;
+
+        const int input = pinBoxes.at(i)->currentIndex()-1;
+        const bool allowed = Invertible(input);
+        invert->setHidden(!allowed);
+        invert->setEnabled(allowed && invertEditToggle->isChecked());
+        invert->setChecked(allowed && Inverted(input));
+    }
+}
+
+
 void guiWindow::on_customPinsEnabled_stateChanged(int arg1)
 {
     App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins] = arg1;
@@ -2601,6 +2702,29 @@ void guiWindow::on_actionOpen_IR_Emitter_Alignment_Assistant_triggered()
 }
 
 
+// Custom layout file (.ofl): board type + '\n', then records of (name, NUL, one byte):
+// - (function name, NUL, GPIO) for every mapped function;
+// - ("NC:" + function name, NUL, 0) for every inverted input;
+// - ("Checksum", NUL, CRC-8 of every byte before this record), then ("End", NUL, 0) as the last bytes.
+// Readers skip the records they don't know, so later versions can add records without changing
+// this layout. Same format as the web app (lightgun/webapp/js/app/state.js in the firmware).
+static constexpr char OFL_NC_PREFIX[] = "NC:";
+static constexpr char OFL_CHECKSUM[]  = "Checksum";
+static constexpr char OFL_END[]       = "End";
+
+// CRC-8 (polynomial 0x07, initial value 0) of the .ofl bytes before the checksum record.
+static uint8_t OflCrc8(const QByteArray &bytes)
+{
+    uint8_t crc = 0;
+    for(const char byte : bytes) {
+        crc ^= static_cast<uint8_t>(byte);
+        for(int bit = 0; bit < 8; ++bit)
+            crc = (crc & 0x80) ? static_cast<uint8_t>((crc << 1) ^ 0x07) : static_cast<uint8_t>(crc << 1);
+    }
+    return crc;
+}
+
+
 void guiWindow::on_actionImport_Custom_Layout_triggered()
 {
     QString path = QFileDialog::getOpenFileName(this,
@@ -2611,31 +2735,82 @@ void guiWindow::on_actionImport_Custom_Layout_triggered()
     if(!path.isEmpty()) {
         QFile fileIn(path);
         if(fileIn.open(QFile::ReadOnly)) {
-            if(fileIn.readLine().trimmed() == App_Common::board.type) {
-                if(!ui->customPinsEnabled->isChecked()) ui->customPinsEnabled->setChecked(true);
-                // clear current mapping
-                for(const auto &box : std::as_const(pinBoxes))
-                    box->setCurrentIndex(OF_Const::btnUnmapped+1);
+            const QByteArray bytes = fileIn.readAll();
+            fileIn.close();
 
-                QByteArray inBuf;
-                // import new maps
-                while(!fileIn.atEnd()) {
-                    inBuf = fileIn.read(fileIn.peek(fileIn.bytesAvailable()).indexOf('\0')+1);
-                    if(App_Common::OFPresets.boardInputs_Strings.count(inBuf.constData()))
-                        pinBoxes.at(fileIn.read(1).at(0))->setCurrentIndex(App_Common::OFPresets.boardInputs_Strings.at(inBuf.constData())+1);
+            const qsizetype newline = bytes.indexOf('\n');
+            if(newline < 0 || bytes.left(newline).trimmed() != App_Common::board.type) {
+                QMessageBox::warning(this, tr("Board Doesn't Match"),
+                                           tr("Custom layout file is not compatible with this board."));
+                return;
+            }
+
+            // read the whole file first: an incomplete or damaged file changes nothing
+            QVector<int> layout(pinBoxes.count(), OF_Const::btnUnmapped);
+            QVector<int> inverted;
+            bool valid = false;
+            qsizetype checked = -1;   // offset just after a valid checksum record
+            qsizetype offset = newline + 1;
+            while(offset < bytes.size()) {
+                const qsizetype start = offset;
+                const qsizetype end = bytes.indexOf('\0', offset);
+                if(end < 0 || end + 1 >= bytes.size())
+                    break;
+                const QByteArray name = bytes.mid(offset, end - offset);
+                const uint8_t value = static_cast<uint8_t>(bytes.at(end + 1));
+                offset = end + 2;
+
+                if(name == OFL_END) {
+                    // the end record must follow the checksum record and be the last bytes of the file
+                    valid = (start == checked && offset == bytes.size() && value == 0);
+                    break;
                 }
+                if(name == OFL_CHECKSUM) {
+                    if(value != OflCrc8(bytes.left(start)))
+                        break;
+                    checked = offset;
+                    continue;
+                }
+                if(name.startsWith(OFL_NC_PREFIX)) {
+                    const QByteArray func = name.mid(sizeof(OFL_NC_PREFIX)-1);
+                    const auto found = App_Common::OFPresets.boardInputs_Strings.find(std::string_view(func.constData(), func.size()));
+                    if(found != App_Common::OFPresets.boardInputs_Strings.cend())
+                        inverted << found->second;
+                    continue;
+                }
+                const auto found = App_Common::OFPresets.boardInputs_Strings.find(std::string_view(name.constData(), name.size()));
+                if(found != App_Common::OFPresets.boardInputs_Strings.cend() && value < layout.size())
+                    layout[value] = found->second;
+            }
 
-                fileIn.close();
+            if(!valid) {
+                QMessageBox::warning(this, tr("File Read Error"),
+                                           tr("Custom layout file could not be read."));
+                return;
+            }
 
-                // recover previous toggles that may have been turned off in the process
-                if(App_Common::inputsMap.value(OF_Const::solenoidPin) >= 0)
-                    ui->solenoidToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::solenoid]);
-                if(App_Common::inputsMap.value(OF_Const::rumblePin) >= 0)
-                    ui->rumbleToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumble]);
+            if(!ui->customPinsEnabled->isChecked()) ui->customPinsEnabled->setChecked(true);
+            // clear current mapping
+            for(const auto &box : std::as_const(pinBoxes))
+                box->setCurrentIndex(OF_Const::btnUnmapped+1);
 
-                ui->statusBar->showMessage(tr("Successfully imported custom layout!"), 5000);
-            } else QMessageBox::warning(this, tr("Board Doesn't Match"),
-                                              tr("Custom layout file is not compatible with this board."));
+            // import new maps
+            for(int i = 0; i < layout.size(); ++i)
+                if(layout.at(i) > OF_Const::btnUnmapped)
+                    pinBoxes.at(i)->setCurrentIndex(layout.at(i)+1);
+
+            // the inversions come from the file only: none in the file = none inverted
+            for(const auto &input : OF_Const::invertibleInputs)
+                SetInverted(input, inverted.contains(input));
+
+            // recover previous toggles that may have been turned off in the process
+            if(App_Common::inputsMap.value(OF_Const::solenoidPin) >= 0)
+                ui->solenoidToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::solenoid]);
+            if(App_Common::inputsMap.value(OF_Const::rumblePin) >= 0)
+                ui->rumbleToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumble]);
+
+            DiffUpdate();
+            ui->statusBar->showMessage(tr("Successfully imported custom layout!"), 5000);
         } else QMessageBox::warning(this, tr("File Read Error"),
                                           tr("Custom layout file could not be read."));
     } else ui->statusBar->showMessage(tr("Canceled custom layout load operation."), 5000);
@@ -2652,17 +2827,40 @@ void guiWindow::on_actionExport_Custom_Layout_triggered()
     if(!path.isEmpty()) {
         QFile fileOut(path);
         if(fileOut.open(QFile::WriteOnly)) {
-            fileOut.write(App_Common::board.type + '\n');
+            QByteArray bytes = App_Common::board.type + '\n';
+            QVector<std::string_view> inverted;
 
             for(auto &pair : App_Common::OFPresets.boardInputs_Strings) {
                 if(pair.second > OF_Const::btnUnmapped && App_Common::inputsMap.value(pair.second) > OF_Const::btnUnmapped) {
-                    fileOut.write(pair.first.data(), pair.first.length()+1);
-                    fileOut.putChar(App_Common::inputsMap.value(pair.second));
+                    bytes.append(pair.first.data(), pair.first.length());
+                    bytes.append('\0');
+                    bytes.append(static_cast<char>(App_Common::inputsMap.value(pair.second)));
+                    if(Invertible(pair.second) && Inverted(pair.second))
+                        inverted << pair.first;
                 }
             }
 
+            for(const auto &name : std::as_const(inverted)) {
+                bytes.append(OFL_NC_PREFIX);
+                bytes.append(name.data(), name.length());
+                bytes.append('\0');
+                bytes.append('\0');
+            }
+
+            const char crc = static_cast<char>(OflCrc8(bytes));
+            bytes.append(OFL_CHECKSUM);
+            bytes.append('\0');
+            bytes.append(crc);
+            bytes.append(OFL_END);
+            bytes.append('\0');
+            bytes.append('\0');
+
+            const bool written = (fileOut.write(bytes) == bytes.size());
             fileOut.close();
-            ui->statusBar->showMessage(tr("Custom layout export successful!"), 5000);
+            if(written)
+                ui->statusBar->showMessage(tr("Custom layout export successful!"), 5000);
+            else QMessageBox::warning(this, tr("File Write Error"),
+                                            tr("Custom layout file could not be written."));
         } else QMessageBox::warning(this, tr("File Write Error"),
                                           tr("Custom layout file could not be written."));
     } else ui->statusBar->showMessage(tr("Canceled custom layout save operation."), 5000);

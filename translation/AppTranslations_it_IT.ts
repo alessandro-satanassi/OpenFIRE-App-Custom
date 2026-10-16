@@ -673,6 +673,22 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
 <context>
     <name>guiWindow</name>
     <message>
+        <source>Edit NC Inputs</source>
+        <translation>Modifica ingressi NC</translation>
+    </message>
+    <message>
+        <source>Enable to change the NC (normally closed) checkboxes of the pins. This box is not saved: it only protects the inversions from changes made by mistake.</source>
+        <translation>Abilita per modificare le spunte NC (normalmente chiuso) dei pin. Questa spunta non viene salvata: serve solo a proteggere le inversioni da modifiche involontarie.</translation>
+    </message>
+    <message>
+        <source>NC</source>
+        <translation>NC</translation>
+    </message>
+    <message>
+        <source>Inverted logic: tick it for a normally closed (NC) contact, read as released while closed.</source>
+        <translation>Logica invertita: spuntala per un contatto normalmente chiuso (NC), letto come rilasciato quando è chiuso.</translation>
+    </message>
+    <message>
         <location filename="../src/appmainwindow.ui" line="49"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1624"/>
         <source>COM Port:</source>

@@ -42,6 +42,7 @@
 #include <QGroupBox>
 #include <QStandardItemModel>
 #include <QComboBox>
+#include <QCheckBox>
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
@@ -76,6 +77,8 @@ private slots:
     void pinBoxes_currentIndexChanged(int index);
 
     void on_customPinsEnabled_stateChanged(int arg1);
+
+    void pinInverts_clicked(bool checked);
 
     void on_presetsBox_currentIndexChanged(int index);
 
@@ -252,6 +255,17 @@ private:
     /// @details    Also invokes name prettification
     void LabelsUpdate();
 
+    /// @brief      Shows each pin's NC checkbox for the inputs that can be inverted, with its value
+    /// @details    Only with custom pins; the checkboxes can be changed while invertEditToggle is on
+    void InvertsUpdate();
+
+    /// @brief      The input can be read inverted: one of invertibleInputs, with custom pins only
+    static bool Invertible(const int &input);
+
+    /// @brief      Bit input of settings[inputInvertMask] (current data): the input is read inverted
+    static bool Inverted(const int &input);
+    static void SetInverted(const int &input, const bool &on);
+
     /// @brief      Converts system name to display name, provided in OF_Const::boardNames
     QString PrettifyName(QString);
 
@@ -349,6 +363,13 @@ private:
     /// @details    Pinboxes stores the state of each pin to one function
     QVector<QComboBox*> pinBoxes;
     QVector<QLabel*> pinLabel;
+
+    /// @brief      NC (inverted logic) checkbox of each pin, nullptr for the pins not shown
+    QVector<QCheckBox*> pinInverts;
+
+    /// @brief      Unlocks the NC checkboxes, against changes made by mistake
+    /// @details    Never saved: off at every board load and when custom pins are turned off
+    QCheckBox *invertEditToggle = nullptr;
 
     /// @brief      Test "Buttons" in the test screen representing each button
     QVector<QLabel*> testLabel;
