@@ -1284,13 +1284,13 @@ void AppSerial::RequestToReboot()
         title = tr("Reset Board to Bootloader?");
         text = tr("<p>The board you selected did not respond to the app properly.</p>"
                   "<p>This can usually be resolved by rebooting the microcontroller to its bootloader, and then updating the board to the latest firmware, which can be found at:</p>"
-                  "<p><a href='https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/releases/latest'><span style=' text-decoration: underline; color:#8ab4f8;'>https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/releases/latest</span></a></p>"
+                  "<p><a href='https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest'><span style=' text-decoration: underline; color:#8ab4f8;'>https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest</span></a></p>"
                   "<p>Would you like to reboot this board to apply an update?</p>");
     } else {
         title = tr("Reboot Microcontroller?");
         text = tr("<p>The board you selected did not respond to the app properly.</p>"
                   "<p>This can usually be resolved by rebooting the microcontroller, and then updating the board to the latest firmware, which can be found at:</p>"
-                  "<p><a href='https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/releases/latest'><span style=' text-decoration: underline; color:#8ab4f8;'>https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/releases/latest</span></a></p>"
+                  "<p><a href='https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest'><span style=' text-decoration: underline; color:#8ab4f8;'>https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest</span></a></p>"
                   "<p>Would you like to reboot this board to apply an update?</p>");
     }
 

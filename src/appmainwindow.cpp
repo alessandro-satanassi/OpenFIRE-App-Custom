@@ -27,6 +27,7 @@
 #include <QGraphicsScene>
 #include <QMessageBox>
 #include <QSvgRenderer>
+#include <QPainter>
 #include <QSerialPortInfo>
 #include <QProgressBar>
 #include <QProcess>
@@ -199,13 +200,13 @@ guiWindow::guiWindow(QWidget *parent)
                 btnFuncBox[slot][0][i].setAccessibleName(tr("Gamepad Mode Output Type for %1").arg(App_Common::OFPresets.boardInputs_sortedStr[i+1]));
                 btnFuncBox[slot][0][i].setWhatsThis(tr("<p>Select the type of button that <i>%1</i> will function as <b>when the gun set to Gamepad Output Mode.</b></p>"
                                                        "<p>Only Gamepad-type outputs are available for Gamepad Output Mode, which can be set via "
-                                                       "<a href='https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/wiki/MAMEHOOKER-Documentation#m---mode-commands'><span style=' text-decoration: underline; color:#8ab4f8;'>Serial command</span></a> "
+                                                       "<a href='https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/wiki/Serial_Commands_OpenFIRE_EN'><span style=' text-decoration: underline; color:#8ab4f8;'>Serial command</span></a> "
                                                        "<tt>M0x1</tt>.</p>")
                                                     .arg(App_Common::OFPresets.boardInputs_sortedStr[i+1]));
                 btnFuncBox[slot][1][i].setAccessibleName(tr("Gamepad Mode Button Mapping for %1").arg(App_Common::OFPresets.boardInputs_sortedStr[i+1]));
                 btnFuncBox[slot][1][i].setWhatsThis(tr("<p>Select the output that <i>%1</i> will send to the connected device <b>when the gun is set to Gamepad Output Mode.</b></p>"
                                                        "<p>Only Gamepad buttons are available to be mapped for Gamepad Output Mode, which can be set via "
-                                                       "<a href='https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/wiki/MAMEHOOKER-Documentation#m---mode-commands'><span style=' text-decoration: underline; color:#8ab4f8;'>Serial command</span></a> "
+                                                       "<a href='https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/wiki/Serial_Commands_OpenFIRE_EN'><span style=' text-decoration: underline; color:#8ab4f8;'>Serial command</span></a> "
                                                        "<tt>M0x1</tt>.</p>"
                                                        "<p><b>NOTE:</b> When connected to the MiSTer FPGA device, these mappings will NOT be reflected, "
                                                        "as OpenFIRE has a hard-coded button layout specifically optimized for the MiSTer ecosystem.</p>")
@@ -879,7 +880,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                 aspectRatio.at(i)->setProperty("trackable", App_Common::trackProfileItem);
                 aspectRatio.at(i)->setAccessibleName(tr("Aspect Ratio Correction for Profile %1").arg(i+1));
                 aspectRatio.at(i)->setWhatsThis(tr("<p>This setting determines the type of Aspect Ratio Correction used for this Profile when <i>4:3 Mode</i> is set.</p>"
-                                                   "<p>When <a href='https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/wiki/MAMEHOOKER-Documentation#m---mode-commands'><span style=' text-decoration: underline; color:#8ab4f8;'>Serial command</span></a> "
+                                                   "<p>When <a href='https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/wiki/Serial_Commands_OpenFIRE_EN'><span style=' text-decoration: underline; color:#8ab4f8;'>Serial command</span></a> "
                                                    "<tt>M3x1</tt> is received, the firmware stretches the effective range for fullscreen applications in Windows "
                                                    "that runs in resolutions <b>narrower</b> than the full display width/height; "
                                                    "this setting determines the stretch factor that will be used for these 4:3 applications.</p>"
@@ -1027,15 +1028,9 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             }
 
             if(App_Common::board.version.indexOf('-') > -1) {
-                QString orgName;
-
-                if(App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardRP])
-                    orgName = "TeamOpenFIRE";
-                else if(App_Common::board.arch == App_Common::OFPresets.boardArchs[OF_Const::boardESP32_S3])
-                    orgName = "alessandro-satanassi";
-
-                ui->versionLabel->setText(QString("FW <tt>v%1<a href='https://github.com/%2/OpenFIRE-Firmware/commit/%3'><span style=' text-decoration: underline; color:#8ab4f8;'>%3</span></a></tt>")
-                                                 .arg(App_Common::board.version.left(App_Common::board.version.indexOf('-')+1), orgName, App_Common::board.version.mid(App_Common::board.version.indexOf('-')+1)));
+                // every board runs this project's firmware: the commit is always in its repository, as in the WebApp
+                ui->versionLabel->setText(QString("FW <tt>v%1<a href='https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/commit/%2'><span style=' text-decoration: underline; color:#8ab4f8;'>%2</span></a></tt>")
+                                                 .arg(App_Common::board.version.left(App_Common::board.version.indexOf('-')+1), App_Common::board.version.mid(App_Common::board.version.indexOf('-')+1)));
             } else ui->versionLabel->setText("FW <tt>v" + App_Common::board.version + "</tt>");
 
             // update presets box if this board has any
@@ -1069,6 +1064,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             auto newInvert = [this](const int &slot, const char *margin) {
                 QCheckBox *invert = new QCheckBox(tr("NC"));
                 invert->setStyleSheet(QString("QCheckBox { %1: 8px; }").arg(margin));
+                invert->setProperty("margin", margin);
                 invert->setToolTip(tr("Inverted logic: tick it for a normally closed (NC) contact, read as released while closed."));
                 invert->setProperty("slot", slot);
                 QSizePolicy policy = invert->sizePolicy();
@@ -1564,9 +1560,62 @@ void guiWindow::InvertsUpdate()
 
         const int input = pinBoxes.at(i)->currentIndex()-1;
         const bool allowed = Invertible(input);
-        invert->setHidden(!allowed);
+        const bool inverted = allowed && Inverted(input);
+        // locked: only the inverted inputs show it, as an "NC" tag without the box
+        const bool badge = inverted && !invertEditToggle->isChecked();
+        invert->setHidden(!allowed || (!invertEditToggle->isChecked() && !inverted));
         invert->setEnabled(allowed && invertEditToggle->isChecked());
-        invert->setChecked(allowed && Inverted(input));
+        invert->setChecked(inverted);
+        if(invert->property("badge").toBool() != badge) {
+            invert->setProperty("badge", badge);
+            const QString margin = invert->property("margin").toString();
+            if(badge) {
+                // drawn in the box's own space: an orange tag with a switch symbol and "NC", as in the WebApp
+                const QSize box = invert->sizeHint();
+                const QSizeF tag(box.width() - (margin == "margin-bottom" ? 0 : 8),
+                                 qMin(18, box.height() - (margin == "margin-bottom" ? 8 : 0)));   // never taller than the box
+                const qreal dpr = invert->devicePixelRatioF();
+                QPixmap pix((tag * dpr).toSize());
+                pix.setDevicePixelRatio(dpr);
+                pix.fill(Qt::transparent);
+                QPainter painter(&pix);
+                painter.setRenderHint(QPainter::Antialiasing);
+                painter.setPen(Qt::NoPen);
+                painter.setBrush(QColor(0xc9, 0x6f, 0x00));
+                painter.drawRoundedRect(QRectF(QPointF(0, 0), tag), tag.height() / 2, tag.height() / 2);
+                QFont font = invert->font();
+                font.setPixelSize(11);
+                font.setBold(true);
+                painter.setFont(font);
+                const QFontMetricsF metrics(font);
+                // icon + gap + "NC", centered in the tag; a narrow box (small system font) scales it down to fit
+                const qreal content = 16 + 2 + metrics.horizontalAdvance(tr("NC"));
+                const qreal fit = qMin<qreal>(1, (tag.width() - 6) / content);
+                painter.translate(tag.width() / 2, tag.height() / 2);
+                painter.scale(fit, fit);
+                // icon: the symbol of a switch contact in white - a line, two circles and the lever rising
+                // from the left circle to rest on the right one (the same drawing as the WebApp's style.css)
+                QSvgRenderer(QByteArray("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 3.5 24 9'><g fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round'>"
+                                        "<path d='M0.5 8H4M20 8H23.5M8 8L18.8 4.6'/><circle cx='6' cy='8' r='2'/><circle cx='18' cy='8' r='2'/></g></svg>"))
+                    .render(&painter, QRectF(-content / 2, -3, 16, 6));
+                painter.setPen(Qt::white);
+                painter.drawText(QPointF(-content / 2 + 18, metrics.capHeight() / 2), tr("NC"));
+                painter.end();
+                QIcon icon(pix);
+                icon.addPixmap(pix, QIcon::Disabled);
+                invert->setStyleSheet(QString("QCheckBox { %1: 8px; spacing: 0px; } QCheckBox::indicator { width: 0px; height: 0px; border: none; image: none; }").arg(margin));
+                invert->setText(QString());
+                invert->setIcon(icon);
+                invert->setIconSize(tag.toSize());
+                invert->setFixedSize(box);
+            } else {
+                invert->setStyleSheet(QString("QCheckBox { %1: 8px; }").arg(margin));
+                invert->setText(tr("NC"));
+                invert->setIcon(QIcon());
+                invert->setMinimumSize(0, 0);
+                invert->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+            }
+        }
     }
 }
 
@@ -2716,13 +2765,15 @@ void guiWindow::on_actionAbout_UI_triggered()
 
 void guiWindow::on_actionOpenFIRE_Documentation_triggered()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/blob/OpenFIRE-dev/OpenFIREmain/README.md"));
+    // the manual of this project, in the App's language (the Italian link is in the translation), as in the WebApp
+    QDesktopServices::openUrl(QUrl(tr("https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/blob/main/lightgun/src/README.md#english-version")));
 }
 
 
 void guiWindow::on_actionOpenFIRE_Serial_Usage_triggered()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/TeamOpenFIRE/OpenFIRE-Firmware/wiki"));
+    // the serial commands page of this project's wiki, in the App's language, as in the WebApp
+    QDesktopServices::openUrl(QUrl(tr("https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/wiki/Serial_Commands_OpenFIRE_EN")));
 }
 
 
