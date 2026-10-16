@@ -164,7 +164,7 @@ public:
     // Ingressi digitali la cui logica puo' essere invertita (contatti normalmente chiusi, NC),
     // solo con i pin custom: il bit N di settings[inputInvertMask] inverte la funzione N.
     // Le App mostrano la spunta di inversione solo per queste funzioni.
-    static constexpr int8_t invertibleInputs[] = {
+    static constexpr int invertibleInputs[] = {
         btnTrigger, btnGunA, btnGunB, btnStart, btnSelect, btnGunC,
         btnGunUp, btnGunDown, btnGunLeft, btnGunRight,
         btnPedal, btnPedal2, btnPump, btnHome,
