@@ -38,6 +38,7 @@
 #include <QDesktopServices>
 #include <QFontDatabase>
 #include <QUrl>
+#include <QScopedValueRollback>
 #include <algorithm>
 #include <iterator>
 
@@ -372,6 +373,8 @@ void guiWindow::aliveTimer_timeout()
 
 void guiWindow::BoxesUpdate()
 {
+    const QScopedValueRollback<int> bulk(pinBoxesDepth, pinBoxesDepth+1);
+
     // enabling custom pins
     if(App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins]) {
         // enable pinboxes
@@ -403,6 +406,9 @@ void guiWindow::BoxesUpdate()
                         App_Common::inputsMap[presetMap->second.at(i)] = i;
         }
 
+        // not when called in the middle of a preset or an import, which check at their end
+        if(pinBoxesDepth == 1)
+            FeedbackOffWithoutPins();
         return;
 
     // disabling custom pins, reset to presets
@@ -416,6 +422,9 @@ void guiWindow::BoxesUpdate()
             for(size_t i = 0; i < pinBoxes.count(); ++i)
                 pinBoxes.at(i)->setCurrentIndex(presetMap->second.at(i)+1);
 
+        // not when called in the middle of a preset or an import, which check at their end
+        if(pinBoxesDepth == 1)
+            FeedbackOffWithoutPins();
         return;
     }
 }
@@ -1264,6 +1273,7 @@ void guiWindow::pinBoxes_currentIndexChanged(int index)
     // using comboboxes' "slot" property to figure caller,
     // and "prevMapping" to get previous index, as this method immediately overwrites what it was mapped to.
     // always remember to sync the change to "prevMapping" property at the end of its logic path!
+    const QScopedValueRollback<int> depth(pinBoxesDepth, pinBoxesDepth+1);
 
     /* For debugging pinBoxes (too lazy to ifdef guard)
     if(index >= 0 && index <= App_Common::inputsMap.size()) {
@@ -1373,17 +1383,8 @@ void guiWindow::pinBoxes_currentIndexChanged(int index)
     }
 
     // update settings panel to reflect pins map changes and prevent illegal values/combinations
-    if(App_Common::inputsMap.value(OF_Const::rumblePin) >= 0)
-        ui->rumbleFFBox->setEnabled(true);
-    else {
-        ui->rumbleToggle->setChecked(false);
-        ui->rumbleFFToggle->setChecked(false);
-        ui->rumbleFFBox->setEnabled(false);
-    }
-
-    if(App_Common::inputsMap.value(OF_Const::solenoidPin) >= 0)
-         ui->solenoidFFBox->setEnabled(true);
-    else ui->solenoidToggle->setChecked(false), ui->solenoidFFBox->setEnabled(false);
+    ui->rumbleFFBox->setEnabled(App_Common::inputsMap.value(OF_Const::rumblePin) >= 0);
+    ui->solenoidFFBox->setEnabled(App_Common::inputsMap.value(OF_Const::solenoidPin) >= 0);
 
     ui->solenoidTempBox->setEnabled(App_Common::inputsMap.value(OF_Const::tempPin) > -1);
     ui->forceFeedbackBox->setEnabled(App_Common::inputsMap.value(OF_Const::rumblePin) > -1 || App_Common::inputsMap.value(OF_Const::solenoidPin) > -1);
@@ -1394,6 +1395,13 @@ void guiWindow::pinBoxes_currentIndexChanged(int index)
     ui->aStickFuncBox->setEnabled(App_Common::inputsMap.value(OF_Const::analogX) >= 0 && App_Common::inputsMap.value(OF_Const::analogY) >= 0);
     for(int i = 0; i < BUTTON_COUNT-1; ++i)
         btnFuncGBoxes.at(i)->setEnabled(InputAvailable(i));
+
+    // only once the change is complete, so a function moved to another pin keeps its inversion,
+    // and rumble/solenoid stay on when the layout still has their pins
+    if(pinBoxesDepth == 1) {
+        FeedbackOffWithoutPins();
+        PruneInverts();
+    }
 
     DiffUpdate();
 }
@@ -1523,6 +1531,26 @@ void guiWindow::SetInverted(const int &input, const bool &on)
 }
 
 
+void guiWindow::FeedbackOffWithoutPins()
+{
+    if(App_Common::inputsMap.value(OF_Const::rumblePin) < 0) {
+        ui->rumbleToggle->setChecked(false);
+        ui->rumbleFFToggle->setChecked(false);
+    }
+
+    if(App_Common::inputsMap.value(OF_Const::solenoidPin) < 0)
+        ui->solenoidToggle->setChecked(false);
+}
+
+
+void guiWindow::PruneInverts()
+{
+    for(const auto &input : OF_Const::invertibleInputs)
+        if(App_Common::inputsMap.value(input) <= OF_Const::btnUnmapped)
+            SetInverted(input, false);
+}
+
+
 void guiWindow::InvertsUpdate()
 {
     const bool customOn = App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins];
@@ -1548,22 +1576,16 @@ void guiWindow::on_customPinsEnabled_stateChanged(int arg1)
     App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins] = arg1;
     BoxesUpdate();
 
+    // back as loaded: the saved inversions; otherwise the pins changed, so none
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::inputInvertMask] =
+        (static_cast<bool>(arg1) == App_Common::boolSettings[App_Common::dataOrig][OF_Const::customPins]) ?
+            App_Common::settingsTable[App_Common::dataOrig][OF_Const::inputInvertMask] : 0;
+
     ui->actionExport_Custom_Layout->setEnabled(arg1);
 
-    if(App_Common::inputsMap.value(OF_Const::solenoidPin) > OF_Const::btnUnmapped) {
-        ui->solenoidFFBox->setEnabled(true);
-    } else {
-        ui->solenoidToggle->setEnabled(false);
-        ui->solenoidFFBox->setEnabled(false);
-    }
-
-    if(App_Common::inputsMap.value(OF_Const::rumblePin) > OF_Const::btnUnmapped) {
-        ui->rumbleFFBox->setEnabled(true);
-    } else {
-        ui->rumbleToggle->setChecked(false);
-        ui->rumbleFFToggle->setChecked(false);
-        ui->rumbleFFBox->setEnabled(false);
-    }
+    // rumble and solenoid toggles without a pin are turned off by BoxesUpdate (or at the end of a preset or an import)
+    ui->solenoidFFBox->setEnabled(App_Common::inputsMap.value(OF_Const::solenoidPin) > OF_Const::btnUnmapped);
+    ui->rumbleFFBox->setEnabled(App_Common::inputsMap.value(OF_Const::rumblePin) > OF_Const::btnUnmapped);
 
     DiffUpdate();
 }
@@ -1572,6 +1594,8 @@ void guiWindow::on_customPinsEnabled_stateChanged(int arg1)
 void guiWindow::on_presetsBox_currentIndexChanged(int index)
 {
     if(index > -1) {
+        const QScopedValueRollback<int> bulk(pinBoxesDepth, pinBoxesDepth+1);
+
         // presets are inherently custom layouts
         if(!ui->customPinsEnabled->isChecked())
             ui->customPinsEnabled->setChecked(true);
@@ -1587,6 +1611,12 @@ void guiWindow::on_presetsBox_currentIndexChanged(int index)
 
         for(int i = 0; i < pinBoxes.count(); ++i)
             pinBoxes.at(i)->setCurrentIndex(preset->second.pin[i]+1);
+
+        FeedbackOffWithoutPins();
+
+        // every function was taken off its pin
+        for(const auto &input : OF_Const::invertibleInputs)
+            SetInverted(input, false);
 
         DiffUpdate();
     }
@@ -2789,6 +2819,7 @@ void guiWindow::on_actionImport_Custom_Layout_triggered()
                 return;
             }
 
+            const QScopedValueRollback<int> bulk(pinBoxesDepth, pinBoxesDepth+1);
             if(!ui->customPinsEnabled->isChecked()) ui->customPinsEnabled->setChecked(true);
             // clear current mapping
             for(const auto &box : std::as_const(pinBoxes))
@@ -2799,9 +2830,12 @@ void guiWindow::on_actionImport_Custom_Layout_triggered()
                 if(layout.at(i) > OF_Const::btnUnmapped)
                     pinBoxes.at(i)->setCurrentIndex(layout.at(i)+1);
 
+            FeedbackOffWithoutPins();
+
             // the inversions come from the file only: none in the file = none inverted
+            // (and only for the functions that have a pin)
             for(const auto &input : OF_Const::invertibleInputs)
-                SetInverted(input, inverted.contains(input));
+                SetInverted(input, inverted.contains(input) && App_Common::inputsMap.value(input) > OF_Const::btnUnmapped);
 
             // recover previous toggles that may have been turned off in the process
             if(App_Common::inputsMap.value(OF_Const::solenoidPin) >= 0)
@@ -2830,13 +2864,15 @@ void guiWindow::on_actionExport_Custom_Layout_triggered()
             QByteArray bytes = App_Common::board.type + '\n';
             QVector<std::string_view> inverted;
 
-            for(auto &pair : App_Common::OFPresets.boardInputs_Strings) {
-                if(pair.second > OF_Const::btnUnmapped && App_Common::inputsMap.value(pair.second) > OF_Const::btnUnmapped) {
-                    bytes.append(pair.first.data(), pair.first.length());
+            // in function order, like the WebApp
+            for(int input = 0; input < OF_Const::boardInputsCount; ++input) {
+                if(App_Common::inputsMap.value(input) > OF_Const::btnUnmapped) {
+                    const std::string_view name(App_Common::OFPresets.boardInputs_sortedStr[input+1]);
+                    bytes.append(name.data(), name.length());
                     bytes.append('\0');
-                    bytes.append(static_cast<char>(App_Common::inputsMap.value(pair.second)));
-                    if(Invertible(pair.second) && Inverted(pair.second))
-                        inverted << pair.first;
+                    bytes.append(static_cast<char>(App_Common::inputsMap.value(input)));
+                    if(Invertible(input) && Inverted(input))
+                        inverted << name;
                 }
             }
 

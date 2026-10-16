@@ -266,6 +266,13 @@ private:
     static bool Inverted(const int &input);
     static void SetInverted(const int &input, const bool &on);
 
+    /// @brief      A function taken off its pin loses its inversion (moved to another pin, it keeps it)
+    static void PruneInverts();
+
+    /// @brief      Rumble and solenoid (and what depends on them) can't stay on without their pin
+    /// @details    Checked once the pins are all set, so a layout that keeps those pins leaves them on
+    void FeedbackOffWithoutPins();
+
     /// @brief      Converts system name to display name, provided in OF_Const::boardNames
     QString PrettifyName(QString);
 
@@ -366,6 +373,11 @@ private:
 
     /// @brief      NC (inverted logic) checkbox of each pin, nullptr for the pins not shown
     QVector<QCheckBox*> pinInverts;
+
+    /// @brief      Nesting of the pin box changes: only a change made by itself (depth 1) clears
+    ///             the inversions of the functions taken off their pins (see PruneInverts)
+    /// @details    Raised by the mass updates (BoxesUpdate, presets, import), which set the inversions themselves
+    int pinBoxesDepth = 0;
 
     /// @brief      Unlocks the NC checkboxes, against changes made by mistake
     /// @details    Never saved: off at every board load and when custom pins are turned off
