@@ -1432,14 +1432,19 @@ void guiWindow::btnFuncTypeBox_currentIndexChanged(int index)
 
             btnFuncBoxPtr->blockSignals(false);
 
+            // Back to the saved type: back to its saved value. Otherwise the value shown, the first of the new list.
+            uint8_t &code = App_Common::inputFuncTable[App_Common::dataCurrent][sender()->property("btn").toInt()][1 | sender()->property("slot").toInt() << 1];
+
             // HACK SHACK: very brute-force-y method because I didn't wanna make another redundant af map for this lookup sorz :(
             if(App_Common::inputFuncTable[App_Common::dataOrig][sender()->property("btn").toInt()][sender()->property("slot").toInt() << 1] == index) {
+                code = App_Common::inputFuncTable[App_Common::dataOrig][sender()->property("btn").toInt()][1 | sender()->property("slot").toInt() << 1];
                 for(auto i = App_Common::inputFuncMaps[index]->cbegin(), end = App_Common::inputFuncMaps[index]->cend(); i != end; ++i)
-                    if(i.value().at(0) == App_Common::inputFuncTable[App_Common::dataCurrent][sender()->property("btn").toInt()][1 | sender()->property("slot").toInt() << 1]) {
+                    if(i.value().at(0) == code) {
                         btnFuncBoxPtr->setCurrentIndex(i.value().at(1));
                         break;
                     }
-            }
+            } else if(btnFuncBoxPtr->count() && App_Common::inputFuncMaps[index]->contains(btnFuncBoxPtr->itemText(0).toStdString()))
+                code = App_Common::inputFuncMaps[index]->value(btnFuncBoxPtr->itemText(0).toStdString()).at(0);
 
             DiffUpdate();
         }
