@@ -71,11 +71,11 @@ Scarica l'App dalla sezione **OpenFIRE App CUSTOM per firmware ESP32 7.x** della
 
 ## Avvio e uso
 
-Avvia `OpenFIREapp`. L'elenco dei dispositivi viene aggiornato periodicamente nella casella *COM Port*. Anche senza una pistola collegata puoi aprire *IR Emitter Alignment Assistant* o consultare le schede supportate e i pin predefiniti con *View Compatible Boards* nel menu *Help*.
+Avvia `OpenFIREapp`. L'elenco dei dispositivi viene aggiornato periodicamente nella casella *Porta COM*. Anche senza una pistola collegata puoi aprire *Assistente allineamento emettitori IR* o consultare le schede supportate e i pin predefiniti con *Visualizza Schede Compatibili* nel menu *Aiuto*.
 
 Collega la pistola e seleziona la sua porta per connetterla all'App (una pistola già connessa viene disconnessa). Se il firmware non comunica correttamente con l'App, puoi riavviare la pistola in modalità aggiornamento e aggiornarla con il [Web Flasher](https://alessandro-satanassi.github.io/OpenFIRE-ESP32-WebFlasher/?lang=it).
 
-Mentre è collegata all'App, la pistola è in modalità configurazione e il gioco normale è sospeso. Usa **Save and Send Settings**, attendi la conferma, poi disconnetti e chiudi l'App prima di giocare. Se la pistola è stata avviata nella modalità WebApp offline tenendo premuto B, riavviala normalmente per ripristinare la porta seriale USB prima di collegare questa App. Il [manuale operativo](https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/blob/main/lightgun/src/README.md#versione-italiana) spiega calibrazione, profili e prima partita.
+Mentre è collegata all'App, la pistola è in modalità configurazione e il gioco normale è sospeso. Usa **Salva e invia impostazioni**, attendi la conferma, poi disconnetti e chiudi l'App prima di giocare. Se la pistola è stata avviata nella modalità WebApp offline tenendo premuto B, riavviala normalmente per ripristinare la porta seriale USB prima di collegare questa App. Il [manuale operativo](https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/blob/main/lightgun/src/README.md#versione-italiana) spiega calibrazione, profili e prima partita.
 
 ### Linux
 
