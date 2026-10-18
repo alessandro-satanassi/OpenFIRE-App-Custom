@@ -112,7 +112,7 @@ guiWindow::guiWindow(QWidget *parent)
     // Connect boards view "custom layouts" actions to the button
     ui->customLayoutToolBtn->addActions({ui->actionImport_Custom_Layout, ui->actionExport_Custom_Layout});
 
-    // NC inputs: the box unlocking the pins' NC checkboxes sits next to "Use Custom Pins", shown with custom pins only
+    // NC inputs: the box unlocking the pins' NC checkboxes sits next to "Use Custom Pins", shown with custom pins and Show Unsafe Settings only
     invertEditToggle = new QCheckBox(tr("Edit NC Inputs"));
     invertEditToggle->setToolTip(tr("Enable to change the NC (normally closed) checkboxes of the pins. "
                                     "This box is not saved: it only protects the inversions from changes made by mistake."));
@@ -1555,9 +1555,10 @@ void guiWindow::PruneInverts()
 void guiWindow::InvertsUpdate()
 {
     const bool customOn = App_Common::boolSettings[App_Common::dataCurrent][OF_Const::customPins];
-    if(!customOn && invertEditToggle->isChecked())
+    const bool unsafeOn = ui->actionShow_Unsafe_Settings->isChecked();
+    if((!customOn || !unsafeOn) && invertEditToggle->isChecked())
         invertEditToggle->setChecked(false);   // calls InvertsUpdate() again
-    invertEditToggle->setHidden(!customOn);
+    invertEditToggle->setHidden(!customOn || !unsafeOn);
 
     for(int i = 0; i < pinInverts.count() && i < pinBoxes.count(); ++i) {
         QCheckBox *invert = pinInverts.at(i);
@@ -2752,6 +2753,7 @@ void guiWindow::on_actionShow_Unsafe_Settings_toggled(bool arg1)
 {
     if(arg1) ui->solenoidTempBox->setVisible(true);
     else     ui->solenoidTempBox->setVisible(false);
+    InvertsUpdate();   // the Edit NC Inputs box is an unsafe setting too
 }
 
 
