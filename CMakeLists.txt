@@ -5,7 +5,7 @@ project(OpenFIREapp
         VERSION 7.0.0
         DESCRIPTION "OpenFIRE Configuration Desktop App"
         LANGUAGES CXX)
-set(OFAPP_CODENAME "Esp32 - Release Candidate rc5")
+set(OFAPP_CODENAME "Esp32")
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
