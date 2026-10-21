@@ -669,6 +669,16 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <source>&lt;p&gt;The board you selected did not respond to the app properly.&lt;/p&gt;&lt;p&gt;This can usually be resolved by rebooting the microcontroller to its bootloader, and then updating the board to the latest firmware, which can be found at:&lt;/p&gt;&lt;p&gt;&lt;a href=&apos;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&apos;&gt;&lt;span style=&apos; text-decoration: underline; color:#8ab4f8;&apos;&gt;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Would you like to reboot this board to apply an update?&lt;/p&gt;</source>
         <translation>&lt;p&gt;La scheda che hai selezionato non ha risposto correttamente all&apos;app.&lt;/p&gt;&lt;p&gt;Questo problema di solito può essere risolto riavviando il microcontrollore nel suo bootloader, per poi aggiornare la scheda all&apos;ultimo firmware, che può essere trovato su:&lt;/p&gt;&lt;p&gt;&lt;a href=&apos;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&apos;&gt;&lt;span style=&apos; text-decoration: underline; color:#8ab4f8;&apos;&gt;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Vuoi riavviare questa scheda per applicare un aggiornamento?&lt;/p&gt;</translation>
     </message>
+    <message>
+        <location filename="../src/appserial.cpp" line="1290"/>
+        <source>Reboot Microcontroller?</source>
+        <translation>Riavviare il microcontrollore?</translation>
+    </message>
+    <message>
+        <location filename="../src/appserial.cpp" line="1291"/>
+        <source>&lt;p&gt;The board you selected did not respond to the app properly.&lt;/p&gt;&lt;p&gt;This can usually be resolved by rebooting the microcontroller, and then updating the board to the latest firmware, which can be found at:&lt;/p&gt;&lt;p&gt;&lt;a href=&apos;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&apos;&gt;&lt;span style=&apos; text-decoration: underline; color:#8ab4f8;&apos;&gt;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Would you like to reboot this board to apply an update?&lt;/p&gt;</source>
+        <translation>&lt;p&gt;La scheda che hai selezionato non ha risposto correttamente all&apos;app.&lt;/p&gt;&lt;p&gt;Questo problema di solito può essere risolto riavviando il microcontrollore, per poi aggiornare la scheda all&apos;ultimo firmware, che può essere trovato su:&lt;/p&gt;&lt;p&gt;&lt;a href=&apos;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&apos;&gt;&lt;span style=&apos; text-decoration: underline; color:#8ab4f8;&apos;&gt;https://github.com/alessandro-satanassi/OpenFIRE-Firmware-ESP32/releases/latest&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Vuoi riavviare questa scheda per applicare un aggiornamento?&lt;/p&gt;</translation>
+    </message>
 </context>
 <context>
     <name>guiWindow</name>
@@ -2349,6 +2359,129 @@ Sei sicuro?</translation>
     <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the &lt;span style=&quot; font-weight:700;&quot;&gt;up/down&lt;/span&gt; direction of the analog stick.&lt;/p&gt;&lt;p&gt;Enable it if pushing the stick up gives a downward movement. It applies to all three &lt;span style=&quot; font-style:italic;&quot;&gt;Send Analog Stick As&lt;/span&gt; options, and the stick shown in the &lt;span style=&quot; font-style:italic;&quot;&gt;Gun Tests&lt;/span&gt; tab follows it.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Disabled&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Inverte la direzione &lt;span style=&quot; font-weight:700;&quot;&gt;su/giù&lt;/span&gt; dello stick analogico.&lt;/p&gt;&lt;p&gt;Attivala se spingendo lo stick in su il movimento avviene verso il basso. Vale per tutte e tre le opzioni di &lt;span style=&quot; font-style:italic;&quot;&gt;Usa Stick Analogico come&lt;/span&gt;, e lo stick mostrato nella scheda &lt;span style=&quot; font-style:italic;&quot;&gt;Gun Tests&lt;/span&gt; la segue.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Predefinito:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; Disattivato&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1680"/>
+        <location filename="../src/appmainwindow.ui" line="1695"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the camera hardware physically installed in your lightgun.&lt;/p&gt;&lt;p&gt;The active camera hardware will be swapped automatically when the settings are saved.&lt;/p&gt;&lt;p&gt;A &lt;span style=&quot; font-weight:700;&quot;&gt;manual reboot is only recommended&lt;/span&gt; if you experience issues.&lt;/p&gt;&lt;p&gt;Remember to also configure the corresponding communication pins in the Pins Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Seleziona la telecamera fisicamente installata nella tua lightgun.&lt;/p&gt;&lt;p&gt;La telecamera attiva verrà cambiata automaticamente al salvataggio delle impostazioni.&lt;/p&gt;&lt;p&gt;Un &lt;span style=&quot; font-weight:700;&quot;&gt;riavvio manuale è consigliato solo&lt;/span&gt; in caso di problemi.&lt;/p&gt;&lt;p&gt;Ricorda di configurare anche i pin di comunicazione corrispondenti nella scheda Layout Scheda.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1683"/>
+        <location filename="../src/appmainwindow.ui" line="1698"/>
+        <source>Infrared Camera Model</source>
+        <translation>Modello telecamera a infrarossi</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1686"/>
+        <source>CAMERA Model</source>
+        <translation>Modello TELECAMERA</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1701"/>
+        <source>Unlock CAMERA Modification</source>
+        <translation>Sblocca modifica TELECAMERA</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1704"/>
+        <source>Warning: Modifying this is only required once when building the gun.</source>
+        <translation>Attenzione: questa modifica serve una sola volta, durante la costruzione della pistola.</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1716"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is an &lt;span style=&quot; font-weight:700;&quot;&gt;I2C&lt;/span&gt; camera module.&lt;/p&gt;&lt;p&gt;When selecting this model, ensure you have correctly mapped the &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SDA&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SCL&lt;/span&gt; pins in the Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Questo è un modulo telecamera &lt;span style=&quot; font-weight:700;&quot;&gt;I2C&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;Selezionando questo modello, assicurati di aver assegnato correttamente i pin &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SDA&lt;/span&gt; e &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SCL&lt;/span&gt; nella scheda Layout.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1719"/>
+        <location filename="../src/appmainwindow.ui" line="1722"/>
+        <source>DFRobot SEN0158 / WiiCam</source>
+        <translation>DFRobot SEN0158 / WiiCam</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1735"/>
+        <location filename="../src/appmainwindow.ui" line="1754"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is an &lt;span style=&quot; font-weight:700;&quot;&gt;SPI&lt;/span&gt; camera module.&lt;/p&gt;&lt;p&gt;When selecting this model, ensure you have correctly mapped the &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_MOSI, cam_SPI_MISO, cam_SPI_SCK,&lt;/span&gt; and &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_CS&lt;/span&gt; pins in the Layout tab.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Questo è un modulo telecamera &lt;span style=&quot; font-weight:700;&quot;&gt;SPI&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;Selezionando questo modello, assicurati di aver assegnato correttamente i pin &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_MOSI, cam_SPI_MISO, cam_SPI_SCK&lt;/span&gt; e &lt;span style=&quot; font-style:italic;&quot;&gt;cam_SPI_CS&lt;/span&gt; nella scheda Layout.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1738"/>
+        <location filename="../src/appmainwindow.ui" line="1741"/>
+        <source>PixArt PAJ7025 R2</source>
+        <translation>PixArt PAJ7025 R2</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.ui" line="1757"/>
+        <location filename="../src/appmainwindow.ui" line="1760"/>
+        <source>PixArt PAJ7025 R3</source>
+        <translation>PixArt PAJ7025 R3</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="686"/>
+        <source>Camera Changed</source>
+        <translation>Telecamera cambiata</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="686"/>
+        <source>Camera Model Changed Successfully</source>
+        <translation>Modello di telecamera cambiato con successo</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="687"/>
+        <source>The lightgun has automatically swapped the active sensors.
+
+If you experience any unexpected issues or the new camera fails to respond, we recommend physically restarting the microcontroller.</source>
+        <translation>La lightgun ha cambiato automaticamente i sensori attivi.
+
+Se si verificano problemi imprevisti o la nuova telecamera non risponde, si consiglia di riavviare fisicamente il microcontrollore.</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="1226"/>
+        <source>Restart Microcontroller in Firmware Update Mode</source>
+        <translation>Riavvia il microcontrollore in modalità aggiornamento firmware</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2365"/>
+        <source>Board restarted.</source>
+        <translation>Scheda riavviata.</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2453"/>
+        <source>Save not confirmed. Keep the board powered and retry Save.</source>
+        <translation>Salvataggio non confermato. Mantieni la scheda alimentata e riprova a salvare.</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2454"/>
+        <source>Save not confirmed</source>
+        <translation>Salvataggio non confermato</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2455"/>
+        <source>Saving failed or its result could not be confirmed. Your edits remain in this App; completed calibration remains in the powered board.
+
+Check the connection or the reported storage error, then press Save and Send Settings again. No restart is required for a recoverable save error. Hardware tests stay disabled until a save is confirmed.
+
+Disconnecting/reloading can replace unsent App edits with the board&apos;s partly updated settings. Restarting loses unsaved board RAM.</source>
+        <translation>Il salvataggio non è riuscito o il suo esito non ha potuto essere confermato. Le modifiche restano in questa App; la calibrazione completata resta nella scheda alimentata.
+
+Controlla la connessione o l&apos;errore di memoria segnalato, poi premi di nuovo Salva e invia impostazioni. Per un errore di salvataggio recuperabile non serve riavviare. I test hardware restano disabilitati finché un salvataggio non viene confermato.
+
+Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate con le impostazioni della scheda aggiornate solo in parte. Riavviare fa perdere la RAM della scheda non salvata.</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2464"/>
+        <source>Operation not confirmed: restart the microcontroller and reconnect.</source>
+        <translation>Operazione non confermata: riavvia il microcontrollore e riconnettiti.</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2465"/>
+        <source>Operation not confirmed</source>
+        <translation>Operazione non confermata</translation>
+    </message>
+    <message>
+        <location filename="../src/appmainwindow.cpp" line="2466"/>
+        <source>The operation failed or its result could not be confirmed. Restart the microcontroller and reconnect before continuing. If saving had already started, verify the settings and save them again after resolving the error.</source>
+        <translation>L&apos;operazione non è riuscita o il suo esito non ha potuto essere confermato. Riavvia il microcontrollore e riconnettiti prima di continuare. Se il salvataggio era già iniziato, dopo aver risolto l&apos;errore verifica le impostazioni e salvale di nuovo.</translation>
     </message>
 </context>
 </TS>
