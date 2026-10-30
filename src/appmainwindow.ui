@@ -1427,6 +1427,56 @@
                 </widget>
                </item>
                <item row="2" column="0">
+                <layout class="QHBoxLayout" name="standbyMinutesLayout">
+                <item>
+                 <spacer name="standbyMinutesSpacerLeft">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                 <item>
+                  <widget class="QLabel" name="label_standbyMinutes">
+                   <property name="text">
+                    <string>Wireless power saving, standby after:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="standbyMinutesBox">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Power saving, only when the lightgun works &lt;span style=&quot; font-weight:700;&quot;&gt;wireless on battery.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;After the selected time of inactivity, the lightgun goes into standby. Pull the trigger to resume.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Disabled&lt;/span&gt; keeps it always awake.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 15 minutes&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Wireless Power Saving</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                <item>
+                 <spacer name="standbyMinutesSpacerRight">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                </layout>
+               </item>
+               <item row="3" column="0">
                 <layout class="QHBoxLayout" name="bootOutputLayout">
                 <item>
                  <spacer name="bootOutputSpacerLeft">
@@ -1766,6 +1816,62 @@
                     <number>1</number>
                    </property>
                   </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_cameraParallax">
+                 <item>
+                  <spacer name="cameraParallaxSpacerLeft">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_cameraParallax">
+                   <property name="text">
+                    <string>Parallax correction (camera below the sight):</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QSpinBox" name="cameraParallaxBox">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Corrects the aim when the camera is &lt;span style=&quot; font-weight:700;&quot;&gt;below the sight line&lt;/span&gt; and you play closer to or farther from the screen than where you calibrated. Leave it at &lt;span style=&quot; font-weight:700;&quot;&gt;0&lt;/span&gt; when the camera is on the sight line.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Starting value&lt;/span&gt;, for each cm between camera and sight: about 3 on a 27&quot; monitor, about 1.5 on a 55&quot; TV. Exact value: cm between camera and sight × 100 / cm between the top and bottom LEDs.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Fine tuning&lt;/span&gt;: calibrate, step back to about one and a half times that distance and aim at a point. Cursor above the point: raise the value by 1. Cursor below the point: lower it by 1.&lt;/p&gt;&lt;p&gt;It takes effect after the next calibration of each profile.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 0&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Parallax Correction</string>
+                   </property>
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="maximum">
+                    <number>25</number>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="cameraParallaxSpacerRight">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                 </layout>
                </item>

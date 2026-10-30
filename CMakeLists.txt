@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 #cmake_policy(VERSION 3.5)
 
 project(OpenFIREapp
-        VERSION 7.0.0
+        VERSION 7.1.0
         DESCRIPTION "OpenFIRE Configuration Desktop App"
         LANGUAGES CXX)
 set(OFAPP_CODENAME "Esp32")
@@ -23,20 +23,8 @@ add_compile_definitions(OF_APP)
 
 add_compile_definitions(OFAPP_VERSION="${PROJECT_VERSION}")
 
-set(MINORVER_TIERLIST_NAMES
-  "" ": Alpha" ": Beta" ": Gamma" ": Omega" ": Sigma"
-)
-math(EXPR MINORVER_TIERLIST_INDEX ${PROJECT_VERSION_MINOR})
-list(GET MINORVER_TIERLIST_NAMES ${MINORVER_TIERLIST_INDEX} PROJECT_MINORVER_WORD)
-
-set(PATCHVER_TIERLIST_NAMES
-  "" " Full!" "': Special Champion Edition" " Turbo: Hyper Fighting" " EX Plus Alpha"
-  " LOVE MAX!!!!!" " LOVEMAX SIXSTARS!!!!!!" " LOVEMAX SIXSTARS !!!!!! XTEND"
-)
-math(EXPR PATCHVER_TIERLIST_INDEX ${PROJECT_VERSION_PATCH})
-list(GET PATCHVER_TIERLIST_NAMES ${PATCHVER_TIERLIST_INDEX} PROJECT_PATCH_NAME)
-
-add_compile_definitions(OFAPP_CODENAME="${OFAPP_CODENAME}${PROJECT_MINORVER_WORD}${PROJECT_PATCH_NAME}")
+# Title: codename only, without the minor/patch suffixes of the original App.
+add_compile_definitions(OFAPP_CODENAME="${OFAPP_CODENAME}")
 
 if(OFAPP_GITHASH)
     add_compile_definitions(OFAPP_GITHASH="${OFAPP_GITHASH}")

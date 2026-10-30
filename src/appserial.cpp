@@ -979,6 +979,10 @@ bool AppSerial::ReceiveSettingsRecords(
             memcpy(&pin, payload.constData() + pos, sizeof(pin));
             App_Common::inputsMap_orig[index] = pin;
         } else if(command == OF_Const::sGetProfile) {
+            // Calibration geometry after the name (corner shape, LED area) stays in the
+            // firmware, as in the WebApp: it is not stored here and never sent back.
+            if(index > OF_Const::profName && index != OF_Const::profCurrent)
+                continue;
             if(index == OF_Const::profCurrent) {
                 // CurrentProf is intentionally a one-byte wire value; the UI
                 // stores it in a native int only after decoding it.
@@ -1192,7 +1196,8 @@ bool AppSerial::SendSettingsRecords(
 
         if(command == OF_Const::sCommitProfile) {
             // Calibration geometry stays in the firmware; send App-writable fields.
-            if(pair.second < OF_Const::profIrSens)
+            if(pair.second < OF_Const::profIrSens ||
+               (pair.second > OF_Const::profName && pair.second != OF_Const::profCurrent))
                 continue;
             if(pair.second == OF_Const::profCurrent) {
                 // Preserve the existing one-per-batch record and ignore aliases.

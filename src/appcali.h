@@ -23,6 +23,7 @@
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QKeyEvent>
+#include <QCloseEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSvgItem>
 #include <QElapsedTimer>
@@ -84,7 +85,11 @@ public:
         Cali_Right,
         Cali_Center,
         Cali_Verify,
-        Cali_End
+        Cali_End,
+        Cali_CornerTR,  // corner targets, only when asked with caliFlagCorners
+        Cali_CornerBR,
+        Cali_CornerBL,
+        Cali_CornerTL
     } CaliSteps_e;
 
     explicit AppCaliWindow(QWidget *parent = nullptr, const int & = modeCalibrate);
@@ -123,7 +128,7 @@ public:
 
     /// @brief      Calibration IR view: the board refused a target shot (sCaliIrWarning)
     /// @param      uint8_t
-    ///             bit 0 an emitter is missing
+    ///             bit 0 an emitter is missing, bit 1 the gun is rolled too far
     void CaliIrWarning(const uint8_t &);
 
     int GetWindowMode() { return mode; }
@@ -151,6 +156,11 @@ signals:
     ///             and to request the board to follow.
     /// @note       Main app is the only part that has access to the current active serialPort object.
     void CaliRequestToExit();
+
+protected:
+    /// @brief      Closed by the system (Alt+F4, taskbar): leaves like ESC, as the WebApp does
+    ///             when fullscreen mode is left, so that the App and the board end the mode first
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     enum {
@@ -313,9 +323,29 @@ private:
     QElapsedTimer caliTargetTimer;              // since the crosshair reached its target
     int caliTargetStage = -1;                   // stage of caliTargetTimer
 
-    /// @brief Six target dots, without shot animation.
+    /// @brief One dot per target (six, or ten with the corners), without shot animation.
     void CaliProgressUpdate();
-    QGraphicsEllipseItem *caliProgressDots[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+    QGraphicsEllipseItem *caliProgressDots[10] = {};
+
+    /// @brief      Calibration: the corner targets are asked for (caliFlagCorners); the board
+    ///             decides, so this turns false when the final centre follows the right edge.
+    bool caliCorners = true;
+
+    /// @brief      Shots in the order of the board; the last entry is verification
+    QList<int> CaliShotSequence() const;
+
+    /// @brief      A stage that shows a target to shoot (not verification or the end)
+    static bool CaliTarget(const int &);
+
+    /// @brief      "Calibration: step N of M" text of a stage
+    QString CaliStepText(const int &);
+
+    /// @brief      After the flash the target glides to the point of the new stage (caliNextTargetPos).
+    void CaliTravelUpdate();
+    QTimer caliTravelTimer;
+    QElapsedTimer caliTravelTime;
+    QPointF caliTravelFrom;
+    int caliTravelStage = -1;                   // stage the target is gliding to, -1 when still
 
     /// @brief Solid white flash; keep the crosshair still until it ends, without delaying data handling.
     void CaliShotRingUpdate();

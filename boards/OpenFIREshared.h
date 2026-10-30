@@ -170,6 +170,14 @@ public:
         btnPedal, btnPedal2, btnPump, btnHome,
         rumbleSwitch, solenoidSwitch, autofireSwitch };
 
+    // Wireless standby: minutes without transmissions before the gun sleeps (settings[standbyMinutes]).
+    // 0 = standby disabled. The Apps offer only these values; any other saved value means standbyMinutesDefault.
+    // /
+    // Standby wireless: minuti senza trasmissioni prima che la pistola dorma (settings[standbyMinutes]).
+    // 0 = standby disabilitato. Le App offrono solo questi valori; ogni altro valore salvato vale standbyMinutesDefault.
+    static constexpr int standbyMinutesChoices[] = { 0, 5, 15, 30, 60 };
+    static constexpr int standbyMinutesDefault = 15;
+
     // For Apps to use for lists of pin functions
     char* boardInputs_sortedStr[boardInputsCount+1];
 
@@ -239,6 +247,8 @@ public:
         cameraModel, // inserita per CAM
         bootOutputMode,
         inputInvertMask,    // bit N = invert input function N (see invertibleInputs)
+        cameraParallax,     // camera below the sight line, percent of the vertical LED distance (0 = none)
+        standbyMinutes,     // wireless standby minutes, one of standbyMinutesChoices (0 = disabled)
         // Add here
         settingsTypesCount
     } settingsTypes_e;
@@ -261,6 +271,8 @@ public:
         {"CameraModel",         cameraModel         },  // inserira per CAM
         {"BootOutputMode",      bootOutputMode      },
         {"InputInvertMask",     inputInvertMask     },
+        {"CamParallax",         cameraParallax      },
+        {"StandbyMinutes",      standbyMinutes      },
     };
 
     enum {
@@ -297,6 +309,14 @@ public:
         profAR,
         profColor,
         profName,
+        // LED shape measured with the corner shots (calibration geometry, see Shape in
+        // OpenFIRE_Calibration.h), after the 16 bytes of the name. All zero = no correction.
+        profSkewX = profName + 4,
+        profSkewY,
+        profKeystoneX,
+        profKeystoneY,
+        // LED area seen at the final centre shot: distance reference of the parallax correction.
+        profCaliArea,
         profDataTypes,
         profCurrent = 0xFD,
     } profSyncTypes_e;
@@ -316,6 +336,11 @@ public:
         {"AspectRatio", profAR              },
         {"Color",       profColor           },
         {"Name",        profName            },
+        {"SkewX",       profSkewX           },
+        {"SkewY",       profSkewY           },
+        {"KeystoneX",   profKeystoneX       },
+        {"KeystoneY",   profKeystoneY       },
+        {"CaliArea",    profCaliArea        },
         {"CurrentProf", profCurrent         },
     };
 
@@ -387,7 +412,7 @@ public:
         sTestCoords,
         sCurrentProf,
         sTestBlobs, // 152: IR test and calibration IR view, blob area/brightness of each vertex
-        sCaliIrWarning, // 153: calibration target shot refused (WebApp IR view): bit 0 emitter missing
+        sCaliIrWarning, // 153: calibration target shot refused: bit 0 emitter missing (IR view), bit 1 gun rolled too far
 
         // Push settings to board
         sCommitStart = 0xAA, // 170
@@ -435,8 +460,10 @@ public:
     // Optional fourth byte of sCaliProfile + sCaliStart (App to board). Older Apps send
     // three bytes and older firmware ignores the fourth, so both keep working as before.
     enum {
-        caliFlagIrView = 0x01   // send the IR emitters during calibration (sTestBlobs + sTestCoords)
+        caliFlagIrView = 0x01,  // send the IR emitters during calibration (sTestBlobs + sTestCoords)
                                 // and refuse the target shots while an emitter is missing
+        caliFlagCorners = 0x02  // four more targets at the screen corners after the right edge
+                                // (sCaliStageUpd 8..11: top-right, bottom-right, bottom-left, top-left)
     } caliStartFlags_e;
 
     enum {

@@ -32,6 +32,7 @@
 #include "apppreviewer.h"
 
 #include <QMainWindow>
+#include <QPointer>
 #include <QSerialPort>
 #include <QFuture>
 #include <QFutureWatcher>
@@ -112,6 +113,8 @@ private slots:
 
     void on_bootOutputModeBox_currentIndexChanged(int index);
 
+    void on_standbyMinutesBox_currentIndexChanged(int index);
+
     void on_rumbleFFToggle_stateChanged(int arg1);
 
     void on_tempWarningBox_valueChanged(int arg1);
@@ -150,6 +153,7 @@ private slots:
     void on_camModel_DFRobot_clicked();
     void on_camModel_PAJ7025R2_clicked();
     void on_camModel_PAJ7025R3_clicked();
+    void on_cameraParallaxBox_valueChanged(int arg1);
     void on_tinyUSBLayoutToggle_stateChanged(int arg1);
 
     void on_tUSB_p1_toggled(bool checked);
@@ -232,7 +236,7 @@ private:
 
     /// @brief      Calibration window pointer
     /// @details    Only one of these should be up at a time
-    AppCaliWindow *caliWindow = nullptr;
+    QPointer<AppCaliWindow> caliWindow;  // null again when the window is deleted (WA_DeleteOnClose)
 
     /// @brief      Boards previewer window
     AppBoardsPreviewer boardsWindow;

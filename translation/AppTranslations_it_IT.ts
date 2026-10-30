@@ -94,12 +94,14 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     <message><source>Emitter centre</source><translation>Centro degli emettitori</translation></message>
     <message><source>Lines joining IR points</source><translation>Linee che collegano i punti IR</translation></message>
     <message><source>Green and cyan identify emitter positions, not signal quality.</source><translation>I colori verde e ciano degli emettitori indicano la posizione, non la qualità del segnale.</translation></message>
-    <message><source>Calibration: step 1 of 6</source><translation>Calibrazione: passo 1 di 6</translation></message>
-    <message><source>Calibration: step 2 of 6</source><translation>Calibrazione: passo 2 di 6</translation></message>
-    <message><source>Calibration: step 3 of 6</source><translation>Calibrazione: passo 3 di 6</translation></message>
-    <message><source>Calibration: step 4 of 6</source><translation>Calibrazione: passo 4 di 6</translation></message>
-    <message><source>Calibration: step 5 of 6</source><translation>Calibrazione: passo 5 di 6</translation></message>
-    <message><source>Calibration: step 6 of 6</source><translation>Calibrazione: passo 6 di 6</translation></message>
+    <message><source>Calibration Window</source><translation>Finestra di calibrazione</translation></message>
+    <message><source>Calibration: step %1 of %2</source><translation>Calibrazione: passo %1 di %2</translation></message>
+    <message><source>Shoot at the top right corner of the screen.</source><translation>Spara all&apos;angolo in alto a destra.</translation></message>
+    <message><source>Shoot at the bottom right corner of the screen.</source><translation>Spara all&apos;angolo in basso a destra.</translation></message>
+    <message><source>Shoot at the bottom left corner of the screen.</source><translation>Spara all&apos;angolo in basso a sinistra.</translation></message>
+    <message><source>Shoot at the top left corner of the screen.</source><translation>Spara all&apos;angolo in alto a sinistra.</translation></message>
+    <message><source>Shot refused: lightgun rotated too much.</source><translation>Tiro rifiutato: lightgun troppo ruotata.</translation></message>
+    <message><source>Hold the lightgun upright, then shoot again.</source><translation>Tieni dritta la lightgun e spara di nuovo.</translation></message>
     <message><source>IR LEDs</source><translation>LED IR</translation></message>
     <message><source>Legend</source><translation>Legenda</translation></message>
     <message><source>IR signal intensity</source><translation>Intensità segnale IR</translation></message>
@@ -806,7 +808,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="803"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1710"/>
         <source>1</source>
-        <translation></translation>
+        <translation>1</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="750"/>
@@ -886,7 +888,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1772"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1859"/>
         <source> ms</source>
-        <translation></translation>
+        <translation> ms</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="662"/>
@@ -910,7 +912,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="693"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1668"/>
         <source> / 255</source>
-        <translation></translation>
+        <translation> / 255</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="706"/>
@@ -970,7 +972,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="1086"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1784"/>
         <source>NeoPixels</source>
-        <translation></translation>
+        <translation>NeoPixels</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1092"/>
@@ -996,7 +998,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1816"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1827"/>
         <source> Pixel(s)</source>
-        <translation></translation>
+        <translation> Pixel(s)</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1264"/>
@@ -1147,7 +1149,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1732"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1739"/>
         <source>°C</source>
-        <translation></translation>
+        <translation>°C</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="904"/>
@@ -1355,7 +1357,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="1608"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1908"/>
         <source>0x</source>
-        <translation></translation>
+        <translation>0x</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1624"/>
@@ -1415,25 +1417,25 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="1721"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1928"/>
         <source>P1</source>
-        <translation></translation>
+        <translation>P1</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1737"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1935"/>
         <source>P2</source>
-        <translation></translation>
+        <translation>P2</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1753"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1942"/>
         <source>P3</source>
-        <translation></translation>
+        <translation>P3</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1769"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1949"/>
         <source>P4</source>
-        <translation></translation>
+        <translation>P4</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1784"/>
@@ -1514,7 +1516,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="2634"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1620"/>
         <source>Debug Window</source>
-        <translation></translation>
+        <translation>Finestra di debug</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2642"/>
@@ -1546,7 +1548,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="641"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1655"/>
         <source>Force Feedback</source>
-        <translation></translation>
+        <translation>Force Feedback</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="647"/>
@@ -1588,7 +1590,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="1309"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1838"/>
         <source>Input / Output</source>
-        <translation></translation>
+        <translation>Input / Output</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1337"/>
@@ -1600,25 +1602,25 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="1988"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1970"/>
         <source>Layout</source>
-        <translation></translation>
+        <translation>Layout</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2012"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1971"/>
         <source>Left</source>
-        <translation></translation>
+        <translation>Left</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2036"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1972"/>
         <source>Right</source>
-        <translation></translation>
+        <translation>Right</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1921"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1964"/>
         <source>Bottom</source>
-        <translation></translation>
+        <translation>Bottom</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1978"/>
@@ -1630,19 +1632,19 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="1948"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1966"/>
         <source>TRled</source>
-        <translation></translation>
+        <translation>TRled</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="1968"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1968"/>
         <source>TLled</source>
-        <translation></translation>
+        <translation>TLled</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2109"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1975"/>
         <source>Top</source>
-        <translation></translation>
+        <translation>Top</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2053"/>
@@ -1668,7 +1670,7 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="2217"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1998"/>
         <source>Gun Tests</source>
-        <translation></translation>
+        <translation>Gun Tests</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2396"/>
@@ -1752,13 +1754,13 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <location filename="../src/appmainwindow.ui" line="2585"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1611"/>
         <source>Alt+D</source>
-        <translation></translation>
+        <translation>Alt+D</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2596"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1615"/>
         <source>Alt+S</source>
-        <translation></translation>
+        <translation>Alt+S</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2604"/>
@@ -2482,6 +2484,70 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
         <location filename="../src/appmainwindow.cpp" line="2466"/>
         <source>The operation failed or its result could not be confirmed. Restart the microcontroller and reconnect before continuing. If saving had already started, verify the settings and save them again after resolving the error.</source>
         <translation>L&apos;operazione non è riuscita o il suo esito non ha potuto essere confermato. Riavvia il microcontrollore e riconnettiti prima di continuare. Se il salvataggio era già iniziato, dopo aver risolto l&apos;errore verifica le impostazioni e salvale di nuovo.</translation>
+    </message>
+    <message>
+        <source>Wireless power saving, standby after:</source>
+        <translation>Risparmio energetico wireless, standby dopo:</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Power saving, only when the lightgun works &lt;span style=&quot; font-weight:700;&quot;&gt;wireless on battery.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;After the selected time of inactivity, the lightgun goes into standby. Pull the trigger to resume.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Disabled&lt;/span&gt; keeps it always awake.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 15 minutes&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Risparmio energetico, solo quando la lightgun funziona &lt;span style=&quot; font-weight:700;&quot;&gt;wireless a batteria.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Dopo il periodo di inattività selezionato, la lightgun entra in standby. Premi il grilletto per riprendere.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Disabilitato&lt;/span&gt; la tiene sempre attiva.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Predefinito:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 15 minuti&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>Wireless Power Saving</source>
+        <translation>Risparmio energetico wireless</translation>
+    </message>
+    <message>
+        <source>Parallax correction (camera below the sight):</source>
+        <translation>Correzione parallasse (telecamera sotto il mirino):</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Corrects the aim when the camera is &lt;span style=&quot; font-weight:700;&quot;&gt;below the sight line&lt;/span&gt; and you play closer to or farther from the screen than where you calibrated. Leave it at &lt;span style=&quot; font-weight:700;&quot;&gt;0&lt;/span&gt; when the camera is on the sight line.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Starting value&lt;/span&gt;, for each cm between camera and sight: about 3 on a 27&quot; monitor, about 1.5 on a 55&quot; TV. Exact value: cm between camera and sight × 100 / cm between the top and bottom LEDs.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Fine tuning&lt;/span&gt;: calibrate, step back to about one and a half times that distance and aim at a point. Cursor above the point: raise the value by 1. Cursor below the point: lower it by 1.&lt;/p&gt;&lt;p&gt;It takes effect after the next calibration of each profile.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 0&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Corregge la mira quando la telecamera è &lt;span style=&quot; font-weight:700;&quot;&gt;sotto la linea del mirino&lt;/span&gt; e giochi più vicino o più lontano dallo schermo rispetto a dove hai calibrato. Lascia &lt;span style=&quot; font-weight:700;&quot;&gt;0&lt;/span&gt; se la telecamera è sulla linea del mirino.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Valore di partenza&lt;/span&gt;, per ogni cm tra telecamera e mirino: circa 3 su un monitor da 27&quot;, circa 1,5 su una TV da 55&quot;. Valore esatto: cm tra telecamera e mirino × 100 / cm tra il LED in alto e quello in basso.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Regolazione fine&lt;/span&gt;: calibra, allontanati fino a circa una volta e mezza quella distanza e mira un punto. Cursore sopra il punto: aumenta il valore di 1. Cursore sotto il punto: diminuiscilo di 1.&lt;/p&gt;&lt;p&gt;Ha effetto dalla prossima calibrazione di ogni profilo.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Predefinito:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 0&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>Parallax Correction</source>
+        <translation>Correzione parallasse</translation>
+    </message>
+    <message>
+        <source>%1 minutes</source>
+        <translation>%1 minuti</translation>
+    </message>
+    <message>
+        <source>Disabled</source>
+        <translation>Disabilitato</translation>
+    </message>
+    <message>
+        <source>Default</source>
+        <translation>Predefinita</translation>
+    </message>
+    <message>
+        <source>Higher</source>
+        <translation>Alta</translation>
+    </message>
+    <message>
+        <source>Highest</source>
+        <translation>Massima</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Normale</translation>
+    </message>
+    <message>
+        <source>1-Frame Avg</source>
+        <translation>Media 1 frame</translation>
+    </message>
+    <message>
+        <source>2-Frame Avg</source>
+        <translation>Media 2 frame</translation>
+    </message>
+    <message>
+        <source>Square</source>
+        <translation>Quadrato</translation>
+    </message>
+    <message>
+        <source>Diamond</source>
+        <translation>Rombo</translation>
     </message>
 </context>
 </TS>

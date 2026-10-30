@@ -109,6 +109,13 @@ guiWindow::guiWindow(QWidget *parent)
     for(const auto &child : this->findChildren<QRadioButton*>())
         if(!child->property("trackable").isNull()) child->installEventFilter(this);
 
+    // Wireless power saving: only the minutes of the shared list, 0 = disabled.
+    {
+        const QSignalBlocker blocker(ui->standbyMinutesBox);
+        for(const int minutes : OF_Const::standbyMinutesChoices)
+            ui->standbyMinutesBox->addItem(minutes ? tr("%1 minutes").arg(minutes) : tr("Disabled"), minutes);
+    }
+
     // Connect boards view "custom layouts" actions to the button
     ui->customLayoutToolBtn->addActions({ui->actionImport_Custom_Layout, ui->actionExport_Custom_Layout});
 
@@ -631,6 +638,8 @@ void guiWindow::NewCaliWindow(const int &type) {
         caliWindow->Shutdown();
 
     caliWindow = new AppCaliWindow(nullptr, type);
+    // Deleted when closed, so a finished window does not stay in memory with its timers running.
+    caliWindow->setAttribute(Qt::WA_DeleteOnClose);
     connect(caliWindow, &AppCaliWindow::WindowExiting, this, &guiWindow::CaliWindowExiting);
 
     switch(type) {
@@ -821,7 +830,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                 TRled           << new QLabel(QString("<tt>%1</tt>").arg(App_Common::profilesTable.at(i).TRled          ));
 
                 irSens << new QComboBox();
-                irSens.at(i)->addItems({"Default", "Higher", "Highest"});
+                irSens.at(i)->addItems({tr("Default"), tr("Higher"), tr("Highest")});
                 irSens.at(i)->setCurrentIndex(App_Common::profilesTable.at(i).irSensitivity);
                 irSens.at(i)->installEventFilter(this);
                 irSens.at(i)->setProperty("slot", i);
@@ -837,7 +846,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                 connect(irSens.at(i), SIGNAL(activated(int)), this, SLOT(profileBoxes_activated(int)));
 
                 runMode << new QComboBox();
-                runMode.at(i)->addItems({"Normal", "1-Frame Avg", "2-Frame Avg"});
+                runMode.at(i)->addItems({tr("Normal"), tr("1-Frame Avg"), tr("2-Frame Avg")});
                 runMode.at(i)->setCurrentIndex(App_Common::profilesTable.at(i).runMode);
                 runMode.at(i)->installEventFilter(this);
                 runMode.at(i)->setProperty("slot", i);
@@ -852,7 +861,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                 connect(runMode.at(i), SIGNAL(activated(int)), this, SLOT(profileBoxes_activated(int)));
 
                 layoutMode << new QComboBox();
-                layoutMode.at(i)->addItems({"Square", "Diamond"});
+                layoutMode.at(i)->addItems({tr("Square"), tr("Diamond")});
                 layoutMode.at(i)->setCurrentIndex(App_Common::profilesTable.at(i).layoutType);
                 layoutMode.at(i)->installEventFilter(this);
                 layoutMode.at(i)->setProperty("slot", i);
@@ -1151,6 +1160,14 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->lowButtonsToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::lowButtonsMode]);
             ui->pedalWirelessToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::pedalWireless]);
             ui->bootOutputModeBox->setCurrentIndex(App_Common::settingsTable[App_Common::dataOrig][OF_Const::bootOutputMode]);
+            // Wireless power saving: a value not in the shared list is the default, as in the firmware (0 = disabled).
+            {
+                int standbyIndex = ui->standbyMinutesBox->findData((int)App_Common::settingsTable[App_Common::dataOrig][OF_Const::standbyMinutes]);
+                if(standbyIndex < 0)
+                    standbyIndex = ui->standbyMinutesBox->findData(OF_Const::standbyMinutesDefault);
+                ui->standbyMinutesBox->setCurrentIndex(standbyIndex);
+                App_Common::settingsTable[App_Common::dataCurrent][OF_Const::standbyMinutes] = ui->standbyMinutesBox->currentData().toUInt();
+            }
             ui->rumbleFFToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumbleFF]);
             ui->rumbleIntensityBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleStrength]);
             ui->rumbleLengthBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleInterval]);
@@ -1161,6 +1178,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             ui->invertStaticPixelsBox->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::invertStaticPixels]);
             ui->tempWarningBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::tempWarning]);
             ui->tempShutoffBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::tempShutdown]);
+            ui->cameraParallaxBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::cameraParallax]);
 
             ui->i2cOLEDtoggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::i2cOLED]);
             ui->oledAltAddrsToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::i2cOLEDaltAddr]);
@@ -1793,6 +1811,17 @@ void guiWindow::on_bootOutputModeBox_currentIndexChanged(int index)
 }
 
 
+void guiWindow::on_standbyMinutesBox_currentIndexChanged(int index)
+{
+    if(index < 0)
+        return;
+
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::standbyMinutes] = ui->standbyMinutesBox->itemData(index).toUInt();
+
+    DiffUpdate();
+}
+
+
 void guiWindow::on_rumbleFFToggle_stateChanged(int arg1)
 {
     App_Common::boolSettings[App_Common::dataCurrent][OF_Const::rumbleFF] = arg1;
@@ -2017,6 +2046,13 @@ void guiWindow::on_cameraModelUnlockToggle_stateChanged(int arg1)
     ui->camModel_DFRobot->setEnabled(enabled);
     ui->camModel_PAJ7025R2->setEnabled(enabled);
     ui->camModel_PAJ7025R3->setEnabled(enabled);
+    ui->cameraParallaxBox->setEnabled(enabled);
+}
+
+void guiWindow::on_cameraParallaxBox_valueChanged(int arg1)
+{
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraParallax] = arg1;
+    DiffUpdate();
 }
 
 void guiWindow::on_camModel_DFRobot_clicked()
@@ -2246,7 +2282,9 @@ void guiWindow::caliBtns_clicked()
         (char)profile,
         (char)(App_Common::profilesTable.at(profile).irSensitivity +
                 (App_Common::profilesTable.at(profile).layoutType << 4)),
-        (char)OF_Const::caliFlagIrView // Optional: IR emitters during calibration (older firmware ignores it)
+        // Optional: IR emitters and the four corner targets during calibration
+        // (older firmware ignores it and keeps six targets)
+        (char)(OF_Const::caliFlagIrView | OF_Const::caliFlagCorners)
     };
 
     if(!serial.SendCommand(OF_Const::sCaliProfile, payload, sizeof(payload)))
