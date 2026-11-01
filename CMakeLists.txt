@@ -54,6 +54,10 @@ set(PROJECT_SOURCES
         src/appcali.h
         src/appcali.cpp
         src/appcali.ui
+        src/applensfit.h
+        src/applensfit.cpp
+        src/applensfitwindow.h
+        src/applensfitwindow.cpp
         src/apppreviewer.h
         src/apppreviewer.cpp
         src/apppreviewer.ui

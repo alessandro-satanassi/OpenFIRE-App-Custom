@@ -1875,6 +1875,106 @@
                  </item>
                 </layout>
                </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_cameraLens">
+                 <item>
+                  <spacer name="cameraLensSpacerLeft">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_cameraLens">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lens values of the camera fitted in the gun. The camera record gives the default values (for some cameras, such as the PAJ7025 R3, computed from the datasheet); each camera may be a little different, wide-angle ones above all.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Refine lens&lt;/span&gt; opens a fullscreen window: sweep the gun over the whole screen, also at the corners and from close, until everything is green. The values that the data really determine are refined (K1, then K2 and the focal ratio), the others keep the default value.&lt;/p&gt;&lt;p&gt;Do it once, when building the gun, &lt;span style=&quot; font-weight:700;&quot;&gt;before calibrating&lt;/span&gt;: after saving the new values, calibrate again every profile you use.&lt;/p&gt;&lt;p&gt;Changing the camera model brings back the default values of the new camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Camera Lens</string>
+                   </property>
+                   <property name="text">
+                    <string>Camera lens:</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="cameraLensValues">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lens values of the camera fitted in the gun. The camera record gives the default values (for some cameras, such as the PAJ7025 R3, computed from the datasheet); each camera may be a little different, wide-angle ones above all.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Refine lens&lt;/span&gt; opens a fullscreen window: sweep the gun over the whole screen, also at the corners and from close, until everything is green. The values that the data really determine are refined (K1, then K2 and the focal ratio), the others keep the default value.&lt;/p&gt;&lt;p&gt;Do it once, when building the gun, &lt;span style=&quot; font-weight:700;&quot;&gt;before calibrating&lt;/span&gt;: after saving the new values, calibrate again every profile you use.&lt;/p&gt;&lt;p&gt;Changing the camera model brings back the default values of the new camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Camera Lens</string>
+                   </property>
+                   <property name="text">
+                    <string>default values</string>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="cameraLensRefineButton">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lens values of the camera fitted in the gun. The camera record gives the default values (for some cameras, such as the PAJ7025 R3, computed from the datasheet); each camera may be a little different, wide-angle ones above all.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Refine lens&lt;/span&gt; opens a fullscreen window: sweep the gun over the whole screen, also at the corners and from close, until everything is green. The values that the data really determine are refined (K1, then K2 and the focal ratio), the others keep the default value.&lt;/p&gt;&lt;p&gt;Do it once, when building the gun, &lt;span style=&quot; font-weight:700;&quot;&gt;before calibrating&lt;/span&gt;: after saving the new values, calibrate again every profile you use.&lt;/p&gt;&lt;p&gt;Changing the camera model brings back the default values of the new camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Camera Lens</string>
+                   </property>
+                   <property name="text">
+                    <string>Refine lens...</string>
+                   </property>
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="cameraLensResetButton">
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lens values of the camera fitted in the gun. The camera record gives the default values (for some cameras, such as the PAJ7025 R3, computed from the datasheet); each camera may be a little different, wide-angle ones above all.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Refine lens&lt;/span&gt; opens a fullscreen window: sweep the gun over the whole screen, also at the corners and from close, until everything is green. The values that the data really determine are refined (K1, then K2 and the focal ratio), the others keep the default value.&lt;/p&gt;&lt;p&gt;Do it once, when building the gun, &lt;span style=&quot; font-weight:700;&quot;&gt;before calibrating&lt;/span&gt;: after saving the new values, calibrate again every profile you use.&lt;/p&gt;&lt;p&gt;Changing the camera model brings back the default values of the new camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="accessibleName">
+                    <string>Camera Lens</string>
+                   </property>
+                   <property name="text">
+                    <string>Default values</string>
+                   </property>
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="trackable" stdset="0">
+                    <number>1</number>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="cameraLensSpacerRight">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
               </layout>
              </widget>
             </item>

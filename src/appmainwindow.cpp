@@ -109,6 +109,10 @@ guiWindow::guiWindow(QWidget *parent)
     for(const auto &child : this->findChildren<QRadioButton*>())
         if(!child->property("trackable").isNull()) child->installEventFilter(this);
 
+    // Camera lens row: its labels show the same help as its buttons.
+    ui->label_cameraLens->installEventFilter(this);
+    ui->cameraLensValues->installEventFilter(this);
+
     // Wireless power saving: only the minutes of the shared list, 0 = disabled.
     {
         const QSignalBlocker blocker(ui->standbyMinutesBox);
@@ -636,6 +640,8 @@ void guiWindow::PixelsDiff()
 void guiWindow::NewCaliWindow(const int &type) {
     if(caliWindow != nullptr)
         caliWindow->Shutdown();
+    if(lensFitWindow != nullptr)
+        lensFitWindow->Shutdown();
 
     caliWindow = new AppCaliWindow(nullptr, type);
     // Deleted when closed, so a finished window does not stay in memory with its timers running.
@@ -733,6 +739,7 @@ void guiWindow::on_confirmButton_clicked()
             // update (clear) diffs
             PixelsDiff();
             DiffUpdate();
+            CameraLensUpdate();   // the camera model saved can now be refined
             
             serialPort_progressSet(0);
             ui->tabWidget->setEnabled(true);
@@ -758,6 +765,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
     if(caliWindow != nullptr)
         if(caliWindow->GetWindowMode() != AppCaliWindow::modeAlignment)
             caliWindow->Shutdown();
+    if(lensFitWindow != nullptr)
+        lensFitWindow->Shutdown();
 
     if(ui->comPortSelector->currentIndex() > 0) {
         printf("COM port set to %d\n", ui->comPortSelector->currentIndex());
@@ -1195,6 +1204,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             case OF_Const::PixArt_PAJ7025R3: ui->camModel_PAJ7025R3->setChecked(true); break;
             }
             ui->cameraModelUnlockToggle->setChecked(false);
+            CameraLensUpdate();
 
             switch(App_Common::tinyUSBtable.tinyUSBid) {
             case 1:
@@ -2047,6 +2057,7 @@ void guiWindow::on_cameraModelUnlockToggle_stateChanged(int arg1)
     ui->camModel_PAJ7025R2->setEnabled(enabled);
     ui->camModel_PAJ7025R3->setEnabled(enabled);
     ui->cameraParallaxBox->setEnabled(enabled);
+    CameraLensUpdate();
 }
 
 void guiWindow::on_cameraParallaxBox_valueChanged(int arg1)
@@ -2057,19 +2068,94 @@ void guiWindow::on_cameraParallaxBox_valueChanged(int arg1)
 
 void guiWindow::on_camModel_DFRobot_clicked()
 {
-    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] = OF_Const::DFRobot_SEN0158;
-    DiffUpdate();
+    CameraModelSet(OF_Const::DFRobot_SEN0158);
 }
 
 void guiWindow::on_camModel_PAJ7025R2_clicked()
 {
-    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] = OF_Const::PixArt_PAJ7025R2;
-    DiffUpdate();
+    CameraModelSet(OF_Const::PixArt_PAJ7025R2);
 }
 
 void guiWindow::on_camModel_PAJ7025R3_clicked()
 {
-    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] = OF_Const::PixArt_PAJ7025R3;
+    CameraModelSet(OF_Const::PixArt_PAJ7025R3);
+}
+
+void guiWindow::CameraModelSet(const uint32_t &model)
+{
+    uint32_t *current = App_Common::settingsTable[App_Common::dataCurrent];
+    const uint32_t *saved = App_Common::settingsTable[App_Common::dataOrig];
+    // Clicking the model already chosen changes nothing (refined values not saved yet stay).
+    if(current[OF_Const::cameraModel] != model) {
+        current[OF_Const::cameraModel] = model;
+        const bool savedModel = saved[OF_Const::cameraModel] == model;
+        for(const int &i : {OF_Const::cameraLensK1, OF_Const::cameraLensK2, OF_Const::cameraLensFocal})
+            current[i] = savedModel ? saved[i] : OF_Const::lensValueUnset;
+    }
+    CameraLensUpdate();
+    DiffUpdate();
+}
+
+void guiWindow::CameraLensUpdate()
+{
+    const uint32_t *current = App_Common::settingsTable[App_Common::dataCurrent];
+    const std::optional<double> lens[3] = {LensFit::FromBits(current[OF_Const::cameraLensK1]),
+                                           LensFit::FromBits(current[OF_Const::cameraLensK2]),
+                                           LensFit::FromBits(current[OF_Const::cameraLensFocal])};
+    const QString names[3] = {tr("K1"), tr("K2"), tr("focal ratio")};
+    QStringList parts;
+    for(int i = 0; i < 3; ++i)
+        parts << names[i] + ' ' + (lens[i] ? QString::number(*lens[i], 'f', 4) : tr("default"));
+    ui->cameraLensValues->setText(!lens[0] && !lens[1] && !lens[2] ? tr("default values") : parts.join(QStringLiteral(" \u00b7 ")));
+
+    const bool unlocked = ui->cameraModelUnlockToggle->isChecked();
+    const bool cameraUnsaved = current[OF_Const::cameraModel] != App_Common::settingsTable[App_Common::dataOrig][OF_Const::cameraModel];
+    ui->cameraLensRefineButton->setEnabled(unlocked && serial.port.isOpen() && lensFitWindow == nullptr && !cameraUnsaved);
+    ui->cameraLensResetButton->setEnabled(unlocked && (lens[0] || lens[1] || lens[2]));
+}
+
+void guiWindow::on_cameraLensRefineButton_clicked()
+{
+    if(!serial.port.isOpen() || lensFitWindow != nullptr)
+        return;   // double click
+    if(App_Common::settingsTable[App_Common::dataCurrent][OF_Const::cameraModel] != App_Common::settingsTable[App_Common::dataOrig][OF_Const::cameraModel]) {
+        QMessageBox::information(this, tr("Refine camera lens"),
+                                 tr("Save the camera model first: the lens is refined for the camera the gun is using."));
+        return;
+    }
+    // IR test with the lens flag: the gun answers with sLensInfo, then sLensSample at every frame.
+    // A firmware without the lens refinement ignores the flag (the window then says so).
+    const char command[2] = {true, OF_Const::irTestFlagLens};
+    if(!serial.SendCommand(OF_Const::sIRTest, command, sizeof(command)))
+        return;
+
+    if(caliWindow != nullptr)
+        caliWindow->Shutdown();
+    lensFitWindow = new AppLensFitWindow(nullptr);
+    // Deleted when closed, so a finished window does not stay in memory with its timers running.
+    lensFitWindow->setAttribute(Qt::WA_DeleteOnClose);
+    connect(lensFitWindow, &AppLensFitWindow::WindowExiting, this, &guiWindow::LensFitWindowExiting);
+    // As the IR test: nothing else is changed while the gun streams the camera view.
+    ui->buttonsTestArea->setEnabled(false);
+    ui->confirmButton->setEnabled(false);
+    ui->confirmButton->setText(tr("[Disabled while in Test Mode]"));
+    ui->confirmButton->setIcon(QIcon());
+    ui->pinsTab->setEnabled(false);
+    ui->settingsTab->setEnabled(false);
+    ui->profilesTab->setEnabled(false);
+    ui->feedbackTestsBox->setEnabled(false);
+    ui->dangerZoneBox->setEnabled(false);
+    lensFitWindow->showFullScreen();
+    lensFitWindow->activateWindow();
+    lensFitWindow->setFocus();
+}
+
+void guiWindow::on_cameraLensResetButton_clicked()
+{
+    // Back to the camera record's values (saved with the normal Save).
+    for(const int &i : {OF_Const::cameraLensK1, OF_Const::cameraLensK2, OF_Const::cameraLensFocal})
+        App_Common::settingsTable[App_Common::dataCurrent][i] = OF_Const::lensValueUnset;
+    CameraLensUpdate();
     DiffUpdate();
 }
 
@@ -2498,6 +2584,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
         if(payload.isEmpty()) {
             if(caliWindow != nullptr)
                 caliWindow->Shutdown();
+            if(lensFitWindow != nullptr)
+                lensFitWindow->Shutdown();
             ui->comPortSelector->setCurrentIndex(0);
             ui->statusBar->showMessage(tr("Operation not confirmed: restart the microcontroller and reconnect."));
             serial.ShowError(tr("Operation not confirmed"),
@@ -2510,6 +2598,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
         case OF_Const::sErrCam:
             if(caliWindow != nullptr)
                 caliWindow->Shutdown();
+            if(lensFitWindow != nullptr)
+                lensFitWindow->Shutdown();
             serial.ShowError(tr("Device Error: Camera not available!"),
                              tr("<p>Data received from the board indicates that the camera is in a bad state.<br>"
                                 "This can happen if, for example, the camera wires are crossed<br>"
@@ -2560,6 +2650,17 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
         if(payload.size() == 1 && caliWindow != nullptr &&
            caliWindow->GetWindowMode() == AppCaliWindow::modeCalibrate)
             caliWindow->CaliIrWarning((uint8_t)payload.at(0));
+        break;
+
+    case OF_Const::sLensInfo:
+        // IR test with irTestFlagLens (lens refinement): once, then sLensSample at every frame
+        if(lensFitWindow != nullptr)
+            lensFitWindow->SetLensInfo(payload);
+        break;
+
+    case OF_Const::sLensSample:
+        if(lensFitWindow != nullptr)
+            lensFitWindow->AddLensSample(payload);
         break;
 
     case OF_Const::sTestCoords:
@@ -2746,6 +2847,41 @@ void guiWindow::CaliWindowExiting(const int &mode,
     caliWindow->close();
     if(caliWindow != nullptr)
         caliWindow = nullptr;
+}
+
+
+void guiWindow::LensFitWindowExiting()
+{
+    AppLensFitWindow *window = lensFitWindow;
+    if(window == nullptr)
+        return;
+    lensFitWindow = nullptr;
+
+    if(window->Applied() && serial.port.isOpen()) {
+        const LensFit::Values &values = window->AppliedValues();
+        uint32_t *current = App_Common::settingsTable[App_Common::dataCurrent];
+        current[OF_Const::cameraLensK1] = LensFit::ToBits(values.k1);
+        current[OF_Const::cameraLensK2] = LensFit::ToBits(values.k2);
+        current[OF_Const::cameraLensFocal] = LensFit::ToBits(values.focal);
+        ui->statusBar->showMessage(tr("New lens values ready: save them, then calibrate again every profile you use."), 10000);
+    }
+
+    // As the IR test: the board leaves the test, then everything is available again.
+    const char enabled = false;
+    if(!serial.port.isOpen() ||
+       serial.SendCommand(OF_Const::sIRTest, &enabled, sizeof(enabled))) {
+        ui->buttonsTestArea->setEnabled(true);
+        ui->pinsTab->setEnabled(true);
+        ui->settingsTab->setEnabled(true);
+        ui->profilesTab->setEnabled(true);
+        ui->feedbackTestsBox->setEnabled(true);
+        ui->dangerZoneBox->setEnabled(true);
+    }
+    if(serial.port.isOpen()) {
+        CameraLensUpdate();
+        DiffUpdate();   // Save button back (the new values make it available)
+    }
+    window->close();
 }
 
 

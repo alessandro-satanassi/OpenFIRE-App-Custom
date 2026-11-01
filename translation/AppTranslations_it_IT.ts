@@ -550,6 +550,149 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
     </message>
 </context>
 <context>
+    <name>AppLensFitWindow</name>
+    <message>
+        <source>Refine camera lens</source>
+        <translation>Affina lente della cam</translation>
+    </message>
+    <message>
+        <source>The camera record has no focal ratio: the lens cannot be refined.</source>
+        <translation>Il record della cam non ha il rapporto focale: la lente non si può affinare.</translation>
+    </message>
+    <message>
+        <source>The gun did not answer: its firmware does not support the lens refinement. Update the firmware.</source>
+        <translation>La pistola non ha risposto: il suo firmware non supporta l&apos;affinamento della lente. Aggiorna il firmware.</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Chiudi</translation>
+    </message>
+    <message>
+        <source>Lens radial correction K1</source>
+        <translation>Correzione radiale lente K1</translation>
+    </message>
+    <message>
+        <source>Lens radial correction K2</source>
+        <translation>Correzione radiale lente K2</translation>
+    </message>
+    <message>
+        <source>Lens focal ratio</source>
+        <translation>Rapporto focale lente</translation>
+    </message>
+    <message>
+        <source>The lens values could not be computed. Try again, moving the gun more slowly over the whole screen.</source>
+        <translation>Non è stato possibile calcolare i valori della lente. Riprova, muovendo la pistola più lentamente su tutto lo schermo.</translation>
+    </message>
+    <message>
+        <source>The analysis found no reliable change: keep the current values.</source>
+        <translation>L&apos;analisi non ha trovato una modifica affidabile: tieni i valori attuali.</translation>
+    </message>
+    <message>
+        <source>The current values are already right for your camera: nothing needs to change.</source>
+        <translation>I valori attuali sono già giusti per la tua cam: non serve cambiare niente.</translation>
+    </message>
+    <message>
+        <source>Values better suited to your camera were found: the aim should be more precise, above all towards the edges of the screen.</source>
+        <translation>Trovati valori più adatti alla tua cam: la mira dovrebbe essere più precisa, soprattutto verso i bordi dello schermo.</translation>
+    </message>
+    <message>
+        <source>The calculated values do not clearly improve on the current ones: better to keep the current ones, so the profiles need no new calibration.</source>
+        <translation>I valori calcolati non migliorano in modo sicuro quelli attuali: conviene tenere quelli attuali, così non serve ricalibrare i profili.</translation>
+    </message>
+    <message>
+        <source>Current</source>
+        <translation>Attuali</translation>
+    </message>
+    <message>
+        <source>Calculated</source>
+        <translation>Calcolati</translation>
+    </message>
+    <message>
+        <source>ERROR</source>
+        <translation>ERRORE</translation>
+    </message>
+    <message>
+        <source>After saving, calibrate again every profile you use.</source>
+        <translation>Dopo aver salvato, ricalibra ogni profilo che usi.</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>Applica</translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation>Ripeti</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Annulla</translation>
+    </message>
+    <message>
+        <source>Keep current</source>
+        <translation>Tieni attuali</translation>
+    </message>
+    <message>
+        <source>Invalid views: step back a little and keep all four LEDs in view.</source>
+        <translation>Viste non valide: allontanati un po&apos; e tieni in vista tutti e quattro i LED.</translation>
+    </message>
+    <message>
+        <source>Invalid views: keep all four LEDs in view and rotate the gun less.</source>
+        <translation>Viste non valide: tieni in vista tutti e quattro i LED e ruota meno la pistola.</translation>
+    </message>
+    <message>
+        <source>Camera view</source>
+        <translation>Vista della cam</translation>
+    </message>
+    <message>
+        <source>Waiting for the gun...</source>
+        <translation>In attesa della pistola...</translation>
+    </message>
+    <message>
+        <source>Step 1 of 3: paint the screen</source>
+        <translation>Passo 1 di 3: colora lo schermo</translation>
+    </message>
+    <message>
+        <source>Move the gun slowly over the whole screen until every square is green.</source>
+        <translation>Muovi la pistola lentamente su tutto lo schermo finché ogni quadrato è verde.</translation>
+    </message>
+    <message>
+        <source>Step 2 of 3: edges of the camera view</source>
+        <translation>Passo 2 di 3: bordi della vista della cam</translation>
+    </message>
+    <message>
+        <source>Bring the white crosshair into the yellow circle.</source>
+        <translation>Porta il mirino bianco nel cerchio giallo.</translation>
+    </message>
+    <message>
+        <source>Come closer to the screen until the yellow circle appears.</source>
+        <translation>Avvicinati allo schermo finché compare il cerchio giallo.</translation>
+    </message>
+    <message>
+        <source>Step back from the screen until the yellow circle appears.</source>
+        <translation>Allontanati dallo schermo finché compare il cerchio giallo.</translation>
+    </message>
+    <message>
+        <source>Step 3 of 3: rotate the gun</source>
+        <translation>Passo 3 di 3: ruota la pistola</translation>
+    </message>
+    <message>
+        <source>Rotate the gun on its own axis, like turning a key, to one side; holding it there, slowly move the white crosshair over the screen until that side turns green, then do the same on the other side.</source>
+        <translation>Ruota la pistola sul suo asse, come per girare una chiave, verso un lato; tenendola così, muovi lentamente il mirino bianco sullo schermo finché quel lato diventa verde, poi fai lo stesso dall&apos;altro lato.</translation>
+    </message>
+    <message>
+        <source>Done!</source>
+        <translation>Fatto!</translation>
+    </message>
+    <message>
+        <source>Computing the lens values... %1% (Esc cancels)</source>
+        <translation>Calcolo dei valori della lente... %1% (Esc annulla)</translation>
+    </message>
+    <message>
+        <source>Esc cancels.</source>
+        <translation>Esc annulla.</translation>
+    </message>
+</context>
+<context>
     <name>AppSerial</name>
     <message>
         <location filename="../src/appserial.cpp" line="95"/>
@@ -2548,6 +2691,58 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
     <message>
         <source>Diamond</source>
         <translation>Rombo</translation>
+    </message>
+    <message>
+        <source>Camera lens:</source>
+        <translation>Lente della cam:</translation>
+    </message>
+    <message>
+        <source>default values</source>
+        <translation>valori predefiniti</translation>
+    </message>
+    <message>
+        <source>Refine lens...</source>
+        <translation>Affina lente...</translation>
+    </message>
+    <message>
+        <source>Default values</source>
+        <translation>Valori predefiniti</translation>
+    </message>
+    <message>
+        <source>Camera Lens</source>
+        <translation>Lente della cam</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lens values of the camera fitted in the gun. The camera record gives the default values (for some cameras, such as the PAJ7025 R3, computed from the datasheet); each camera may be a little different, wide-angle ones above all.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Refine lens&lt;/span&gt; opens a fullscreen window: sweep the gun over the whole screen, also at the corners and from close, until everything is green. The values that the data really determine are refined (K1, then K2 and the focal ratio), the others keep the default value.&lt;/p&gt;&lt;p&gt;Do it once, when building the gun, &lt;span style=&quot; font-weight:700;&quot;&gt;before calibrating&lt;/span&gt;: after saving the new values, calibrate again every profile you use.&lt;/p&gt;&lt;p&gt;Changing the camera model brings back the default values of the new camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Valori della lente della cam montata nella pistola. Il record della cam fornisce i valori predefiniti (per alcune cam, come la PAJ7025 R3, calcolati dalla scheda tecnica); ogni cam può essere un po&apos; diversa, soprattutto le grandangolari.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Affina lente&lt;/span&gt; apre una finestra a schermo intero: muovi la pistola su tutto lo schermo, anche agli angoli e da vicino, finché è tutto verde. Si affinano i valori che i dati determinano davvero (K1, poi K2 e il rapporto focale), gli altri restano quelli predefiniti.&lt;/p&gt;&lt;p&gt;Fallo una volta, quando costruisci la pistola, &lt;span style=&quot; font-weight:700;&quot;&gt;prima di calibrare&lt;/span&gt;: dopo aver salvato i nuovi valori, ricalibra ogni profilo che usi.&lt;/p&gt;&lt;p&gt;Cambiando il modello di cam tornano i valori predefiniti della nuova cam.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>K1</source>
+        <translation>K1</translation>
+    </message>
+    <message>
+        <source>K2</source>
+        <translation>K2</translation>
+    </message>
+    <message>
+        <source>focal ratio</source>
+        <translation>rapporto focale</translation>
+    </message>
+    <message>
+        <source>default</source>
+        <translation>predefinito</translation>
+    </message>
+    <message>
+        <source>Refine camera lens</source>
+        <translation>Affina lente della cam</translation>
+    </message>
+    <message>
+        <source>Save the camera model first: the lens is refined for the camera the gun is using.</source>
+        <translation>Salva prima il modello della cam: la lente si affina per la cam che la pistola sta usando.</translation>
+    </message>
+    <message>
+        <source>New lens values ready: save them, then calibrate again every profile you use.</source>
+        <translation>Nuovi valori della lente pronti: salvali, poi ricalibra ogni profilo che usi.</translation>
     </message>
 </context>
 </TS>

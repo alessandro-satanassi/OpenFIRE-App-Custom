@@ -25,6 +25,7 @@
 
 #include "appcommon.h"
 #include "appcali.h"
+#include "applensfitwindow.h"
 #ifdef OFAPP_DEBUG
 #include "appdebug.h"
 #endif
@@ -225,6 +226,13 @@ private slots:
 
     void CaliWindowRequestedExit();
 
+    /// @brief      Lens refinement window leaving: applies the chosen values and ends the IR test
+    void LensFitWindowExiting();
+
+    void on_cameraLensRefineButton_clicked();
+
+    void on_cameraLensResetButton_clicked();
+
     void on_actionDebug_Window_triggered();
 
     void on_actionAbout_UI_triggered();
@@ -237,6 +245,17 @@ private:
     /// @brief      Calibration window pointer
     /// @details    Only one of these should be up at a time
     QPointer<AppCaliWindow> caliWindow;  // null again when the window is deleted (WA_DeleteOnClose)
+
+    /// @brief      Lens refinement window (Gun Settings > camera), at most one, never with a calibration window
+    QPointer<AppLensFitWindow> lensFitWindow;
+
+    /// @brief      Camera model chosen in the App: the refined lens values belong to the fitted camera,
+    ///             so a different model starts again from its own record values (lensValueUnset) and
+    ///             going back to the saved model gives back the saved values (as the WebApp)
+    void CameraModelSet(const uint32_t &model);
+
+    /// @brief      Camera lens row: values shown, Refine and Default buttons (locked like the model)
+    void CameraLensUpdate();
 
     /// @brief      Boards previewer window
     AppBoardsPreviewer boardsWindow;
