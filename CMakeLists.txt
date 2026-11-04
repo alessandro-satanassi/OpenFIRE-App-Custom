@@ -58,6 +58,10 @@ set(PROJECT_SOURCES
         src/applensfit.cpp
         src/applensfitwindow.h
         src/applensfitwindow.cpp
+        src/appemitterlayout.h
+        src/appemitterlayout.cpp
+        src/appalignmentwindow.h
+        src/appalignmentwindow.cpp
         src/apppreviewer.h
         src/apppreviewer.cpp
         src/apppreviewer.ui

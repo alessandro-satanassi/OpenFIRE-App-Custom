@@ -985,13 +985,22 @@ std::optional<double> FromBits(const uint32_t &bits)
 
 bool CurveValid(double k1, double k2)
 {
+    double gainMin, gainMax;
+    return CurveRange(k1, k2, gainMin, gainMax);
+}
+
+bool CurveRange(double k1, double k2, double &min, double &max)
+{
     k1 = double(float(k1));
     k2 = double(float(k2));
     if(!(std::fabs(k1) <= 2) || !(std::fabs(k2) <= 2)) return false;
     double gainMin, gainMax, slopeMin, slopeMax;
     ParabolaRange(k1, k2, gainMin, gainMax);
     ParabolaRange(3 * k1, 5 * k2, slopeMin, slopeMax);
-    return gainMin > CURVE_MARGIN && slopeMin > CURVE_MARGIN;
+    if(!(gainMin > CURVE_MARGIN && slopeMin > CURVE_MARGIN)) return false;
+    min = gainMin;
+    max = gainMax;
+    return true;
 }
 
 std::optional<Info> ParseInfo(const QByteArray &payload)

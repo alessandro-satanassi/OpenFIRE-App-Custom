@@ -40,6 +40,7 @@
 #include <QFontDatabase>
 #include <QUrl>
 #include <QScopedValueRollback>
+#include <QStyleOptionGroupBox>
 #include <algorithm>
 #include <iterator>
 
@@ -270,6 +271,17 @@ guiWindow::guiWindow(QWidget *parent)
                                           QPen(QColor(255,100,0), 0), QBrush(QColor(255,125,0)));
     analogPos->setTransform(QTransform::fromScale(analogGfxScene.sceneRect().width() / 256, analogGfxScene.sceneRect().height() / 256));
 
+    // Gun Tests switches (rumble, solenoid, autofire), spread over the Switch box like the WebApp
+    ui->switchesLayout->addStretch(1);
+    for(int i = 0; i < 3; ++i) {
+        testSwitch << new TestSwitchItem(ui->switchesGroup);
+        ui->switchesLayout->addWidget(testSwitch.at(i));
+        ui->switchesLayout->addStretch(1);
+    }
+    // the temperature box follows the frame of the Switch box (it depends on the style and the font)
+    ui->switchesGroup->installEventFilter(this);
+    SwitchesUpdate();
+
     // hiding tUSB elements by default since this can't be done from the off
     ui->tUSBLayoutAdvanced->setVisible(false);
 
@@ -320,6 +332,9 @@ guiWindow::~guiWindow()
 
 bool guiWindow::eventFilter(QObject* object, QEvent* event)
 {
+    if(object == ui->switchesGroup && event->type() == QEvent::Resize)
+        TemperatureBoxAlign();
+
     if(event->type() == QEvent::Enter) {
         switch(object->property("trackable").toInt()) {
         case App_Common::trackPinbox:
@@ -591,6 +606,13 @@ void guiWindow::LabelsUpdate()
         }
     }
 
+    // The last switch states stay: the board repeats them twice a second, with the
+    // pins and the normally closed setting it has after a save.
+    testSwitchMapped[0] = App_Common::inputsMap.value(OF_Const::rumbleSwitch) >= 0;
+    testSwitchMapped[1] = App_Common::inputsMap.value(OF_Const::solenoidSwitch) >= 0;
+    testSwitchMapped[2] = App_Common::inputsMap.value(OF_Const::autofireSwitch) >= 0;
+    SwitchesUpdate();
+
     ui->tmp36Label->setStyleSheet("");
     if(App_Common::inputsMap.value(OF_Const::tempPin) >= 0) {
         ui->tmp36Label->setText(tr("Temperature Read..."));
@@ -608,6 +630,137 @@ void guiWindow::LabelsUpdate()
     else ui->analogGroup->setEnabled(false), ui->aPosLabel->setText(tr("Not Connected"));
 
     ui->boardLabel->setText(PrettifyName(App_Common::tinyUSBtable.tinyUSBname));
+}
+
+
+void guiWindow::SwitchesUpdate()
+{
+    static const char *const names[3] = {
+        QT_TR_NOOP("Rumble"), QT_TR_NOOP("Solenoid"), QT_TR_NOOP("Autofire")
+    };
+    for(int i = 0; i < testSwitch.count(); ++i) {
+        const bool connected = testSwitchMapped[i];
+        const bool known = connected && switchRead >= 0;
+        // Without that bit the board does not read the switch (a build without it).
+        const bool read = known && ((switchRead >> i) & 1);
+        const bool on = read && ((switchOn >> i) & 1);
+        const bool off = !connected || (known && !read);
+
+        TestSwitchItem::State state;
+        QString text;
+        if(off)         state = TestSwitchItem::NotConnected, text = tr("Not Connected");
+        else if(!known) state = TestSwitchItem::Unknown,      text = tr("Switch state not available: update the firmware.");
+        else if(on)     state = TestSwitchItem::On,           text = tr("Enabled");
+        else            state = TestSwitchItem::Off,          text = tr("Disabled");
+
+        const QString name = tr(names[i]);
+        testSwitch.at(i)->SetName(name);
+        testSwitch.at(i)->SetState(state);
+        testSwitch.at(i)->setToolTip(text);
+        testSwitch.at(i)->setAccessibleName(QString("%1: %2").arg(name, text));
+    }
+}
+
+
+void guiWindow::TemperatureBoxAlign()
+{
+    QGroupBox *group = ui->switchesGroup;
+    QStyleOptionGroupBox option;
+    option.initFrom(group);
+    option.text = group->title();
+    option.lineWidth = 1;
+    option.midLineWidth = 0;
+    option.textAlignment = group->alignment();
+    option.subControls = QStyle::SC_GroupBoxFrame;
+    if(!option.text.isEmpty())
+        option.subControls |= QStyle::SC_GroupBoxLabel;
+    option.features = group->isFlat() ? QStyleOptionFrame::Flat : QStyleOptionFrame::None;
+
+    const QRect frame = group->style()->subControlRect(QStyle::CC_GroupBox, &option, QStyle::SC_GroupBoxFrame, group);
+    int top = std::max(0, frame.top());
+    // Fusion (the App style on Windows) returns the whole box and draws the frame below the title:
+    // the same margin as its PE_FrameGroupBox (title height + 3 px)
+    if(top == 0 && !option.text.isEmpty())
+        top = std::max(group->style()->pixelMetric(QStyle::PM_ExclusiveIndicatorHeight, &option, group),
+                       group->fontMetrics().height()) + 3;
+    const int bottom = std::max(0, group->height() - 1 - frame.bottom());
+    const QMargins margins(0, top, 0, bottom);
+    if(ui->tmp36BoxLayout->contentsMargins() != margins)
+        ui->tmp36BoxLayout->setContentsMargins(margins);
+}
+
+
+TestSwitchItem::TestSwitchItem(QWidget *parent) : QWidget(parent)
+{
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+}
+
+
+void TestSwitchItem::SetName(const QString &newName)
+{
+    if(name == newName) return;
+    name = newName;
+    updateGeometry();
+    update();
+}
+
+
+void TestSwitchItem::SetState(State newState)
+{
+    if(state == newState) return;
+    state = newState;
+    update();
+}
+
+
+// Same sizes as the WebApp: lever 42 x 22 px, 8 px from the name, 2/6 px padding.
+static constexpr int SWITCH_PILL_W = 42;
+static constexpr int SWITCH_PILL_H = 22;
+static constexpr int SWITCH_GAP = 8;
+static constexpr int SWITCH_PAD_X = 6;
+static constexpr int SWITCH_PAD_Y = 2;
+
+
+QSize TestSwitchItem::sizeHint() const
+{
+    const QFontMetrics metrics(font());
+    return QSize(SWITCH_PAD_X * 2 + metrics.horizontalAdvance(name) + SWITCH_GAP + SWITCH_PILL_W,
+                 SWITCH_PAD_Y * 2 + std::max(SWITCH_PILL_H, metrics.height()));
+}
+
+
+void TestSwitchItem::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    const bool dashed = state == NotConnected || state == Unknown;
+    const QFontMetrics metrics(font());
+    const int textWidth = metrics.horizontalAdvance(name);
+    const QRect textRect(SWITCH_PAD_X, 0, textWidth, height());
+    painter.setPen(palette().color(state == NotConnected || !isEnabled() ? QPalette::Disabled : QPalette::Active,
+                                   QPalette::WindowText));
+    painter.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, name);
+
+    const QRectF pill(SWITCH_PAD_X + textWidth + SWITCH_GAP + 0.5, (height() - SWITCH_PILL_H) / 2.0 + 0.5,
+                      SWITCH_PILL_W - 1, SWITCH_PILL_H - 1);
+    const qreal radius = pill.height() / 2;
+    if(dashed) {
+        QPen pen(QColor(128, 128, 128), 1, Qt::DashLine);
+        painter.setPen(pen);
+        painter.setBrush(Qt::NoBrush);
+        painter.drawRoundedRect(pill, radius, radius);
+        return;
+    }
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(state == On ? QColor(0x11, 0xD0, 0x0A) : QColor(128, 128, 128));
+    painter.drawRoundedRect(pill, radius, radius);
+
+    // the lever: 16 px, 3 px from the edge, on the right when on
+    const qreal knob = 16;
+    const qreal x = state == On ? pill.right() - 3 - knob + 0.5 : pill.left() + 3 - 0.5;
+    painter.setBrush(QColor(0xF4, 0xF4, 0xF4));
+    painter.drawEllipse(QRectF(x, pill.center().y() - knob / 2, knob, knob));
 }
 
 
@@ -642,6 +795,8 @@ void guiWindow::NewCaliWindow(const int &type) {
         caliWindow->Shutdown();
     if(lensFitWindow != nullptr)
         lensFitWindow->Shutdown();
+    if(alignmentWindow != nullptr)
+        alignmentWindow->Shutdown();
 
     caliWindow = new AppCaliWindow(nullptr, type);
     // Deleted when closed, so a finished window does not stay in memory with its timers running.
@@ -1069,6 +1224,9 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             // set boxes to reflect indexes of inputsMap
             BoxesUpdate();
 
+            // a new board session: nothing known about its switches yet
+            switchRead = -1;
+            switchOn = 0;
             LabelsUpdate();
 
             // Drawing the actual board view page by referencing the board maps data from OpenFIREshared.h
@@ -1284,6 +1442,9 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
 
         // reset temp label stylesheet to neutral
         ui->tmp36Label->setStyleSheet("");
+        switchRead = -1;
+        switchOn = 0;
+        SwitchesUpdate();
         ui->confirmButton->setEnabled(false);
         ui->confirmButton->setText(tr("[Currently Not Connected]"));
         ui->confirmButton->setIcon(QIcon());
@@ -2131,6 +2292,8 @@ void guiWindow::on_cameraLensRefineButton_clicked()
 
     if(caliWindow != nullptr)
         caliWindow->Shutdown();
+    if(alignmentWindow != nullptr)
+        alignmentWindow->Shutdown();
     lensFitWindow = new AppLensFitWindow(nullptr);
     // Deleted when closed, so a finished window does not stay in memory with its timers running.
     lensFitWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -2519,6 +2682,16 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
             const uint8_t btn = (uint8_t)payload.at(0);
             if(btn < testLabel.count())
                 testLabel.at(btn)->setStyleSheet("");
+        }
+        break;
+
+    case OF_Const::sSwitchStateUpd:
+        // docked firmware 7.1.0+: byte 0 switches read, byte 1 switches enabled (normally closed
+        // setting applied), at every change and twice a second
+        if(payload.size() >= 2) {
+            switchRead = (uint8_t)payload.at(0);
+            switchOn = (uint8_t)payload.at(1);
+            SwitchesUpdate();
         }
         break;
 
@@ -2960,7 +3133,34 @@ void guiWindow::on_actionOpenFIRE_Serial_Usage_triggered()
 
 void guiWindow::on_actionOpen_IR_Emitter_Alignment_Assistant_triggered()
 {
-    NewCaliWindow(AppCaliWindow::modeAlignment);
+    // As the WebApp: a calibration, IR test or lens refinement in progress is not interrupted.
+    if(caliWindow != nullptr || lensFitWindow != nullptr)
+        return;
+
+    // Same planner as the WebApp: with a lightgun connected it starts from its camera, refined
+    // lens values and the layout of the selected profile; without one, from the default values.
+    std::optional<int> camera;
+    std::optional<EmitterLayout::Custom> lens;
+    bool diamond = false;
+    if(serial.port.isOpen()) {
+        const uint32_t *current = App_Common::settingsTable[App_Common::dataCurrent];
+        camera = (int)current[OF_Const::cameraModel];
+        lens = EmitterLayout::Custom{LensFit::FromBits(current[OF_Const::cameraLensK1]),
+                                     LensFit::FromBits(current[OF_Const::cameraLensK2]),
+                                     LensFit::FromBits(current[OF_Const::cameraLensFocal])};
+        if(App_Common::board.selectedProfile >= 0 && App_Common::board.selectedProfile < (int)App_Common::profilesTable.size())
+            diamond = App_Common::profilesTable.at(App_Common::board.selectedProfile).layoutType == OF_Const::layoutDiamond;
+    }
+
+    if(alignmentWindow != nullptr)
+        alignmentWindow->Shutdown();
+
+    alignmentWindow = new AppAlignmentWindow(camera, diamond, lens);
+    // Deleted when closed, so a closed window does not stay in memory with its timer.
+    alignmentWindow->setAttribute(Qt::WA_DeleteOnClose);
+    alignmentWindow->showFullScreen();
+    alignmentWindow->activateWindow();
+    alignmentWindow->setFocus();
 }
 
 

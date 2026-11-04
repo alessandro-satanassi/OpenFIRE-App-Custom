@@ -1646,14 +1646,14 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
     <message>
         <location filename="../src/appmainwindow.ui" line="2582"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1609"/>
-        <source>&amp;OpenFIRE Documentation on the Repo...</source>
-        <translation>Documentazione &amp;OpenFIRE sul Repo...</translation>
+        <source>&amp;OpenFIRE ESP32 Documentation on the Repo...</source>
+        <translation>Documentazione &amp;OpenFIRE ESP32 sul Repo...</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2593"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1613"/>
-        <source>OpenFIRE &amp;Serial Usage Docs on the Wiki...</source>
-        <translation>Uso della &amp;Seriale OpenFIRE sulla Wiki...</translation>
+        <source>OpenFIRE ESP32 &amp;Serial Usage Docs on the Wiki...</source>
+        <translation>Uso della &amp;Seriale OpenFIRE ESP32 sulla Wiki...</translation>
     </message>
     <message>
         <location filename="../src/appmainwindow.ui" line="2634"/>
@@ -2743,6 +2743,269 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
     <message>
         <source>New lens values ready: save them, then calibrate again every profile you use.</source>
         <translation>Nuovi valori della lente pronti: salvali, poi ricalibra ogni profilo che usi.</translation>
+    </message>
+    <message>
+        <source>Switch</source>
+        <translation>Switch</translation>
+    </message>
+    <message>
+        <source>Autofire</source>
+        <translation>Autofire</translation>
+    </message>
+    <message>
+        <source>Enabled</source>
+        <translation>Abilitato</translation>
+    </message>
+    <message>
+        <source>Switch state not available: update the firmware.</source>
+        <translation>Stato non disponibile: aggiorna il firmware.</translation>
+    </message>
+</context>
+<context>
+    <name>AppAlignmentWindow</name>
+    <message>
+        <source>Alignment Assistant</source>
+        <translation>Assistente di allineamento</translation>
+    </message>
+    <message>
+        <source>IR emitter placement</source>
+        <translation>Posizionamento emettitori IR</translation>
+    </message>
+    <message>
+        <source>Hide controls</source>
+        <translation>Nascondi controlli</translation>
+    </message>
+    <message>
+        <source>Show controls</source>
+        <translation>Mostra controlli</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Chiudi</translation>
+    </message>
+    <message>
+        <source>Your setup</source>
+        <translation>La tua configurazione</translation>
+    </message>
+    <message>
+        <source>Screen format</source>
+        <translation>Formato schermo</translation>
+    </message>
+    <message>
+        <source>Screen diagonal</source>
+        <translation>Diagonale schermo</translation>
+    </message>
+    <message>
+        <source>Common screen sizes</source>
+        <translation>Diagonali più comuni</translation>
+    </message>
+    <message>
+        <source>Choose a common screen size…</source>
+        <translation>Scegli una diagonale comune…</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Camera</translation>
+    </message>
+    <message>
+        <source>Additional lens</source>
+        <translation>Lente aggiuntiva</translation>
+    </message>
+    <message>
+        <source>Common lenses</source>
+        <translation>Lenti più comuni</translation>
+    </message>
+    <message>
+        <source>Choose a common lens…</source>
+        <translation>Scegli una lente comune…</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Nessuna</translation>
+    </message>
+    <message>
+        <source>0.67x converter</source>
+        <translation>Convertitore 0,67×</translation>
+    </message>
+    <message>
+        <source>0.45x converter</source>
+        <translation>Convertitore 0,45×</translation>
+    </message>
+    <message>
+        <source>Playing distance</source>
+        <translation>Distanza di gioco</translation>
+    </message>
+    <message>
+        <source>Set ideal minimum distance</source>
+        <translation>Imposta distanza minima ideale</translation>
+    </message>
+    <message>
+        <source>Measured from the gun to the screen.</source>
+        <translation>Misurata dalla pistola allo schermo.</translation>
+    </message>
+    <message>
+        <source>Force legacy placement</source>
+        <translation>Forza posizione legacy</translation>
+    </message>
+    <message>
+        <source>Measure between LED centres. After moving the emitters, calibrate again.</source>
+        <translation>Misura fra i centri dei LED. Dopo aver spostato gli emettitori, ripeti la calibrazione.</translation>
+    </message>
+    <message>
+        <source>Slider</source>
+        <translation>Cursore</translation>
+    </message>
+    <message>
+        <source>Legacy placement</source>
+        <translation>Posizionamento legacy</translation>
+    </message>
+    <message>
+        <source>Suggested placement</source>
+        <translation>Posizionamento suggerito</translation>
+    </message>
+    <message>
+        <source>Legacy placement active</source>
+        <translation>Posizionamento legacy attivo</translation>
+    </message>
+    <message>
+        <source>Good movement margin</source>
+        <translation>Buon margine di movimento</translation>
+    </message>
+    <message>
+        <source>Limited movement margin</source>
+        <translation>Margine di movimento ridotto</translation>
+    </message>
+    <message>
+        <source>Reduced LED coverage</source>
+        <translation>Copertura dei LED ridotta</translation>
+    </message>
+    <message>
+        <source>Diamond: centre of each screen edge</source>
+        <translation>Diamond: al centro dei quattro lati dello schermo</translation>
+    </message>
+    <message>
+        <source>Square: two emitters above and two below</source>
+        <translation>Square: due emettitori sopra e due sotto</translation>
+    </message>
+    <message>
+        <source>Screen size</source>
+        <translation>Dimensioni schermo</translation>
+    </message>
+    <message>
+        <source>Horizontal LED spacing</source>
+        <translation>Distanza orizzontale fra i LED</translation>
+    </message>
+    <message>
+        <source>From the screen centre</source>
+        <translation>Dalla mezzeria dello schermo</translation>
+    </message>
+    <message>
+        <source>From each side edge</source>
+        <translation>Da ciascun bordo laterale</translation>
+    </message>
+    <message>
+        <source>Base / height</source>
+        <translation>Base / altezza</translation>
+    </message>
+    <message>
+        <source>Vertical LED spacing</source>
+        <translation>Distanza verticale fra i LED</translation>
+    </message>
+    <message>
+        <source>For fuller LED coverage</source>
+        <translation>Per una copertura più completa dei LED</translation>
+    </message>
+    <message>
+        <source>For more freedom of movement</source>
+        <translation>Per più libertà di movimento</translation>
+    </message>
+    <message>
+        <source>Suggested minimum distance</source>
+        <translation>Distanza minima suggerita</translation>
+    </message>
+    <message>
+        <source>More than 10 m</source>
+        <translation>Oltre 10 m</translation>
+    </message>
+    <message>
+        <source>Square uses the fixed legacy base / height ratio of 0.711.</source>
+        <translation>Square usa il rapporto base/altezza legacy fisso di 0,711.</translation>
+    </message>
+    <message>
+        <source>These LED positions work well in most situations, but they are not optimised for your setup.</source>
+        <translation>Queste posizioni dei LED funzionano più che bene nella maggior parte delle situazioni, ma non sono ottimizzate per la tua postazione.</translation>
+    </message>
+    <message>
+        <source>This placement does not adapt to the camera or playing distance.</source>
+        <translation>La posizione non si adatta alla camera o alla distanza di gioco.</translation>
+    </message>
+    <message>
+        <source>Your choices are preserved. Press the legacy button again to return to automatic placement.</source>
+        <translation>Le tue scelte vengono conservate. Premi di nuovo il pulsante legacy per tornare al posizionamento automatico.</translation>
+    </message>
+    <message>
+        <source>Check all four screen corners from your playing positions in the IR camera test.</source>
+        <translation>Nel test della camera IR, verifica i quattro angoli dello schermo dalle tue posizioni di gioco.</translation>
+    </message>
+    <message>
+        <source>Usable at the selected distance, with less room to move. Move farther back for more freedom.</source>
+        <translation>Utilizzabile alla distanza indicata, con meno libertà di movimento. Per avere più margine, allontanati dallo schermo.</translation>
+    </message>
+    <message>
+        <source>Showing the first usable placement farther back. The colour refers to your selected distance.</source>
+        <translation>L’assistente mostra la prima disposizione utilizzabile da più lontano. Il colore si riferisce alla distanza scelta.</translation>
+    </message>
+    <message>
+        <source>No tested placement meets the visibility checks within 10 m.</source>
+        <translation>Nessuna delle disposizioni valutate soddisfa i requisiti di visibilità entro 10 m.</translation>
+    </message>
+    <message>
+        <source>Some LEDs may leave the view even with the gun upright. Aim may be less precise or tracking may be lost.</source>
+        <translation>Alcuni LED possono uscire dalla vista anche con la pistola dritta. La mira può essere meno precisa o il tracking può interrompersi.</translation>
+    </message>
+    <message>
+        <source>The placement prioritises aiming precision, then LED visibility. You can calibrate farther back without moving the LEDs.</source>
+        <translation>Il consiglio privilegia la precisione di mira, poi la visibilità dei LED. Puoi calibrare da più lontano senza spostare i LED.</translation>
+    </message>
+    <message>
+        <source>Checks four LEDs with the gun upright and at least three when rolled up to 15° to either side, including side movements.</source>
+        <translation>Verifica quattro LED con la pistola dritta e almeno tre con rotazioni fino a 15° per lato, considerando anche gli spostamenti laterali.</translation>
+    </message>
+    <message>
+        <source>When you tilt the gun, one LED may leave the view: the gun fills it in, with slightly less precise aim.</source>
+        <translation>Quando inclini la pistola, un LED può uscire dalla vista: la pistola lo ricostruisce, con una mira un po’ meno precisa.</translation>
+    </message>
+    <message>
+        <source>Uses the entered lens factor combined with the camera’s native field of view.</source>
+        <translation>Usa il fattore della lente indicato, combinato con il campo visivo nativo della camera.</translation>
+    </message>
+    <message>
+        <source>After fitting the lens, use Refine lens in the App, so the gun knows the new lens.</source>
+        <translation>Dopo aver montato la lente, usa Affina lente nell’App, così la pistola conosce la nuova lente.</translation>
+    </message>
+    <message>
+        <source>This lens may be too strong for Refine lens in the App: aiming may be less precise.</source>
+        <translation>Questa lente potrebbe essere troppo forte per Affina lente nell’App: la mira potrebbe essere meno precisa.</translation>
+    </message>
+    <message>
+        <source>Uses the lens refinement currently selected in the App.</source>
+        <translation>Usa i valori di affinamento della lente attualmente selezionati nell’App.</translation>
+    </message>
+    <message>
+        <source>Coverage is a geometric estimate, not a guarantee of detection range. LED power, mounting and reflections also matter.</source>
+        <translation>La copertura è una stima geometrica, non garantisce la portata di rilevamento. Contano anche potenza dei LED, montaggio e riflessi.</translation>
+    </message>
+    <message>
+        <source>Scaled preview: use the centimetre measurements to position the LEDs.</source>
+        <translation>Anteprima in scala: usa le quote in centimetri per posizionare i LED.</translation>
+    </message>
+    <message>
+        <source>en_US</source>
+        <translation>it_IT</translation>
+    </message>
+    <message>
+        <source>Camera optics are unavailable.</source>
+        <translation>Dati ottici non disponibili.</translation>
     </message>
 </context>
 </TS>

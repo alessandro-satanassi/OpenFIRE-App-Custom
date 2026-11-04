@@ -26,6 +26,7 @@
 #include "appcommon.h"
 #include "appcali.h"
 #include "applensfitwindow.h"
+#include "appalignmentwindow.h"
 #ifdef OFAPP_DEBUG
 #include "appdebug.h"
 #endif
@@ -52,6 +53,31 @@
 #include <QProgressBar>
 #include <QVariantAnimation>
 #include <QGraphicsDropShadowEffect>
+
+/// @brief  Gun Tests: one switch (rumble, solenoid or autofire) shown as its name and a lever, like the
+///         WebApp: on (green, lever right), off (grey, lever left), dashed without a pin or when the firmware
+///         never sent its state (sSwitchStateUpd).
+class TestSwitchItem : public QWidget
+{
+public:
+    enum State { NotConnected = 0, Unknown, Off, On };
+
+    explicit TestSwitchItem(QWidget *parent = nullptr);
+
+    void SetName(const QString &newName);
+    void SetState(State newState);
+    State GetState() const { return state; }
+
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override { return sizeHint(); }
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
+    QString name;
+    State state = NotConnected;
+};
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -248,6 +274,8 @@ private:
 
     /// @brief      Lens refinement window (Gun Settings > camera), at most one, never with a calibration window
     QPointer<AppLensFitWindow> lensFitWindow;
+    // IR emitter placement planner: offline, it never changes the lightgun settings
+    QPointer<AppAlignmentWindow> alignmentWindow;
 
     /// @brief      Camera model chosen in the App: the refined lens values belong to the fitted camera,
     ///             so a different model starts again from its own record values (lensValueUnset) and
@@ -277,6 +305,12 @@ private:
     /// @brief      Updates boards layout header
     /// @details    Also invokes name prettification
     void LabelsUpdate();
+
+    /// @brief      Gun Tests switches, from the pins of the last load/save and the last sSwitchStateUpd
+    void SwitchesUpdate();
+
+    /// @brief      Gun Tests: the temperature box lines up with the frame of the Switch box beside it
+    void TemperatureBoxAlign();
 
     /// @brief      Shows each pin's NC checkbox for the inputs that can be inverted, with its value
     /// @details    Only with custom pins; the checkboxes can be changed while invertEditToggle is on
@@ -408,6 +442,17 @@ private:
 
     /// @brief      Test "Buttons" in the test screen representing each button
     QVector<QLabel*> testLabel;
+
+    /// @brief      Gun Tests switches: rumble, solenoid and autofire (bit 0, 1, 2 of sSwitchStateUpd)
+    QVector<TestSwitchItem*> testSwitch;
+
+    /// @brief      Pins of the switches at the last load/save (like the button labels)
+    bool testSwitchMapped[3] = {false, false, false};
+
+    /// @brief      Last sSwitchStateUpd of this board: switches read and switches enabled;
+    ///             switchRead < 0 until one arrives (older firmware never sends it)
+    int switchRead = -1;
+    int switchOn = 0;
 
     /// @brief      Analog stick graphic view
     QGraphicsScene analogGfxScene;

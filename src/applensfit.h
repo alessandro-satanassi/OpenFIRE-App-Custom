@@ -84,6 +84,10 @@ std::optional<double> FromBits(const uint32_t &bits);
 /// @brief  Same check as the firmware (OpenFIRECamera::LensCurveValid)
 bool CurveValid(double k1, double k2);
 
+/// @brief  CurveValid, also giving the range of the factor 1 + K1 q + K2 q^2 over q = 0..2
+///         (WebApp lensfit.js curveValid: min and max); false, and min/max unchanged, when not valid
+bool CurveRange(double k1, double k2, double &min, double &max);
+
 enum Tiers_e {
     TierRecord = 0,
     TierK1,
