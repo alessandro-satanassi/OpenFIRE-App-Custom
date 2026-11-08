@@ -112,13 +112,16 @@ std::array<Vec3, 4> Leds(const Settings &s, double ratio)
     return {{{-ratio * h / 2, -h / 2, 0}, {ratio * h / 2, -h / 2, 0}, {-ratio * h / 2, h / 2, 0}, {ratio * h / 2, h / 2, 0}}};
 }
 
-Point Project(const Optics &o, const Pose &pose, const Vec3 &led)
+// The firmware radial map (camera -> corrected) and its inverse.
+Point Corrected(const Optics &o, const Point &p)
 {
-    const Vec3 v = {led[0] - pose.eye[0], led[1] - pose.eye[1], led[2] - pose.eye[2]};
-    const double z = Dot(v, pose.f);
-    if(!(z > 0)) return {1e6, 1e6};
-    double x = Dot(v, pose.right) / (z * o.tx) * o.sideGain;
-    double y = Dot(v, pose.down) / (z * o.ty) * o.sideGain;
+    const double x = p[0], y = p[1], r = x * x + y * y;
+    const double g = Clampd(1 + o.k1 * r + o.k2 * r * r, o.min, o.max);
+    return {x * g, y * g};
+}
+
+Point Distorted(const Optics &o, double x, double y)
+{
     const double r = std::hypot(x, y);
     if(r != 0 && (o.k1 != 0 || o.k2 != 0)) {
         double lo = 0, hi = std::max(2.0, r / o.min + 1);
@@ -131,6 +134,14 @@ Point Project(const Optics &o, const Pose &pose, const Vec3 &led)
         y *= scale;
     }
     return {x, y};
+}
+
+Point Project(const Optics &o, const Pose &pose, const Vec3 &led)
+{
+    const Vec3 v = {led[0] - pose.eye[0], led[1] - pose.eye[1], led[2] - pose.eye[2]};
+    const double z = Dot(v, pose.f);
+    if(!(z > 0)) return {1e6, 1e6};
+    return Distorted(o, Dot(v, pose.right) / (z * o.tx) * o.sideGain, Dot(v, pose.down) / (z * o.ty) * o.sideGain);
 }
 
 // Test the radial boundary directly for the distance search (no inversion).
@@ -246,9 +257,21 @@ Rebuild Reconstruction(const Optics &o, const Quad &reference, const std::vector
             return std::optional<Quad>(result);
         };
     }
-    const Plane P = AnchorPlane(old, focal);
+    // As in the firmware (OpenFIRE_Anchor): with two or three LEDs the rebuild works on
+    // lens-corrected points, then the hidden ones go back to camera space.
+    const bool lens = o.k1 != 0 || o.k2 != 0;
+    const Optics optics = o;
+    const double halfX = o.sensorX / 2, halfY = o.sensorY / 2;
+    const auto view = [optics, lens, halfX, halfY](const Point &x) {
+        const Point c = lens ? Corrected(optics, x) : x;
+        return Point{c[0] * halfX, c[1] * halfY};
+    };
+    std::vector<Point> seen;
+    if(lens) for(const int i : visible) seen.push_back(view(reference[i]));
+    else seen = old;
+    const Plane P = AnchorPlane(seen, focal);
     std::vector<Point> p;
-    for(const Point &x : old) {
+    for(const Point &x : seen) {
         const auto t = P.To(x);
         if(!t) return Rebuild();
         p.push_back(*t);
@@ -262,7 +285,7 @@ Rebuild Reconstruction(const Optics &o, const Quad &reference, const std::vector
     std::vector<Hidden> hidden;
     for(int i = 0; i < 4; ++i) {
         if(std::find(visible.begin(), visible.end(), i) != visible.end()) continue;
-        const auto h = P.To(sensor(reference[i]));
+        const auto h = P.To(view(reference[i]));
         if(!h) return Rebuild();
         const double x = (*h)[0] - p[0][0], y = (*h)[1] - p[0][1];
         hidden.push_back({i, (x * b[1] - y * b[0]) / det, (a[0] * y - a[1] * x) / det});
@@ -270,7 +293,7 @@ Rebuild Reconstruction(const Optics &o, const Quad &reference, const std::vector
     const double sx = o.sensorX, sy = o.sensorY;
     return [=](const Quad &current) -> std::optional<Quad> {
         std::vector<Point> now;
-        for(const int i : visible) now.push_back({current[i][0] * sx / 2, current[i][1] * sy / 2});
+        for(const int i : visible) now.push_back(view(current[i]));
         const Plane Q = AnchorPlane(now, focal);
         std::vector<Point> q;
         for(const Point &x : now) {
@@ -284,7 +307,8 @@ Rebuild Reconstruction(const Optics &o, const Quad &reference, const std::vector
         for(const Hidden &hd : hidden) {
             const auto h = Q.From({q[0][0] + hd.s * u[0] + hd.t * v[0], q[0][1] + hd.s * u[1] + hd.t * v[1]});
             if(!h) return std::nullopt;
-            result[hd.i] = {2 * (*h)[0] / sx, 2 * (*h)[1] / sy};
+            const Point back = {2 * (*h)[0] / sx, 2 * (*h)[1] / sy};
+            result[hd.i] = lens ? Distorted(optics, back[0], back[1]) : back;
         }
         return result;
     };
