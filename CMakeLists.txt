@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 #cmake_policy(VERSION 3.5)
 
 project(OpenFIREapp
-        VERSION 7.1.0
+        VERSION 7.1.1
         DESCRIPTION "OpenFIRE Configuration Desktop App"
         LANGUAGES CXX)
 set(OFAPP_CODENAME "Esp32")

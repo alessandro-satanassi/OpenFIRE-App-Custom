@@ -539,6 +539,54 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
         <source>emitters missing</source>
         <translation>emettitori assenti</translation>
     </message>
+    <message>
+        <source>Shot refused: the camera does not see at least two IR emitters.</source>
+        <translation>Tiro rifiutato: la camera non vede almeno due emettitori IR.</translation>
+    </message>
+    <message>
+        <source>Shot refused: the position was not updated.</source>
+        <translation>Tiro rifiutato: la posizione non è stata aggiornata.</translation>
+    </message>
+    <message>
+        <source>Keep aiming at the target, then shoot again.</source>
+        <translation>Tieni la mira sul bersaglio e spara di nuovo.</translation>
+    </message>
+    <message>
+        <source>Shot refused: aim at the target before shooting.</source>
+        <translation>Tiro rifiutato: mira al bersaglio prima di sparare.</translation>
+    </message>
+    <message>
+        <source>Tolerant: 4 emitters at the centre, 2 at the edges; a grey corner can be skipped.</source>
+        <translation>Tollerante: 4 emettitori al centro, 2 ai bordi; un angolo grigio si può saltare.</translation>
+    </message>
+    <message>
+        <source>Calibration not completed</source>
+        <translation>Calibrazione non completata</translation>
+    </message>
+    <message>
+        <source>Not enough data to complete the calibration.</source>
+        <translation>Dati non sufficienti per la calibrazione.</translation>
+    </message>
+    <message>
+        <source>Repeat it holding your aim steady before</source>
+        <translation>Ripetila tenendo la mira ferma prima</translation>
+    </message>
+    <message>
+        <source>each shot; if needed, step back a little.</source>
+        <translation>di ogni colpo; se serve, allontanati un po&apos;.</translation>
+    </message>
+    <message>
+        <source>Press Button A or Button B to restart calibration.</source>
+        <translation>Premi il Pulsante A o B per ripeterla.</translation>
+    </message>
+    <message>
+        <source>&lt;p align=&quot;center&quot;&gt;Not enough data to complete the calibration.&lt;br&gt;Repeat it holding your aim steady before each shot; if needed, step back a little.&lt;/p&gt;</source>
+        <translation>&lt;p align=&quot;center&quot;&gt;Dati non sufficienti per la calibrazione.&lt;br&gt;Ripetila tenendo la mira ferma prima di ogni colpo; se serve, allontanati un po&apos;.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <source>&lt;p align=&quot;center&quot;&gt;Press &lt;i&gt;Button A&lt;/i&gt; or &lt;i&gt;Button B&lt;/i&gt; to restart calibration.&lt;br&gt;&lt;br&gt;[You can also exit calibration without saving changes&lt;br&gt;by pressing &lt;i&gt;Button C (if available).&lt;/i&gt;]&lt;/p&gt;</source>
+        <translation>&lt;p align=&quot;center&quot;&gt;Premi il &lt;i&gt;Pulsante A&lt;/i&gt; o il &lt;i&gt;Pulsante B&lt;/i&gt; per ripeterla.&lt;br&gt;&lt;br&gt;[Puoi anche uscire senza salvare le modifiche&lt;br&gt;premendo il &lt;i&gt;Pulsante C (se disponibile).&lt;/i&gt;]&lt;/p&gt;</translation>
+    </message>
 </context>
 <context>
     <name>AppDebugWindow</name>
@@ -2759,6 +2807,14 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
     <message>
         <source>Switch state not available: update the firmware.</source>
         <translation>Stato non disponibile: aggiorna il firmware.</translation>
+    </message>
+    <message>
+        <source>Tolerant calibration</source>
+        <translation>Calibrazione tollerante</translation>
+    </message>
+    <message>
+        <source>&lt;p&gt;Tolerant calibration: at the edge shots it is enough for the camera to see two IR emitters, at the corner shots even fewer.&lt;/p&gt;&lt;p&gt;When the camera sees at least two emitters at the corners too, the result is usually very close to the standard calibration. A corner with fewer than two emitters lets you go on but is not used in the calculation, and the precision drops.&lt;/p&gt;&lt;p&gt;Use it only if you cannot complete the standard calibration from your playing position. The two shots at the centre still need all four emitters.&lt;/p&gt;</source>
+        <translation>&lt;p&gt;Calibrazione tollerante: nei colpi ai bordi basta che la camera veda due emettitori IR, in quelli agli angoli anche meno.&lt;/p&gt;&lt;p&gt;Quando la camera vede almeno due emettitori anche agli angoli, il risultato è di solito molto vicino alla calibrazione standard. Un angolo con meno di due emettitori permette di proseguire ma non entra nel calcolo, e la precisione cala.&lt;/p&gt;&lt;p&gt;Usala solo se dalla tua posizione di gioco non riesci a completare la calibrazione standard. I due colpi al centro richiedono comunque tutti e quattro gli emettitori.&lt;/p&gt;</translation>
     </message>
 </context>
 <context>

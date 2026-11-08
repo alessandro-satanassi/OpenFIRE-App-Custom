@@ -19,7 +19,7 @@ Download the App from the **OpenFIRE App CUSTOM for ESP32 7.x firmware** section
  - **Cross-platform Qt application** for Windows, Linux and macOS desktops.
  - **Simple to use:** plug in the gun, select it from the drop-down list and configure it.
  - See and change the pin layout, enable custom mappings, and adjust force feedback, I2C peripherals, camera model and other settings on the fly.
- - Calibrate any profile in an interactive full-screen window that also shows whether the camera sees the IR emitters well, as in the WebApp.
+ - Calibrate any profile in an interactive full-screen window that also shows whether the camera sees the IR emitters well, as in the WebApp. When you cannot step back far enough, the tolerant calibration accepts fewer emitters at the edges and corners.
  - Plan where to place the IR emitters for your screen, camera, add-on lens and playing distance with the IR Emitter Alignment Assistant, the same as in the WebApp.
  - Preview the layouts of all supported boards and the functions available on each pin, to make wiring your lightgun easier.
  - Test digital and analog inputs, the rumble, solenoid and autofire switches, force feedback devices, the IR camera and more.
@@ -64,7 +64,7 @@ Scarica l'App dalla sezione **OpenFIRE App CUSTOM per firmware ESP32 7.x** della
 - **App desktop multipiattaforma** per Windows, Linux e macOS.
 - **Uso semplice:** collega la pistola, selezionala dall'elenco e configurala.
 - Visualizza e modifica i pin, personalizza i comandi e regola force feedback, periferiche I2C, modello di telecamera e altre impostazioni.
-- Calibra ogni profilo in una finestra interattiva a schermo intero, che mostra anche se la telecamera vede bene gli emettitori IR, come nella WebApp.
+- Calibra ogni profilo in una finestra interattiva a schermo intero, che mostra anche se la telecamera vede bene gli emettitori IR, come nella WebApp. Quando non puoi allontanarti abbastanza, la calibrazione tollerante accetta meno emettitori ai bordi e agli angoli.
 - Visualizza la disposizione ideale degli emettitori con l'Assistente di allineamento degli emettitori IR.
 - Consulta il layout di tutte le schede supportate e le funzioni disponibili sui pin, per facilitare il cablaggio.
 - Prova ingressi digitali e analogici, dispositivi di force feedback, telecamera IR e altre funzioni della pistola.

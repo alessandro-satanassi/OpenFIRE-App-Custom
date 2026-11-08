@@ -123,12 +123,18 @@ public:
     ///             at the middle of the sides of the panel, the others at its corners
     void SetCaliIrDiamond(const bool &diamond) { caliIrDiamond = diamond; }
 
+    /// @brief      Tolerant calibration asked for (caliFlagTolerant): two emitters are enough at the
+    ///             edges and fewer at the corners; the two centre shots still need all four
+    void SetCaliTolerant(const bool &);
+
     /// @brief      IR test: underline the layout applied on the active board profile.
     void SetIrTestDiamond(const bool &diamond);
 
     /// @brief      Calibration IR view: the board refused a target shot (sCaliIrWarning)
     /// @param      uint8_t
-    ///             bit 0 an emitter is missing, bit 1 the gun is rolled too far
+    ///             bit 0 an emitter is missing, bit 1 the gun is rolled too far; tolerant calibration:
+    ///             bit 2 aim not yet at the target, bit 3 calibration not refined (verification),
+    ///             bit 4 position not updated in that frame
     void CaliIrWarning(const uint8_t &);
 
     int GetWindowMode() { return mode; }
@@ -330,6 +336,15 @@ private:
     /// @brief      Calibration: the corner targets are asked for (caliFlagCorners); the board
     ///             decides, so this turns false when the final centre follows the right edge.
     bool caliCorners = true;
+
+    /// @brief      Tolerant calibration (caliFlagTolerant), and its verification refused by the board
+    ///             because the calibration could not be refined (CALI_IR_UNREFINED): the trigger does not
+    ///             confirm it, A or B repeat it.
+    bool caliTolerant = false;
+    bool caliUnrefined = false;
+
+    /// @brief      Verification text of a calibration that could not be refined
+    void CaliUnrefinedText();
 
     /// @brief      Shots in the order of the board; the last entry is verification
     QList<int> CaliShotSequence() const;

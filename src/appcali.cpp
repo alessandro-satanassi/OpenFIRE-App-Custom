@@ -91,6 +91,11 @@ constexpr qint64 CALI_IR_MAX_AGE = 500;         // ms without coordinates: older
 constexpr int CALI_IR_WARNING_TIME = 4000;      // ms the refusal message stays on screen
 constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bit
 constexpr uint8_t CALI_IR_ROLL = 0x02;          // sCaliIrWarning bit
+// Tolerant calibration (caliFlagTolerant): a shot at an edge or a corner fired before reaching
+// its target, and a calibration that could not be refined (the trigger does not confirm it).
+constexpr uint8_t CALI_IR_AIM = 0x04;           // sCaliIrWarning bit
+constexpr uint8_t CALI_IR_UNREFINED = 0x08;     // sCaliIrWarning bit, during verification
+constexpr uint8_t CALI_IR_STALE = 0x10;         // sCaliIrWarning bit: emitters seen, but the position was not updated in that frame
 // Colour of each emitter seen in the panel, and of the crosshair from the emitter with the
 // lowest brightness; missing = intense red (the crosshair only; the panel keeps the dashed
 // circle). Continuous scale of the brightness, without jumps: red at the camera threshold
@@ -104,6 +109,7 @@ constexpr int CALI_IR_BLEND = 20;               // half width of the orange to g
 constexpr int CALI_IR_FULL_GREEN = 230;
 struct CaliIrRgb_s { qreal r, g, b; };
 constexpr CaliIrRgb_s CALI_IR_MISSING_RGB   = {255, 20, 20};
+constexpr CaliIrRgb_s CALI_IR_SKIPPED_RGB   = {170, 170, 170};  // tolerant calibration: corner not measured
 constexpr CaliIrRgb_s CALI_IR_WEAK_LOW_RGB  = {255, 40, 40};    // 130
 constexpr CaliIrRgb_s CALI_IR_WEAK_HIGH_RGB = {255, 190, 90};   // limit - blend
 constexpr CaliIrRgb_s CALI_IR_GOOD_LOW_RGB  = {170, 255, 140};  // limit + blend
@@ -999,6 +1005,8 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
 {
     if(caliStage < Cali_Init || (caliStage > Cali_End && !CaliTarget(caliStage)))
         return;
+    if(caliStage != Cali_Verify)
+        caliUnrefined = false;
     // The board decides: the corners follow the right edge, or the final centre does
     // (firmware without corners, or calibration without the refinement).
     if(caliStage >= Cali_CornerTR)
@@ -1216,7 +1224,9 @@ void AppCaliWindow::CaliModeSet(const int &caliStage)
         ui->graphicsView->setMouseTracking(true);
         mouseCanBeTracked = true;
 
-        if(bitmapText) {
+        if(caliUnrefined)
+            CaliUnrefinedText();
+        else if(bitmapText) {
             if(topOffset    >= -32768  &&  topOffset    <= 32768    &&
                 bottomOffset >= -32768  &&  bottomOffset <= 32768    &&
                 leftOffset   >= -32768  &&  leftOffset   <= 32768    &&
@@ -1834,9 +1844,72 @@ void AppCaliWindow::CaliIrWarning(const uint8_t &bits)
 {
     if(mode != modeCalibrate || !bits)
         return;
-    caliIrWarningBits = bits;
+    uint8_t shown = bits;
+    if(shown & CALI_IR_UNREFINED) {
+        // Shown in place of the verification text until the calibration restarts.
+        shown &= ~CALI_IR_UNREFINED;
+        if(caliIrStage == Cali_Verify && !caliUnrefined) {
+            caliUnrefined = true;
+            CaliUnrefinedText();
+        }
+        if(!shown)
+            return;
+    }
+    caliIrWarningBits = shown;
     caliIrWarningTimer.start(CALI_IR_WARNING_TIME);
     CaliIrRefresh();
+}
+
+void AppCaliWindow::SetCaliTolerant(const bool &tolerant)
+{
+    if(caliTolerant == tolerant)
+        return;
+    caliTolerant = tolerant;
+    // The legend note depends on it: built again at the next refresh.
+    if(caliIrLegend != nullptr)
+        caliIrLegend->setPixmap(QPixmap());
+    CaliIrRefresh();
+}
+
+void AppCaliWindow::CaliUnrefinedText()
+{
+    const QRectF rect = scene.sceneRect();
+    if(bitmapText) {
+        const QColor red(225, 25, 25);
+        caliStageBitmap->setPixmap(GenerateText({tr("Calibration not completed")}, red));
+        caliStageBitmap->setPos(rect.center().x()    - (caliStageBitmap->boundingRect().center().x() * caliStageBitmap->scale()),
+                                rect.height() * 0.15 - (caliStageBitmap->boundingRect().center().y() * caliStageBitmap->scale()));
+
+        headerBitmap->setPixmap(GenerateText(IrTestCentredLines({tr("Not enough data to complete the calibration."),
+                                                                 tr("Repeat it holding your aim steady before"),
+                                                                 tr("each shot; if needed, step back a little.")}), red));
+        headerBitmap->setPos(rect.center().x()          - (headerBitmap->boundingRect().center().x() * headerBitmap->scale()),
+                             caliStageBitmap->pos().y() + (caliStageBitmap->boundingRect().height()  * caliStageBitmap->scale()));
+
+        tutorialBitmap->setPixmap(GenerateText(IrTestCentredLines({tr("Press Button A or Button B to restart calibration."),
+                                                                   tr(""),
+                                                                   tr("[You can also exit calibration without saving changes"),
+                                                                   tr("        by pressing Button C (if available).]        ")}), red));
+        tutorialBitmap->setPos(rect.center().x()     - (tutorialBitmap->boundingRect().center().x() * tutorialBitmap->scale()),
+                               (rect.bottom() * 0.8) - (tutorialBitmap->boundingRect().center().y() * tutorialBitmap->scale()));
+    } else {
+        caliStageText->setPlainText(tr("Calibration not completed"));
+        caliStageText->setPos(rect.center().x()      - caliStageText->boundingRect().center().x(),
+                              (rect.bottom() * 0.25) - caliStageText->boundingRect().center().y());
+
+        headerText->setHtml(tr("<p align=\"center\">Not enough data to complete the calibration.<br>"
+                               "Repeat it holding your aim steady before each shot; if needed, step back a little.</p>"));
+        headerText->setPos(rect.center().x()        - headerText->boundingRect().center().x(),
+                           caliStageText->pos().y() + caliStageText->boundingRect().height());
+
+        tutorialText->setHtml(tr("<p align=\"center\">Press <i>Button A</i> or <i>Button B</i> to restart calibration.<br>"
+                                 "<br>"
+                                 "[You can also exit calibration without saving changes<br>"
+                                 "by pressing <i>Button C (if available).</i>]</p>"));
+        tutorialText->setPos(rect.center().x()     - tutorialText->boundingRect().center().x(),
+                             (rect.bottom() * 0.8) - tutorialText->boundingRect().center().y());
+    }
+    CaliIrRefresh(); // the IR view lays out around the new texts
 }
 
 QColor AppCaliWindow::CaliIrColor() const
@@ -1850,27 +1923,53 @@ QColor AppCaliWindow::CaliIrColor() const
 
     // The emitter with the lowest brightness gives the colour, so the crosshair always has
     // the colour of one of the four circles.
+    // Tolerant calibration, at the edges and corners: the scale of the emitters seen when there
+    // are at least two; with fewer, red at an edge (refused) and grey at a corner (accepted,
+    // not measured). The two centre shots keep the rule above.
+    const bool corner = caliIrStage >= Cali_CornerTR && caliIrStage <= Cali_CornerTL;
+    const bool edge = caliIrStage >= Cali_Top && caliIrStage <= Cali_Right;
+    const bool tolerant = caliTolerant && (corner || edge);
     int worst = 255;
+    int seen = 0;
     for(const TestBlob_s &blob : testBlobs) {
-        if(!blob.seen)
-            return CaliIrMix(CALI_IR_MISSING_RGB, CALI_IR_MISSING_RGB, 0); // intense red
+        if(!blob.seen) {
+            if(!tolerant)
+                return CaliIrMix(CALI_IR_MISSING_RGB, CALI_IR_MISSING_RGB, 0); // intense red
+            continue;
+        }
+        ++seen;
         worst = qMin(worst, (int)blob.max);
     }
+    if(tolerant && seen < 2)
+        return corner ? CaliIrMix(CALI_IR_SKIPPED_RGB, CALI_IR_SKIPPED_RGB, 0)
+                      : CaliIrMix(CALI_IR_MISSING_RGB, CALI_IR_MISSING_RGB, 0);
     return CaliIrEmitterColor(worst);
 }
 
 QStringList AppCaliWindow::CaliIrWarningLines(const uint8_t &bits)
 {
-    if(!(bits & CALI_IR_ROLL))
-        return {(bits & CALI_IR_MISSING) ? tr("Shot refused: the camera does not see all four IR emitters.")
-                                         : QString(),
-                tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")};
+    // Tolerant calibration: two emitters are enough at the edges (the corners never refuse
+    // a missing emitter), all four at the two centre shots.
+    const QString missing = caliTolerant && caliIrStage != Cali_Init && caliIrStage != Cali_Center
+        ? tr("Shot refused: the camera does not see at least two IR emitters.")
+        : tr("Shot refused: the camera does not see all four IR emitters.");
+    if(bits & CALI_IR_STALE)
+        return {tr("Shot refused: the position was not updated."), tr("Keep aiming at the target, then shoot again.")};
+    QStringList aim;
+    if(bits & CALI_IR_AIM)
+        aim << tr("Shot refused: aim at the target before shooting.");
+    if(!(bits & CALI_IR_ROLL)) {
+        if(!(bits & CALI_IR_MISSING) && !aim.isEmpty())
+            return aim;
+        return QStringList{(bits & CALI_IR_MISSING) ? missing : QString(),
+                tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")} + aim;
+    }
     QStringList lines;
     if(bits & CALI_IR_MISSING)
-        lines << tr("Shot refused: the camera does not see all four IR emitters.")
+        lines << missing
               << tr("Check the emitters, your distance and the IR sensitivity, then shoot again.");
     return lines << tr("Shot refused: lightgun rotated too much.")
-                 << tr("Hold the lightgun upright, then shoot again.");
+                 << tr("Hold the lightgun upright, then shoot again.") << aim;
 }
 
 void AppCaliWindow::CaliIrArmExpiry()
@@ -2070,7 +2169,8 @@ void AppCaliWindow::CaliIrDrawLegend(const qreal &side, const qreal &margin)
             painter.drawText(QPointF(padding, y + metrics.ascent()), line);
         };
         note(tr("The crosshair colour indicates the emitter with the weakest signal."), 201);
-        note(tr("All 4 emitters must be detected to proceed."), 234);
+        note(caliTolerant ? tr("Tolerant: 4 emitters at the centre, 2 at the edges; a grey corner can be skipped.")
+                          : tr("All 4 emitters must be detected to proceed."), 234);
         painter.end();
         caliIrLegend->setPixmap(pixmap);
     }

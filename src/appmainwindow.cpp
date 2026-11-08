@@ -573,6 +573,7 @@ void guiWindow::CommitRecoveryUiUpdate()
     ui->testBtn->setEnabled(!pending);
     for(int i = 0; i < caliBtn.size(); ++i)
         caliBtn.at(i)->setEnabled(!pending);
+    ui->caliTolerantBox->setEnabled(!pending);
     for(int i = 0; i < selectedProfile.size(); ++i)
         selectedProfile.at(i)->setEnabled(!pending);
 }
@@ -810,6 +811,7 @@ void guiWindow::NewCaliWindow(const int &type) {
         caliWindow->setProperty("profile", profile);
         // IR view: the emitters panel shows the layout of the profile being calibrated.
         caliWindow->SetCaliIrDiamond((int)App_Common::profilesTable.at(profile).layoutType == OF_Const::layoutDiamond);
+        caliWindow->SetCaliTolerant(ui->caliTolerantBox->isChecked());
         connect(caliWindow, &AppCaliWindow::CaliRequestToExit,  this, &guiWindow::CaliWindowRequestedExit);
         break;
     }
@@ -2532,8 +2534,9 @@ void guiWindow::caliBtns_clicked()
         (char)(App_Common::profilesTable.at(profile).irSensitivity +
                 (App_Common::profilesTable.at(profile).layoutType << 4)),
         // Optional: IR emitters and the four corner targets during calibration
-        // (older firmware ignores it and keeps six targets)
-        (char)(OF_Const::caliFlagIrView | OF_Const::caliFlagCorners)
+        // (older firmware ignores it and keeps six targets), and the tolerant calibration
+        (char)(OF_Const::caliFlagIrView | OF_Const::caliFlagCorners |
+               (ui->caliTolerantBox->isChecked() ? OF_Const::caliFlagTolerant : 0))
     };
 
     if(!serial.SendCommand(OF_Const::sCaliProfile, payload, sizeof(payload)))

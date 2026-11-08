@@ -1026,6 +1026,9 @@
                        <property name="accessibleName">
                         <string>Solenoid Engagement Length</string>
                        </property>
+                       <property name="maximum">
+                        <number>500</number>
+                       </property>
                        <property name="buttonSymbols">
                         <enum>QAbstractSpinBox::PlusMinus</enum>
                        </property>
@@ -1050,6 +1053,9 @@
                        </property>
                        <property name="accessibleName">
                         <string>Solenoid Autofire Wait Length</string>
+                       </property>
+                       <property name="maximum">
+                        <number>9999</number>
                        </property>
                        <property name="buttonSymbols">
                         <enum>QAbstractSpinBox::PlusMinus</enum>
@@ -2608,6 +2614,22 @@
                </item>
                <item>
                 <layout class="QGridLayout" name="caliBtnsLayout"/>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="caliTolerantBox">
+                 <property name="whatsThis">
+                  <string>&lt;p&gt;Tolerant calibration: at the edge shots it is enough for the camera to see two IR emitters, at the corner shots even fewer.&lt;/p&gt;&lt;p&gt;When the camera sees at least two emitters at the corners too, the result is usually very close to the standard calibration. A corner with fewer than two emitters lets you go on but is not used in the calculation, and the precision drops.&lt;/p&gt;&lt;p&gt;Use it only if you cannot complete the standard calibration from your playing position. The two shots at the centre still need all four emitters.&lt;/p&gt;</string>
+                 </property>
+                 <property name="accessibleName">
+                  <string>Tolerant calibration</string>
+                 </property>
+                 <property name="text">
+                  <string>Tolerant calibration</string>
+                 </property>
+                 <property name="trackable" stdset="0">
+                  <number>2</number>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
