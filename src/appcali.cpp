@@ -1954,23 +1954,35 @@ QStringList AppCaliWindow::CaliIrWarningLines(const uint8_t &bits)
     const QString missing = caliTolerant && caliIrStage != Cali_Init && caliIrStage != Cali_Center
         ? tr("Shot refused: the camera does not see at least two IR emitters.")
         : tr("Shot refused: the camera does not see all four IR emitters.");
+    // Too close, an emitter leaves the view: step back. Where the standard calibration
+    // needs four emitters at the edges and corners, the tolerant one is the way out.
+    const QString back = caliTolerant || caliIrStage == Cali_Init || caliIrStage == Cali_Center
+        ? tr("If an emitter is out of view, step back a little.")
+        : tr("If an emitter is out of view, step back a little; if you cannot, exit and tick Tolerant calibration.");
+    QStringList persist;
+    if(caliTolerant && caliIrStage >= Cali_Top && caliIrStage <= Cali_Right && !(bits & CALI_IR_MISSING))
+        persist << tr("If it persists, aim towards the centre for a moment, then back at the target.");
     if(bits & CALI_IR_STALE)
-        return {tr("Shot refused: the position was not updated."), tr("Keep aiming at the target, then shoot again.")};
+        return {tr("Shot refused: the position was not updated."), tr("Keep aiming at the target, then shoot again."),
+                tr("If it persists, aim towards the centre for a moment, then back at the target.")};
     QStringList aim;
     if(bits & CALI_IR_AIM)
         aim << tr("Shot refused: aim at the target before shooting.");
     if(!(bits & CALI_IR_ROLL)) {
         if(!(bits & CALI_IR_MISSING) && !aim.isEmpty())
-            return aim;
-        return QStringList{(bits & CALI_IR_MISSING) ? missing : QString(),
-                tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")} + aim;
+            return aim + persist;
+        QStringList lines{(bits & CALI_IR_MISSING) ? missing : QString(),
+                tr("Check the emitters, your distance and the IR sensitivity, then shoot again.")};
+        if(bits & CALI_IR_MISSING)
+            lines << back;
+        return lines + aim;
     }
     QStringList lines;
     if(bits & CALI_IR_MISSING)
         lines << missing
-              << tr("Check the emitters, your distance and the IR sensitivity, then shoot again.");
+              << tr("Check the emitters, your distance and the IR sensitivity, then shoot again.") << back;
     return lines << tr("Shot refused: lightgun rotated too much.")
-                 << tr("Hold the lightgun upright, then shoot again.") << aim;
+                 << tr("Hold the lightgun upright, then shoot again.") << aim << persist;
 }
 
 void AppCaliWindow::CaliIrArmExpiry()
@@ -2052,7 +2064,15 @@ void AppCaliWindow::CaliIrRefresh()
         caliIrWarningBitmap->setPixmap(GenerateText(IrTestCentredLines(lines), QColor(255, 90, 90), sub));
         const qreal width = caliIrWarningBitmap->boundingRect().width() * sub;
         const qreal height = caliIrWarningBitmap->boundingRect().height() * sub;
-        const QPointF pos(rect.center().x() - width / 2, rect.top() + rect.height() * 0.8 - height / 2);
+        qreal top = rect.top() + rect.height() * 0.8 - height / 2;
+        // A long warning moves down, within the screen, so that the posture reminder above it
+        // stays clear of the values list (small screens only).
+        if(profileBitmaps[5]->isVisible()) {
+            const qreal below = profileBitmaps[5]->pos().y() + profileBitmaps[5]->boundingRect().height() * profileBitmaps[5]->scale() +
+                                caliPositionHintBitmap->boundingRect().height() * sub + 8 * sub + 6 * sub;
+            top = qMax(top, qMin(below, rect.bottom() - height - 6 * sub));
+        }
+        const QPointF pos(rect.center().x() - width / 2, top);
         caliIrWarningBitmap->setPos(pos);
         caliIrWarningBox->setRect(pos.x() - 8 * sub, pos.y() - 6 * sub, width + 16 * sub, height + 12 * sub);
     }

@@ -552,6 +552,18 @@ SPI indica se questo pin può interagire con dispositivi SPI, e quale canale e t
         <translation>Tieni la mira sul bersaglio e spara di nuovo.</translation>
     </message>
     <message>
+        <source>If it persists, aim towards the centre for a moment, then back at the target.</source>
+        <translation>Se persiste, mira un attimo verso il centro, poi torna sul bersaglio.</translation>
+    </message>
+    <message>
+        <source>If an emitter is out of view, step back a little.</source>
+        <translation>Se un emettitore è fuori dalla vista, allontanati un po&apos;.</translation>
+    </message>
+    <message>
+        <source>If an emitter is out of view, step back a little; if you cannot, exit and tick Tolerant calibration.</source>
+        <translation>Se un emettitore è fuori dalla vista, allontanati un po&apos;; se non puoi, esci e spunta Calibrazione tollerante.</translation>
+    </message>
+    <message>
         <source>Shot refused: aim at the target before shooting.</source>
         <translation>Tiro rifiutato: mira al bersaglio prima di sparare.</translation>
     </message>
