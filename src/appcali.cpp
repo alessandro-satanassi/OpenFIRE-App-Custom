@@ -89,6 +89,7 @@ constexpr qreal CALI_IR_PANEL_MIN_WIDTH = 140;  // px, also on small screens
 constexpr qreal CALI_LEGEND_SIZE = 268.8;       // same square as the IR panel at 1920x1080
 constexpr qint64 CALI_IR_MAX_AGE = 500;         // ms without coordinates: older firmware, no panel
 constexpr int CALI_IR_WARNING_TIME = 4000;      // ms the refusal message stays on screen
+constexpr int CALI_IR_WARNING_MIN_TIME = 1000;  // ms it stays at least, also when a grey corner removes it
 constexpr uint8_t CALI_IR_MISSING = 0x01;       // sCaliIrWarning bit
 constexpr uint8_t CALI_IR_ROLL = 0x02;          // sCaliIrWarning bit
 // Tolerant calibration (caliFlagTolerant): a shot at an edge or a corner fired before reaching
@@ -1996,6 +1997,13 @@ void AppCaliWindow::CaliIrRefresh()
     const QRectF rect = scene.sceneRect();
     const int sub = GetTextScale(TextSub);
     const QColor color = CaliIrColor();
+    // Tolerant calibration: a grey corner takes the next shot without any check, so the
+    // reason of an earlier refusal is removed once it has been readable for a moment.
+    if(caliIrWarningBits && color.isValid() && color == CaliIrMix(CALI_IR_SKIPPED_RGB, CALI_IR_SKIPPED_RGB, 0) &&
+       caliIrWarningTimer.remainingTime() <= CALI_IR_WARNING_TIME - CALI_IR_WARNING_MIN_TIME) {
+        caliIrWarningBits = 0;
+        caliIrWarningTimer.stop();
+    }
 
     // Crosshair in the colour of the worst emitter, in steps of 8 so that the SVG is not
     // reloaded at every update; the original colour without IR data.
