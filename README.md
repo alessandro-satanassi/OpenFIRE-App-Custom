@@ -22,7 +22,7 @@ Download the App from the **OpenFIRE App CUSTOM for ESP32 7.x firmware** section
  - Calibrate any profile in an interactive full-screen window that also shows whether the camera sees the IR emitters well, as in the WebApp. When you cannot step back far enough, the tolerant calibration accepts fewer emitters at the edges and corners.
  - Plan where to place the IR emitters for your screen, camera, add-on lens and playing distance with the IR Emitter Alignment Assistant, the same as in the WebApp.
  - Preview the layouts of all supported boards and the functions available on each pin, to make wiring your lightgun easier.
- - Test digital and analog inputs, the rumble, solenoid and autofire switches, force feedback devices, the IR camera and more.
+ - Test digital and analog inputs, the rumble, solenoid and autofire switches, force feedback devices, the IR camera and more. The Aim Test checks the aim, the buttons and the recoil on one fullscreen grid, as in the WebApp.
 
 ## Running:
 Start `OpenFIREapp`. Available devices are refreshed periodically and listed in the *COM Port* drop-down box. Even with no device plugged in, you can open the *IR Emitter Alignment Assistant* or preview the supported boards and their default layouts with *View Compatible Boards* in the *Help* menu.

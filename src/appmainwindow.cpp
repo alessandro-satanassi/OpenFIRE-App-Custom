@@ -571,6 +571,7 @@ void guiWindow::CommitRecoveryUiUpdate()
     ui->buttonsTestArea->setEnabled(!pending);
     ui->feedbackTestsBox->setEnabled(!pending);
     ui->testBtn->setEnabled(!pending);
+    ui->aimTestBtn->setEnabled(!pending);
     for(int i = 0; i < caliBtn.size(); ++i)
         caliBtn.at(i)->setEnabled(!pending);
     ui->caliTolerantBox->setEnabled(!pending);
@@ -924,6 +925,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             caliWindow->Shutdown();
     if(lensFitWindow != nullptr)
         lensFitWindow->Shutdown();
+    if(aimTestWindow != nullptr)
+        aimTestWindow->Shutdown();
 
     if(ui->comPortSelector->currentIndex() > 0) {
         printf("COM port set to %d\n", ui->comPortSelector->currentIndex());
@@ -2600,6 +2603,66 @@ void guiWindow::on_testBtn_clicked()
 }
 
 
+void guiWindow::on_aimTestBtn_clicked()
+{
+    // A calibration, IR test or lens refinement in progress is not interrupted (and a double click
+    // does not open a second window).
+    if(!serial.port.isOpen() || aimTestWindow != nullptr || caliWindow != nullptr || lensFitWindow != nullptr)
+        return;
+
+    // Same warning and test mode as the IR camera tester (on_testBtn_clicked).
+    if(App_Common::profilesTable.at(App_Common::board.selectedProfile).layoutType != App_Common::profilesTable_orig.at(App_Common::board.selectedProfile).layoutType &&
+       QMessageBox::information(
+           this,
+           tr("Warning: Unsaved Changes"),
+           tr("Your current calibration profile has an unsaved IR Layout type change.\n"
+              "Test Mode relies on the profile's settings since the last save, and may not work as expected.\n"
+              "It is recommended that you save your changes before continuing.\n\n"
+              "Continue to Test Mode?"),
+           QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes)
+        return;
+
+    const char enabled = true;
+    if(!serial.SendCommand(OF_Const::sIRTest, &enabled, sizeof(enabled)))
+        return;
+
+    if(alignmentWindow != nullptr)
+        alignmentWindow->Shutdown();
+    aimTestWindow = new AppAimTestWindow(nullptr);
+    // Deleted when closed, so a finished window does not stay in memory with its timer running.
+    aimTestWindow->setAttribute(Qt::WA_DeleteOnClose);
+    connect(aimTestWindow, &AppAimTestWindow::WindowExiting, this, &guiWindow::AimTestWindowExiting);
+    connect(aimTestWindow, &AppAimTestWindow::TriggerFired, this, &guiWindow::AimTestRecoil);
+    // As the IR test: nothing else is changed while the gun is in test mode.
+    ui->buttonsTestArea->setEnabled(false);
+    ui->confirmButton->setEnabled(false);
+    ui->confirmButton->setText(tr("[Disabled while in Test Mode]"));
+    ui->confirmButton->setIcon(QIcon());
+    ui->pinsTab->setEnabled(false);
+    ui->settingsTab->setEnabled(false);
+    ui->profilesTab->setEnabled(false);
+    ui->feedbackTestsBox->setEnabled(false);
+    ui->dangerZoneBox->setEnabled(false);
+    ui->testBtn->setEnabled(false);
+    ui->aimTestBtn->setEnabled(false);
+    aimTestWindow->showFullScreen();
+    aimTestWindow->activateWindow();
+    aimTestWindow->setFocus();
+}
+
+
+void guiWindow::AimTestRecoil()
+{
+    // The App's toggles, saved or not, as the Feedback Tests: the firmware fires the pulse
+    // only if the output has a pin.
+    const bool *toggles = App_Common::boolSettings[App_Common::dataCurrent];
+    const uint8_t command = toggles[OF_Const::solenoid] ? (uint8_t)OF_Const::sTestSolenoid :
+                            toggles[OF_Const::rumble]   ? (uint8_t)OF_Const::sTestRumble : 0;
+    if(command && aimTestWindow != nullptr && serial.port.isOpen())
+        serial.SendCommand(command);
+}
+
+
 void guiWindow::on_clearEepromBtn_clicked()
 {
     // Do we really need all this msgbox setup?
@@ -2677,6 +2740,9 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
             const uint8_t btn = (uint8_t)payload.at(0);
             if(btn < testLabel.count())
                 testLabel.at(btn)->setStyleSheet("background-color: #FF0000; font: bold");
+            if(aimTestWindow != nullptr)
+                aimTestWindow->ButtonPressed(btn, btn < testLabel.count() ?
+                    QString::fromUtf8(App_Common::OFPresets.boardInputs_sortedStr[btn + 1]) : QString::number(btn));
         }
         break;
 
@@ -2762,6 +2828,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
                 caliWindow->Shutdown();
             if(lensFitWindow != nullptr)
                 lensFitWindow->Shutdown();
+            if(aimTestWindow != nullptr)
+                aimTestWindow->Shutdown();
             ui->comPortSelector->setCurrentIndex(0);
             ui->statusBar->showMessage(tr("Operation not confirmed: restart the microcontroller and reconnect."));
             serial.ShowError(tr("Operation not confirmed"),
@@ -2776,6 +2844,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
                 caliWindow->Shutdown();
             if(lensFitWindow != nullptr)
                 lensFitWindow->Shutdown();
+            if(aimTestWindow != nullptr)
+                aimTestWindow->Shutdown();
             serial.ShowError(tr("Device Error: Camera not available!"),
                              tr("<p>Data received from the board indicates that the camera is in a bad state.<br>"
                                 "This can happen if, for example, the camera wires are crossed<br>"
@@ -2820,6 +2890,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
         // IR test, and calibration with the IR view (caliFlagIrView)
         if(caliWindow != nullptr && caliWindow->GetWindowMode() != AppCaliWindow::modeAlignment)
             caliWindow->TestModeBlobs((const uint8_t*)payload.constData(), (int)payload.size());
+        if(aimTestWindow != nullptr)
+            aimTestWindow->TestModeBlobs(payload);
         break;
 
     case OF_Const::sCaliIrWarning:
@@ -2845,6 +2917,8 @@ void guiWindow::serialPort_readyRead(const uint8_t command, const QByteArray &pa
             memcpy(coordsList, payload.constData(), sizeof(coordsList));
             caliWindow->TestModeDraw(coordsList);
         }
+        if(aimTestWindow != nullptr)
+            aimTestWindow->TestModeDraw(payload);
         break;
 
     case OF_Const::sClearFlash:
@@ -3061,6 +3135,32 @@ void guiWindow::LensFitWindowExiting()
 }
 
 
+void guiWindow::AimTestWindowExiting()
+{
+    AppAimTestWindow *window = aimTestWindow;
+    if(window == nullptr)
+        return;
+    aimTestWindow = nullptr;
+
+    // As the IR test: the board leaves the test, then everything is available again.
+    const char enabled = false;
+    if(!serial.port.isOpen() ||
+       serial.SendCommand(OF_Const::sIRTest, &enabled, sizeof(enabled))) {
+        ui->buttonsTestArea->setEnabled(true);
+        ui->pinsTab->setEnabled(true);
+        ui->settingsTab->setEnabled(true);
+        ui->profilesTab->setEnabled(true);
+        ui->feedbackTestsBox->setEnabled(true);
+        ui->dangerZoneBox->setEnabled(true);
+        ui->testBtn->setEnabled(!serial.CommitNeedsRetry());
+        ui->aimTestBtn->setEnabled(!serial.CommitNeedsRetry());
+    }
+    if(serial.port.isOpen())
+        DiffUpdate();   // Save button back, as the lens refinement
+    window->close();
+}
+
+
 void guiWindow::CaliWindowRequestedExit()
 {
     if(!serial.SendCommand(OF_Const::serialTerminator))
@@ -3137,7 +3237,7 @@ void guiWindow::on_actionOpenFIRE_Serial_Usage_triggered()
 void guiWindow::on_actionOpen_IR_Emitter_Alignment_Assistant_triggered()
 {
     // As the WebApp: a calibration, IR test or lens refinement in progress is not interrupted.
-    if(caliWindow != nullptr || lensFitWindow != nullptr)
+    if(caliWindow != nullptr || lensFitWindow != nullptr || aimTestWindow != nullptr)
         return;
 
     // Same planner as the WebApp: with a lightgun connected it starts from its camera, refined

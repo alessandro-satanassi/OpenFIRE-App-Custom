@@ -1918,6 +1918,10 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <translation>Apri Tester telecamera IR...</translation>
     </message>
     <message>
+        <source>Open Aim Test...</source>
+        <translation>Apri Prova puntamento...</translation>
+    </message>
+    <message>
         <location filename="../src/appmainwindow.ui" line="2478"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1995"/>
         <source>Board Actions</source>
@@ -3074,6 +3078,97 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
     <message>
         <source>Camera optics are unavailable.</source>
         <translation>Dati ottici non disponibili.</translation>
+    </message>
+</context>
+<context>
+    <name>AppAimTestWindow</name>
+    <message>
+        <source>Aim Test</source>
+        <translation>Prova puntamento</translation>
+    </message>
+    <message>
+        <source>quit</source>
+        <translation>esci</translation>
+    </message>
+    <message>
+        <source>hide this line</source>
+        <translation>nascondi questa riga</translation>
+    </message>
+    <message>
+        <source>feedback on</source>
+        <translation>feedback attivo</translation>
+    </message>
+    <message>
+        <source>feedback off</source>
+        <translation>feedback disattivato</translation>
+    </message>
+    <message>
+        <source>IR emitters not seen</source>
+        <translation>Emettitori IR non visti</translation>
+    </message>
+    <message>
+        <source>Aim unavailable</source>
+        <translation>Puntamento non disponibile</translation>
+    </message>
+    <message>
+        <source>OFF-SCREEN</source>
+        <translation>FUORI SCHERMO</translation>
+    </message>
+    <message>
+        <source>Trigger</source>
+        <translation>Grilletto</translation>
+    </message>
+    <message>
+        <source>Button A</source>
+        <translation>Pulsante A</translation>
+    </message>
+    <message>
+        <source>Button B</source>
+        <translation>Pulsante B</translation>
+    </message>
+    <message>
+        <source>Button C</source>
+        <translation>Pulsante C</translation>
+    </message>
+    <message>
+        <source>Start</source>
+        <translation>Start</translation>
+    </message>
+    <message>
+        <source>Select</source>
+        <translation>Select</translation>
+    </message>
+    <message>
+        <source>D-Pad Up</source>
+        <translation>D-Pad su</translation>
+    </message>
+    <message>
+        <source>D-Pad Down</source>
+        <translation>D-Pad giù</translation>
+    </message>
+    <message>
+        <source>D-Pad Left</source>
+        <translation>D-Pad sinistra</translation>
+    </message>
+    <message>
+        <source>D-Pad Right</source>
+        <translation>D-Pad destra</translation>
+    </message>
+    <message>
+        <source>Pedal</source>
+        <translation>Pedale</translation>
+    </message>
+    <message>
+        <source>Alt Pedal</source>
+        <translation>Pedale alternativo</translation>
+    </message>
+    <message>
+        <source>Pump Action</source>
+        <translation>Pompa</translation>
+    </message>
+    <message>
+        <source>Home Button</source>
+        <translation>Pulsante Home</translation>
     </message>
 </context>
 </TS>

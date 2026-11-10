@@ -2965,14 +2965,28 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="testBtn">
-              <property name="text">
-               <string>Open IR Camera Tester...</string>
-              </property>
-              <property name="icon">
-               <iconset theme="camera-web"/>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="testWindowsLayout" stretch="1,1">
+              <item>
+               <widget class="QPushButton" name="testBtn">
+                <property name="text">
+                 <string>Open IR Camera Tester...</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="camera-web"/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="aimTestBtn">
+                <property name="text">
+                 <string>Open Aim Test...</string>
+                </property>
+                <property name="icon">
+                 <iconset theme="input-gaming"/>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
              <spacer name="verticalSpacer_3">

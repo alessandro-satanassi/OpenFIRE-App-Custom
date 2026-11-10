@@ -26,6 +26,7 @@
 #include "appcommon.h"
 #include "appcali.h"
 #include "applensfitwindow.h"
+#include "appaimtestwindow.h"
 #include "appalignmentwindow.h"
 #ifdef OFAPP_DEBUG
 #include "appdebug.h"
@@ -223,6 +224,15 @@ private slots:
 
     void on_testBtn_clicked();
 
+    /// @brief      Aim test (beside the IR camera tester): same test mode, its own fullscreen window
+    void on_aimTestBtn_clicked();
+
+    /// @brief      Aim test window leaving: ends the IR test, as the IR camera tester
+    void AimTestWindowExiting();
+
+    /// @brief      Aim test trigger: the solenoid, or the rumble in its place when the solenoid is off
+    void AimTestRecoil();
+
     /// system/background
     void on_tabWidget_currentChanged(int index);
 
@@ -274,6 +284,8 @@ private:
 
     /// @brief      Lens refinement window (Gun Settings > camera), at most one, never with a calibration window
     QPointer<AppLensFitWindow> lensFitWindow;
+    /// @brief      Aim test window (Gun Tests), at most one, never with a calibration or lens window
+    QPointer<AppAimTestWindow> aimTestWindow;
     // IR emitter placement planner: offline, it never changes the lightgun settings
     QPointer<AppAlignmentWindow> alignmentWindow;
 
