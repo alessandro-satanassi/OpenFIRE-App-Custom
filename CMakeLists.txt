@@ -60,6 +60,11 @@ set(PROJECT_SOURCES
         src/applensfitwindow.cpp
         src/appaimtestwindow.h
         src/appaimtestwindow.cpp
+        src/apppollingstats.h
+        src/apppollingrawinput.h
+        src/apppollingrawinput.cpp
+        src/apppollingtestwindow.h
+        src/apppollingtestwindow.cpp
         src/appemitterlayout.h
         src/appemitterlayout.cpp
         src/appalignmentwindow.h
@@ -98,6 +103,11 @@ else()
 endif()
 
 target_link_libraries(OpenFIREapp PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Concurrent Qt${QT_VERSION_MAJOR}::SerialPort)
+
+# Polling rate test: Raw Input of Windows (apppollingrawinput.cpp)
+if(WIN32)
+    target_link_libraries(OpenFIREapp PRIVATE user32)
+endif()
 
 # SVG Renderer has a different package name >= 6.1 for some reason
 if(${QT_VERSION} VERSION_LESS 6.1.0)

@@ -1922,6 +1922,14 @@ Chiudi l&apos;applicazione in conflitto e prova a selezionare nuovamente questa 
         <translation>Apri Prova puntamento...</translation>
     </message>
     <message>
+        <source>Measure Polling Rate</source>
+        <translation>Misura polling rate</translation>
+    </message>
+    <message>
+        <source>How often the lightgun sends its aim to the computer, before connecting it: Run mode, mouse output.</source>
+        <translation>Quanto spesso la lightgun invia la mira al computer, prima di connetterla: modalità run, uscita mouse.</translation>
+    </message>
+    <message>
         <location filename="../src/appmainwindow.ui" line="2478"/>
         <location filename="../build/Desktop_Qt_6_9_0_MinGW_64_bit-Debug/OpenFIREapp_autogen/include/ui_appmainwindow.h" line="1995"/>
         <source>Board Actions</source>
@@ -3169,6 +3177,73 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
     <message>
         <source>Home Button</source>
         <translation>Pulsante Home</translation>
+    </message>
+</context>
+<context>
+    <name>AppPollingTestWindow</name>
+    <message>
+        <source>Polling Rate Test</source>
+        <translation>Test del polling rate</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Azzera</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Chiudi</translation>
+    </message>
+    <message>
+        <source>Aim the lightgun inside this window and keep moving it. The lightgun must be in Run mode (not connected to the App) with mouse output.</source>
+        <translation>Punta la lightgun dentro questa finestra e continua a muoverla. La lightgun deve essere in modalità run (non connessa all'App) con uscita mouse.</translation>
+    </message>
+    <message>
+        <source>Expected value with OpenFIRE: about %1 Hz, the frame rate of the camera (with the USB cable and with the dongle).</source>
+        <translation>Valore atteso con OpenFIRE: circa %1 Hz, la frequenza della camera (sia con il cavo USB sia con il dongle).</translation>
+    </message>
+    <message>
+        <source>On this system the mouse moves can reach the App already joined: the rate measured can be lower than the real one. On Windows every report is measured.</source>
+        <translation>Su questo sistema i movimenti del mouse possono arrivare all'App già accorpati: la frequenza misurata può risultare più bassa di quella reale. Su Windows viene misurato ogni singolo report.</translation>
+    </message>
+    <message>
+        <source>Average (last 3 s)</source>
+        <translation>Media (ultimi 3 s)</translation>
+    </message>
+    <message>
+        <source>Rate of the last 3 s of movement: green from 180 Hz, orange from 60 Hz, red below. Indicative thresholds.</source>
+        <translation>Frequenza degli ultimi 3 s di movimento: verde da 180 Hz, arancione da 60 Hz, rosso sotto. Soglie indicative.</translation>
+    </message>
+    <message>
+        <source>Maximum (last 10 s)</source>
+        <translation>Massimo (ultimi 10 s)</translation>
+    </message>
+    <message>
+        <source>Minimum (last 10 s)</source>
+        <translation>Minimo (ultimi 10 s)</translation>
+    </message>
+    <message>
+        <source>Rate over the last %1 s of movement (line: %2 fps of the camera)</source>
+        <translation>Frequenza negli ultimi %1 s di movimento (linea: %2 fps della camera)</translation>
+    </message>
+    <message>
+        <source>Measuring</source>
+        <translation>Misura in corso</translation>
+    </message>
+    <message>
+        <source>Click on this window to measure</source>
+        <translation>Fai clic su questa finestra per misurare</translation>
+    </message>
+    <message>
+        <source>Waiting for the lightgun: move it inside the window</source>
+        <translation>In attesa della lightgun: muovila dentro la finestra</translation>
+    </message>
+    <message>
+        <source>Aim outside the window</source>
+        <translation>Mira fuori dalla finestra</translation>
+    </message>
+    <message>
+        <source>Paused: keep moving the lightgun</source>
+        <translation>In pausa: continua a muovere la lightgun</translation>
     </message>
 </context>
 </TS>

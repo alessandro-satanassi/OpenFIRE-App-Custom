@@ -27,6 +27,7 @@
 #include "appcali.h"
 #include "applensfitwindow.h"
 #include "appaimtestwindow.h"
+#include "apppollingtestwindow.h"
 #include "appalignmentwindow.h"
 #ifdef OFAPP_DEBUG
 #include "appdebug.h"
@@ -233,6 +234,10 @@ private slots:
     /// @brief      Aim test trigger: the solenoid, or the rumble in its place when the solenoid is off
     void AimTestRecoil();
 
+    /// @brief      Polling rate test (next to the COM port): only while no gun is connected, the gun
+    ///             in Run mode with mouse output. Nothing is sent to the gun.
+    void on_pollingTestBtn_clicked();
+
     /// system/background
     void on_tabWidget_currentChanged(int index);
 
@@ -286,6 +291,8 @@ private:
     QPointer<AppLensFitWindow> lensFitWindow;
     /// @brief      Aim test window (Gun Tests), at most one, never with a calibration or lens window
     QPointer<AppAimTestWindow> aimTestWindow;
+    /// @brief      Polling rate test window: only while no gun is connected, closed when one connects
+    QPointer<AppPollingTestWindow> pollingTestWindow;
     // IR emitter placement planner: offline, it never changes the lightgun settings
     QPointer<AppAlignmentWindow> alignmentWindow;
 

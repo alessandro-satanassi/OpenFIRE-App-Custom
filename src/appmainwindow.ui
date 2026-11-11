@@ -29,7 +29,7 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QHBoxLayout" name="comPortLayout" stretch="1,0,0">
+     <layout class="QHBoxLayout" name="comPortLayout" stretch="1,0,0,0,0">
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -38,6 +38,32 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pollingTestBtn">
+        <property name="toolTip">
+         <string>How often the lightgun sends its aim to the computer, before connecting it: Run mode, mouse output.</string>
+        </property>
+        <property name="text">
+         <string>Measure Polling Rate</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="pollingTestSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>12</width>
           <height>20</height>
          </size>
         </property>

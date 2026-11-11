@@ -797,6 +797,8 @@ void guiWindow::NewCaliWindow(const int &type) {
         caliWindow->Shutdown();
     if(lensFitWindow != nullptr)
         lensFitWindow->Shutdown();
+    if(aimTestWindow != nullptr)
+        aimTestWindow->Shutdown();
     if(alignmentWindow != nullptr)
         alignmentWindow->Shutdown();
 
@@ -927,6 +929,14 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
         lensFitWindow->Shutdown();
     if(aimTestWindow != nullptr)
         aimTestWindow->Shutdown();
+
+    // The polling rate test is for a gun not connected to the App (a docked gun does not send
+    // the aim as a mouse): its window closes and its button waits for the disconnection.
+    if(ui->comPortSelector->currentIndex() > 0) {
+        if(pollingTestWindow != nullptr)
+            pollingTestWindow->Shutdown();
+        ui->pollingTestBtn->setEnabled(false);
+    }
 
     if(ui->comPortSelector->currentIndex() > 0) {
         printf("COM port set to %d\n", ui->comPortSelector->currentIndex());
@@ -1453,6 +1463,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
         ui->confirmButton->setEnabled(false);
         ui->confirmButton->setText(tr("[Currently Not Connected]"));
         ui->confirmButton->setIcon(QIcon());
+
+        ui->pollingTestBtn->setEnabled(true);
     }
     serialActive = false;
 }
@@ -2297,6 +2309,8 @@ void guiWindow::on_cameraLensRefineButton_clicked()
 
     if(caliWindow != nullptr)
         caliWindow->Shutdown();
+    if(aimTestWindow != nullptr)
+        aimTestWindow->Shutdown();
     if(alignmentWindow != nullptr)
         alignmentWindow->Shutdown();
     lensFitWindow = new AppLensFitWindow(nullptr);
@@ -2648,6 +2662,23 @@ void guiWindow::on_aimTestBtn_clicked()
     aimTestWindow->showFullScreen();
     aimTestWindow->activateWindow();
     aimTestWindow->setFocus();
+}
+
+
+void guiWindow::on_pollingTestBtn_clicked()
+{
+    if(serial.port.isOpen())
+        return;
+    if(pollingTestWindow != nullptr) {
+        pollingTestWindow->raise();
+        pollingTestWindow->activateWindow();
+        return;
+    }
+    // A window of its own (Qt::Window) above the main one, deleted when closed.
+    pollingTestWindow = new AppPollingTestWindow(this);
+    pollingTestWindow->setAttribute(Qt::WA_DeleteOnClose);
+    pollingTestWindow->move(geometry().center() - pollingTestWindow->rect().center());
+    pollingTestWindow->show();
 }
 
 

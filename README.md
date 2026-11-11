@@ -23,6 +23,7 @@ Download the App from the **OpenFIRE App CUSTOM for ESP32 7.x firmware** section
  - Plan where to place the IR emitters for your screen, camera, add-on lens and playing distance with the IR Emitter Alignment Assistant, the same as in the WebApp.
  - Preview the layouts of all supported boards and the functions available on each pin, to make wiring your lightgun easier.
  - Test digital and analog inputs, the rumble, solenoid and autofire switches, force feedback devices, the IR camera and more. The Aim Test checks the aim, the buttons and the recoil on one fullscreen grid, as in the WebApp.
+ - Measure Polling Rate (next to the COM port, before connecting the gun): how often the gun, in Run mode with mouse output, sends its aim to the computer, as in the WebApp. Expected value: about 209 Hz, the frame rate of the camera.
 
 ## Running:
 Start `OpenFIREapp`. Available devices are refreshed periodically and listed in the *COM Port* drop-down box. Even with no device plugged in, you can open the *IR Emitter Alignment Assistant* or preview the supported boards and their default layouts with *View Compatible Boards* in the *Help* menu.
@@ -68,6 +69,7 @@ Scarica l'App dalla sezione **OpenFIRE App CUSTOM per firmware ESP32 7.x** della
 - Visualizza la disposizione ideale degli emettitori con l'Assistente di allineamento degli emettitori IR.
 - Consulta il layout di tutte le schede supportate e le funzioni disponibili sui pin, per facilitare il cablaggio.
 - Prova ingressi digitali e analogici, dispositivi di force feedback, telecamera IR e altre funzioni della pistola.
+- Misura polling rate (accanto alla Porta COM, prima di connettere la pistola): quanto spesso la pistola, in modalità run con uscita mouse, invia la mira al computer, come nella WebApp. Valore atteso: circa 209 Hz, la frequenza della camera.
 
 ## Avvio e uso
 
