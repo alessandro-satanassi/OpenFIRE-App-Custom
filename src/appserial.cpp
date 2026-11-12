@@ -858,6 +858,8 @@ bool AppSerial::GetSettings(const QString &portName)
     // Refined lens values that a firmware does not send stay "camera record" (not 0.0), as in the WebApp.
     for(const int &i : {OF_Const::cameraLensK1, OF_Const::cameraLensK2, OF_Const::cameraLensFocal})
         App_Common::settingsTable[App_Common::dataCurrent][i] = OF_Const::lensValueUnset;
+    // The wireless transmit power a firmware does not send stays the default, as in the firmware.
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::espnowTxPower] = OF_Const::espnowTxPowerDefault;
     if(!ReceiveSettingsRecords(OF_Const::sGetSettings,
                                App_Common::settingsTable[App_Common::dataCurrent],
                                App_Common::OFPresets.settingsTypes_Strings,

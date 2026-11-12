@@ -2713,6 +2713,22 @@ Disconnettere o ricaricare la pagina può sostituire le modifiche non inviate co
         <translation>Risparmio energetico wireless</translation>
     </message>
     <message>
+        <source>Wireless transmit power:</source>
+        <translation>Potenza di trasmissione wireless:</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Power with which the lightgun transmits to the dongle and the pedal in &lt;span style=&quot; font-weight:700;&quot;&gt;WIRELESS WI-FI&lt;/span&gt; mode.&lt;/p&gt;&lt;p&gt;Lower uses less battery but reduces the range; higher increases the range.&lt;/p&gt;&lt;p&gt;It takes effect at the next start of the lightgun.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 16.5 dBm&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Potenza con cui la pistola trasmette al dongle e al pedale in modalità &lt;span style=&quot; font-weight:700;&quot;&gt;WIRELESS WI-FI&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;Più bassa consuma meno batteria ma riduce la portata; più alta aumenta la portata.&lt;/p&gt;&lt;p&gt;Vale dal prossimo avvio.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Predefinito:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 16,5 dBm&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>Wireless Transmit Power</source>
+        <translation>Potenza di trasmissione wireless</translation>
+    </message>
+    <message>
+        <source>%1 dBm</source>
+        <translation>%1 dBm</translation>
+    </message>
+    <message>
         <source>Parallax correction (camera below the sight):</source>
         <translation>Correzione parallasse (telecamera sotto il mirino):</translation>
     </message>

@@ -1509,6 +1509,70 @@
                 </layout>
                </item>
                <item row="3" column="0">
+                <widget class="QWidget" name="espnowTxPowerWidget">
+                 <layout class="QHBoxLayout" name="espnowTxPowerLayout">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <spacer name="espnowTxPowerSpacerLeft">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="label_espnowTxPower">
+                    <property name="text">
+                     <string>Wireless transmit power:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="espnowTxPowerBox">
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Power with which the lightgun transmits to the dongle and the pedal in &lt;span style=&quot; font-weight:700;&quot;&gt;WIRELESS WI-FI&lt;/span&gt; mode.&lt;/p&gt;&lt;p&gt;Lower uses less battery but reduces the range; higher increases the range.&lt;/p&gt;&lt;p&gt;It takes effect at the next start of the lightgun.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;Default:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; 16.5 dBm&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="accessibleName">
+                     <string>Wireless Transmit Power</string>
+                    </property>
+                    <property name="trackable" stdset="0">
+                     <number>1</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="espnowTxPowerSpacerRight">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item row="4" column="0">
                 <layout class="QHBoxLayout" name="bootOutputLayout">
                 <item>
                  <spacer name="bootOutputSpacerLeft">

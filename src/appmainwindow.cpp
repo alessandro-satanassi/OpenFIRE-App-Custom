@@ -39,6 +39,7 @@
 #include <QDesktopServices>
 #include <QFontDatabase>
 #include <QUrl>
+#include <QLocale>
 #include <QScopedValueRollback>
 #include <QStyleOptionGroupBox>
 #include <algorithm>
@@ -119,6 +120,21 @@ guiWindow::guiWindow(QWidget *parent)
         const QSignalBlocker blocker(ui->standbyMinutesBox);
         for(const int minutes : OF_Const::standbyMinutesChoices)
             ui->standbyMinutesBox->addItem(minutes ? tr("%1 minutes").arg(minutes) : tr("Disabled"), minutes);
+    }
+
+    // Wireless (ESP-NOW) transmit power: only the levels of the shared list (0.25 dBm), shown with
+    // Show Unsafe Settings. The label is the power the radio really uses: it rounds a value down to
+    // one of radioLevels (esp_wifi_set_max_tx_power() of ESP-IDF), so 68, the value used so far
+    // (WIFI_POWER_17dBm) and the default, is 16.5 dBm.
+    {
+        static constexpr int radioLevels[] = { 8, 20, 28, 34, 44, 52, 56, 60, 66, 72, 80 };
+        const QSignalBlocker blocker(ui->espnowTxPowerBox);
+        for(const int power : OF_Const::espnowTxPowerChoices) {
+            int level = radioLevels[0];
+            for(const int radioLevel : radioLevels)
+                if(radioLevel <= power) level = radioLevel;
+            ui->espnowTxPowerBox->addItem(tr("%1 dBm").arg(QLocale().toString(level / 4.0)), power);
+        }
     }
 
     // Connect boards view "custom layouts" actions to the button
@@ -288,6 +304,7 @@ guiWindow::guiWindow(QWidget *parent)
     // set hidden by default until a board with presets is loaded
     ui->presetsBox->setVisible(false);
     ui->solenoidTempBox->setVisible(false);
+    ui->espnowTxPowerWidget->setVisible(false);
 
     statusBar()->showMessage(tr("Welcome to the OpenFIRE app!"), 3000);
 
@@ -1350,6 +1367,14 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                 ui->standbyMinutesBox->setCurrentIndex(standbyIndex);
                 App_Common::settingsTable[App_Common::dataCurrent][OF_Const::standbyMinutes] = ui->standbyMinutesBox->currentData().toUInt();
             }
+            // Wireless transmit power: the same, a value not in the shared list is the default, as in the firmware.
+            {
+                int txPowerIndex = ui->espnowTxPowerBox->findData((int)App_Common::settingsTable[App_Common::dataOrig][OF_Const::espnowTxPower]);
+                if(txPowerIndex < 0)
+                    txPowerIndex = ui->espnowTxPowerBox->findData(OF_Const::espnowTxPowerDefault);
+                ui->espnowTxPowerBox->setCurrentIndex(txPowerIndex);
+                App_Common::settingsTable[App_Common::dataCurrent][OF_Const::espnowTxPower] = ui->espnowTxPowerBox->currentData().toUInt();
+            }
             ui->rumbleFFToggle->setChecked(App_Common::boolSettings[App_Common::dataOrig][OF_Const::rumbleFF]);
             ui->rumbleIntensityBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleStrength]);
             ui->rumbleLengthBox->setValue(App_Common::settingsTable[App_Common::dataOrig][OF_Const::rumbleInterval]);
@@ -2005,6 +2030,17 @@ void guiWindow::on_standbyMinutesBox_currentIndexChanged(int index)
         return;
 
     App_Common::settingsTable[App_Common::dataCurrent][OF_Const::standbyMinutes] = ui->standbyMinutesBox->itemData(index).toUInt();
+
+    DiffUpdate();
+}
+
+
+void guiWindow::on_espnowTxPowerBox_currentIndexChanged(int index)
+{
+    if(index < 0)
+        return;
+
+    App_Common::settingsTable[App_Common::dataCurrent][OF_Const::espnowTxPower] = ui->espnowTxPowerBox->itemData(index).toUInt();
 
     DiffUpdate();
 }
@@ -3234,6 +3270,7 @@ void guiWindow::on_actionShow_Unsafe_Settings_toggled(bool arg1)
 {
     if(arg1) ui->solenoidTempBox->setVisible(true);
     else     ui->solenoidTempBox->setVisible(false);
+    ui->espnowTxPowerWidget->setVisible(arg1);   // the wireless transmit power is an unsafe setting too
     InvertsUpdate();   // the Edit NC Inputs box is an unsafe setting too
 }
 
