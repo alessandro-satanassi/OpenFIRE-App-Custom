@@ -3127,6 +3127,11 @@ void guiWindow::CaliWindowExiting(const int &mode,
     switch(mode) {
     case AppCaliWindow::modeCalibrate:
     {
+        // The board does not send the button releases made during calibration:
+        // clear the Gun Tests buttons, so none stays shown as pressed.
+        for(uint8_t i = 0; i < testLabel.count(); ++i)
+            testLabel.at(i)->setStyleSheet("");
+
         uint8_t selection = caliWindow->property("profile").toInt();
 
         if(!(topOffsetNew  == -1 && bottomOffsetNew == -1 &&
