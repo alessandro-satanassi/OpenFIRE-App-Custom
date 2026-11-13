@@ -82,6 +82,3 @@ jobs:
         name: OpenFIREapp-${{ matrix.pretty }}-Qt${{ matrix.qt_version }}-${{ matrix.build_type }}
         # A file, directory or wildcard pattern that describes what to upload
         path: build/out/OpenFIREapp-${{ matrix.sys_arch }}.dmg
-
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v8

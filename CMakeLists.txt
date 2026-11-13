@@ -14,9 +14,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT(CMAKE_BUILD_TYPE STREQUAL "Release"))
-    add_compile_definitions(OFAPP_DEBUG)
-endif()
+# OFAPP_DEBUG in every configuration but Release, also with the multi-config generators
+# (Visual Studio, Xcode, Ninja Multi-Config), where CMAKE_BUILD_TYPE is empty.
+add_compile_definitions($<$<NOT:$<CONFIG:Release>>:OFAPP_DEBUG>)
 
 # required to make use of definitions in `OpenFIREshared.h` for App usage
 add_compile_definitions(OF_APP)

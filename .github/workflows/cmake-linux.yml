@@ -105,6 +105,3 @@ jobs:
         # Artifact name
         name: OpenFIREapp-${{ matrix.pretty }}-Qt${{ matrix.qt_version }}-${{ matrix.build_type }}
         path: "OpenFIRE_App-${{matrix.sys_arch}}.AppImage"
-
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v8

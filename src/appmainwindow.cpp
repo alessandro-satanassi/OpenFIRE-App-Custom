@@ -44,6 +44,16 @@
 #include <QStyleOptionGroupBox>
 #include <algorithm>
 #include <iterator>
+#include <cstring>
+#include <QLineEdit>
+#include <QRegularExpressionValidator>
+
+// Names of the gun and of the profiles: char[] fields of the firmware, Latin-1 (as the WebApp),
+// up to the first NUL and never past the field.
+static QString Latin1Field(const char *text, size_t size)
+{
+    return QString::fromLatin1(text, (int)strnlen(text, size));
+}
 
 guiWindow::guiWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -648,7 +658,7 @@ void guiWindow::LabelsUpdate()
         ui->analogGroup->setEnabled(true),  ui->aPosLabel->clear();
     else ui->analogGroup->setEnabled(false), ui->aPosLabel->setText(tr("Not Connected"));
 
-    ui->boardLabel->setText(PrettifyName(App_Common::tinyUSBtable.tinyUSBname));
+    ui->boardLabel->setText(PrettifyName(Latin1Field(App_Common::tinyUSBtable.tinyUSBname, sizeof(App_Common::tinyUSBtable_s::tinyUSBname))));
 }
 
 
@@ -846,6 +856,8 @@ void guiWindow::NewCaliWindow(const int &type) {
         ui->profilesTab->setEnabled(false);
         ui->feedbackTestsBox->setEnabled(false);
         ui->dangerZoneBox->setEnabled(false);
+        ui->testBtn->setEnabled(false);
+        ui->aimTestBtn->setEnabled(false);
         break;
     case AppCaliWindow::modeAlignment:
     default:
@@ -1012,7 +1024,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
                                                  "Cali Profile names are displayed in Pause Mode when using a compatible <i>I2C Display.</i></p>"));
                 connect(renameBtn.at(i), &QPushButton::clicked, this, &guiWindow::renameBoxes_clicked);
 
-                selectedProfile << new QRadioButton(QString("%1. %2").arg(i+1).arg(App_Common::profilesTable.at(i).profName));
+                selectedProfile << new QRadioButton(QString("%1. %2").arg(i+1).arg(Latin1Field(App_Common::profilesTable.at(i).profName, sizeof(App_Common::profilesTable_s::profName))));
                 selectedProfile.at(i)->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
                 if(i == App_Common::board.selectedProfile) selectedProfile.at(i)->setChecked(true);
                 selectedProfile.at(i)->setProperty("slot", i);
@@ -1441,7 +1453,7 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
             }
 
             ui->productIdInput->setValue(App_Common::tinyUSBtable.tinyUSBid);
-            ui->productNameInput->setText(App_Common::tinyUSBtable.tinyUSBname);
+            ui->productNameInput->setText(Latin1Field(App_Common::tinyUSBtable.tinyUSBname, sizeof(App_Common::tinyUSBtable_s::tinyUSBname)));
 
             ui->tabWidget->setCurrentIndex(0);
             ui->comPortSelector->setItemText(0, tr("[Disconnect Current Device]"));
@@ -1469,6 +1481,8 @@ void guiWindow::on_comPortSelector_currentTextChanged(const QString &text)
         ui->profilesTab->setEnabled(true);
         ui->feedbackTestsBox->setEnabled(true);
         ui->dangerZoneBox->setEnabled(true);
+        ui->testBtn->setEnabled(true);      // a test left without confirmation (FailOperation)
+        ui->aimTestBtn->setEnabled(true);
 
         ui->tabWidget->setEnabled(false);
 
@@ -2136,7 +2150,7 @@ void guiWindow::on_customLEDstaticSpinbox_valueChanged(int arg1)
 {
     if(arg1 > App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcount]) { ui->customLEDstaticSpinbox->setValue(App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcount]); }
     else { App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDstatic] = arg1; }
-    if(OF_Const::customLEDstatic) {
+    {
         switch(App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDstatic]) {
         case 1:
             ui->customLEDstaticBtn1->setEnabled(true);
@@ -2172,14 +2186,12 @@ void guiWindow::on_customLEDstaticBtn1_clicked()
 {
     QColor colorPick = QColorDialog::getColor(App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcolor1]);
     if(colorPick.isValid()) {
-        int *red = new int;
-        int *green = new int;
-        int *blue = new int;
-        colorPick.getRgb(red, green, blue);
+        int red, green, blue;
+        colorPick.getRgb(&red, &green, &blue);
         uint32_t packedColor = 0;
-        packedColor |= *red << 16;
-        packedColor |= *green << 8;
-        packedColor |= *blue;
+        packedColor |= red << 16;
+        packedColor |= green << 8;
+        packedColor |= blue;
         App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcolor1] = packedColor;
         ui->customLEDstaticBtn1->setStyleSheet(QString("background-color: #%1").arg(packedColor, 6, 16, QLatin1Char('0')));
 
@@ -2195,14 +2207,12 @@ void guiWindow::on_customLEDstaticBtn2_clicked()
 {
     QColor colorPick = QColorDialog::getColor(App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcolor2]);
     if(colorPick.isValid()) {
-        int *red = new int;
-        int *green = new int;
-        int *blue = new int;
-        colorPick.getRgb(red, green, blue);
+        int red, green, blue;
+        colorPick.getRgb(&red, &green, &blue);
         uint32_t packedColor = 0;
-        packedColor |= *red << 16;
-        packedColor |= *green << 8;
-        packedColor |= *blue;
+        packedColor |= red << 16;
+        packedColor |= green << 8;
+        packedColor |= blue;
         App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcolor2] = packedColor;
         ui->customLEDstaticBtn2->setStyleSheet(QString("background-color: #%1").arg(packedColor, 6, 16, QLatin1Char('0')));
 
@@ -2218,14 +2228,12 @@ void guiWindow::on_customLEDstaticBtn3_clicked()
 {
     QColor colorPick = QColorDialog::getColor(App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcolor3]);
     if(colorPick.isValid()) {
-        int *red = new int;
-        int *green = new int;
-        int *blue = new int;
-        colorPick.getRgb(red, green, blue);
+        int red, green, blue;
+        colorPick.getRgb(&red, &green, &blue);
         uint32_t packedColor = 0;
-        packedColor |= *red << 16;
-        packedColor |= *green << 8;
-        packedColor |= *blue;
+        packedColor |= red << 16;
+        packedColor |= green << 8;
+        packedColor |= blue;
         App_Common::settingsTable[App_Common::dataCurrent][OF_Const::customLEDcolor3] = packedColor;
         ui->customLEDstaticBtn3->setStyleSheet(QString("background-color: #%1").arg(packedColor, 6, 16, QLatin1Char('0')));
 
@@ -2488,12 +2496,12 @@ void guiWindow::on_productNameInput_textEdited(const QString &arg1)
     }
 
     if(badInput) {
-        ui->productNameInput->setText(App_Common::tinyUSBtable.tinyUSBname);
+        ui->productNameInput->setText(Latin1Field(App_Common::tinyUSBtable.tinyUSBname, sizeof(App_Common::tinyUSBtable_s::tinyUSBname)));
         ui->productNameInput->setStyleSheet("color: red");
     } else {
         if(!ui->productNameInput->styleSheet().isEmpty())
             ui->productNameInput->setStyleSheet("");
-        strncpy(App_Common::tinyUSBtable.tinyUSBname, arg1.toLocal8Bit().constData(), sizeof(App_Common::tinyUSBtable_s::tinyUSBname)-1);
+        strncpy(App_Common::tinyUSBtable.tinyUSBname, arg1.toLatin1().constData(), sizeof(App_Common::tinyUSBtable_s::tinyUSBname)-1);   // checked above: Latin-1 only
         DiffUpdate();
     }
 }
@@ -2525,15 +2533,25 @@ void guiWindow::profileBoxes_activated(int index)
 
 void guiWindow::renameBoxes_clicked()
 {
-    // TODO: limit character length in the text dialog - for now, just use up to 15 characters.
-    QString newLabel = QInputDialog::getText(this,
-                                             tr("Input Name"),
-                                             tr("Set name for Calibration Profile %1").arg(sender()->property("slot").toInt()+1));
+    // Up to 15 characters, Latin-1 only (the firmware keeps the name as Latin-1 bytes, as the
+    // WebApp and the product name do): other characters cannot be typed.
+    QInputDialog dialog(this);
+    dialog.setInputMode(QInputDialog::TextInput);
+    dialog.setWindowTitle(tr("Input Name"));
+    dialog.setLabelText(tr("Set name for Calibration Profile %1").arg(sender()->property("slot").toInt()+1));
+    if(QLineEdit *edit = dialog.findChild<QLineEdit*>()) {
+        edit->setMaxLength(sizeof(App_Common::profilesTable_s::profName)-1);
+        edit->setValidator(new QRegularExpressionValidator(QRegularExpression(QStringLiteral("[\\x{0001}-\\x{00FF}]*")), edit));
+    }
+    const QString newLabel = dialog.exec() == QDialog::Accepted ? dialog.textValue().left(sizeof(App_Common::profilesTable_s::profName)-1) : QString();
 
-    if(!newLabel.isEmpty()) {
-        selectedProfile[sender()->property("slot").toInt()]->setText(QString("%1. %2").arg(sender()->property("slot").toInt()+1).arg(newLabel.left(15)));
+    bool latin1 = true;
+    for(const QChar c : newLabel)
+        if(c.unicode() > 255) { latin1 = false; break; }
+    if(!newLabel.isEmpty() && latin1) {
+        selectedProfile[sender()->property("slot").toInt()]->setText(QString("%1. %2").arg(sender()->property("slot").toInt()+1).arg(newLabel));
         memset(App_Common::profilesTable[sender()->property("slot").toInt()].profName, 0, sizeof(App_Common::profilesTable_s::profName));
-        strncpy(App_Common::profilesTable[sender()->property("slot").toInt()].profName, newLabel.toLocal8Bit().constData(), sizeof(App_Common::profilesTable_s::profName)-1);
+        strncpy(App_Common::profilesTable[sender()->property("slot").toInt()].profName, newLabel.toLatin1().constData(), sizeof(App_Common::profilesTable_s::profName)-1);
     }
 
     DiffUpdate();
@@ -2634,6 +2652,11 @@ void guiWindow::on_blueLedTestBtn_clicked()
 
 void guiWindow::on_testBtn_clicked()
 {
+    // As the aim test: a calibration, IR test or lens refinement in progress is not interrupted
+    // (and a double click does not open a second window).
+    if(!serial.port.isOpen() || caliWindow != nullptr || lensFitWindow != nullptr || aimTestWindow != nullptr)
+        return;
+
     bool startTest = true;
 
     if(App_Common::profilesTable.at(App_Common::board.selectedProfile).layoutType != App_Common::profilesTable_orig.at(App_Common::board.selectedProfile).layoutType) {
@@ -3151,7 +3174,11 @@ void guiWindow::CaliWindowExiting(const int &mode,
             ui->profilesTab->setEnabled(true);
             ui->feedbackTestsBox->setEnabled(true);
             ui->dangerZoneBox->setEnabled(true);
-        }
+            ui->testBtn->setEnabled(!serial.CommitNeedsRetry());
+            ui->aimTestBtn->setEnabled(!serial.CommitNeedsRetry());
+        } else serial.FailOperation();   // test mode could not be left: restart the board (as the WebApp)
+        if(serial.port.isOpen())
+            DiffUpdate();   // Save button back, as the aim test
         break;
     }
     case AppCaliWindow::modeAlignment:
@@ -3193,7 +3220,7 @@ void guiWindow::LensFitWindowExiting()
         ui->profilesTab->setEnabled(true);
         ui->feedbackTestsBox->setEnabled(true);
         ui->dangerZoneBox->setEnabled(true);
-    }
+    } else serial.FailOperation();   // test mode could not be left: restart the board (as the WebApp)
     if(serial.port.isOpen()) {
         CameraLensUpdate();
         DiffUpdate();   // Save button back (the new values make it available)
@@ -3221,7 +3248,7 @@ void guiWindow::AimTestWindowExiting()
         ui->dangerZoneBox->setEnabled(true);
         ui->testBtn->setEnabled(!serial.CommitNeedsRetry());
         ui->aimTestBtn->setEnabled(!serial.CommitNeedsRetry());
-    }
+    } else serial.FailOperation();   // test mode could not be left: restart the board (as the WebApp)
     if(serial.port.isOpen())
         DiffUpdate();   // Save button back, as the lens refinement
     window->close();
